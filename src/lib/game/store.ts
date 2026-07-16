@@ -111,6 +111,9 @@ export function sellPlayer(id: string): number {
 
 export function discardPlayer(id: string) {
   set((s) => removePlayerInternal(s, id));
+}
+
+
 
 export function spendCoins(amount: number): boolean {
   collectPassive();
