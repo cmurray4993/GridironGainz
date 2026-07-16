@@ -31,8 +31,10 @@ function Home() {
   const opponent = useMemo(() => pickTodaysOpponent(teamOverall), [teamOverall]);
   const coinsPerHour = state.fans * COIN_PER_FAN_PER_HOUR;
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const pend = pendingClaim();
-  const canClaim = pend.buckets > 0;
+  const canClaim = mounted && pend.buckets > 0;
 
   return (
     <div className="animate-float-up space-y-6">
