@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { PlayerCard } from "@/components/PlayerCard";
-import { useGame } from "@/lib/game/store";
-import { POSITIONS, type Position, type Rarity } from "@/lib/game/types";
+import { discardPlayer, sellPlayer, sellPrice, useGame } from "@/lib/game/store";
+import { POSITIONS, type Player, type Position, type Rarity } from "@/lib/game/types";
 
 export const Route = createFileRoute("/roster")({
   component: RosterPage,
