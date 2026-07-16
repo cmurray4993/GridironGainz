@@ -84,6 +84,34 @@ export function addPlayers(players: Player[]) {
   }));
 }
 
+function removePlayerInternal(s: GameState, id: string): GameState {
+  const p = s.roster.find((r) => r.id === id);
+  if (!p) return s;
+  const nextLineup = { ...s.lineup };
+  for (const pos of LINEUP_SLOTS) if (nextLineup[pos] === id) nextLineup[pos] = null;
+  return {
+    ...s,
+    roster: s.roster.filter((r) => r.id !== id),
+    fans: Math.max(0, s.fans - p.fanValue),
+    lineup: nextLineup,
+  };
+}
+
+export function sellPlayer(id: string): number {
+  collectPassive();
+  const p = state.roster.find((r) => r.id === id);
+  if (!p) return 0;
+  const price = sellPrice(p);
+  set((s) => {
+    const next = removePlayerInternal(s, id);
+    return { ...next, coins: next.coins + price };
+  });
+  return price;
+}
+
+export function discardPlayer(id: string) {
+  set((s) => removePlayerInternal(s, id));
+
 export function spendCoins(amount: number): boolean {
   collectPassive();
   if (state.coins < amount) return false;
