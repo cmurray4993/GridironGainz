@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { recordResult, useGame } from "@/lib/game/store";
 import { LINEUP_SLOTS } from "@/lib/game/types";
 import { lineupOverall, pickTodaysOpponent, simulateGame, type SimResult } from "@/lib/game/sim";
+import { KickoffCountdown } from "@/components/KickoffCountdown";
+import { kickoffStatus } from "@/lib/game/kickoff";
 
 export const Route = createFileRoute("/game")({
   component: GamePage,
