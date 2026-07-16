@@ -10,7 +10,12 @@ export const Route = createFileRoute("/roster")({
 });
 
 function RosterPage() {
-  const { roster } = useGame();
+  const { roster, lineup } = useGame();
+  const [confirming, setConfirming] = useState<Player | null>(null);
+  const inLineup = useMemo(
+    () => new Set(Object.values(lineup).filter(Boolean) as string[]),
+    [lineup],
+  );
   const [filter, setFilter] = useState<Position | "ALL">("ALL");
   const [sort, setSort] = useState<"overall" | "fan" | "rarity">("overall");
 
