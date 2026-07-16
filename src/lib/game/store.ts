@@ -1,5 +1,17 @@
 import { useSyncExternalStore } from "react";
-import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, type GameState, type Player, type Position } from "./types";
+import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, type GameState, type Player, type Position, type Rarity } from "./types";
+
+const RARITY_SELL_MULT: Record<Rarity, number> = {
+  common: 0.8,
+  uncommon: 1.4,
+  rare: 2.4,
+  epic: 4.2,
+  legendary: 8,
+};
+
+export function sellPrice(p: Player): number {
+  return Math.max(5, Math.round(p.overall * RARITY_SELL_MULT[p.rarity]));
+}
 
 const KEY = "faf.state.v1";
 
