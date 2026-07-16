@@ -9,8 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RosterRouteImport } from './routes/roster'
+import { Route as PackRouteImport } from './routes/pack'
+import { Route as LineupRouteImport } from './routes/lineup'
+import { Route as GameRouteImport } from './routes/game'
 import { Route as IndexRouteImport } from './routes/index'
 
+const RosterRoute = RosterRouteImport.update({
+  id: '/roster',
+  path: '/roster',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PackRoute = PackRouteImport.update({
+  id: '/pack',
+  path: '/pack',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LineupRoute = LineupRouteImport.update({
+  id: '/lineup',
+  path: '/lineup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GameRoute = GameRouteImport.update({
+  id: '/game',
+  path: '/game',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +43,72 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/game': typeof GameRoute
+  '/lineup': typeof LineupRoute
+  '/pack': typeof PackRoute
+  '/roster': typeof RosterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/game': typeof GameRoute
+  '/lineup': typeof LineupRoute
+  '/pack': typeof PackRoute
+  '/roster': typeof RosterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/game': typeof GameRoute
+  '/lineup': typeof LineupRoute
+  '/pack': typeof PackRoute
+  '/roster': typeof RosterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/game' | '/lineup' | '/pack' | '/roster'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/game' | '/lineup' | '/pack' | '/roster'
+  id: '__root__' | '/' | '/game' | '/lineup' | '/pack' | '/roster'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GameRoute: typeof GameRoute
+  LineupRoute: typeof LineupRoute
+  PackRoute: typeof PackRoute
+  RosterRoute: typeof RosterRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/roster': {
+      id: '/roster'
+      path: '/roster'
+      fullPath: '/roster'
+      preLoaderRoute: typeof RosterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pack': {
+      id: '/pack'
+      path: '/pack'
+      fullPath: '/pack'
+      preLoaderRoute: typeof PackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lineup': {
+      id: '/lineup'
+      path: '/lineup'
+      fullPath: '/lineup'
+      preLoaderRoute: typeof LineupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/game': {
+      id: '/game'
+      path: '/game'
+      fullPath: '/game'
+      preLoaderRoute: typeof GameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,7 +121,21 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GameRoute: GameRoute,
+  LineupRoute: LineupRoute,
+  PackRoute: PackRoute,
+  RosterRoute: RosterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
