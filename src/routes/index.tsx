@@ -1,6 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useGame } from "@/lib/game/store";
+import { useEffect, useMemo, useState } from "react";
+import {
+  claimCoins,
+  MAX_CLAIM_BUCKETS,
+  pendingClaim,
+  useGame,
+} from "@/lib/game/store";
 import { COIN_PER_FAN_PER_HOUR } from "@/lib/game/types";
 import { lineupOverall, pickTodaysOpponent } from "@/lib/game/sim";
 
@@ -8,6 +13,13 @@ export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
   const state = useGame();
+
+  // Re-render every second so the pending-claim tile stays live.
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(i);
+  }, []);
 
   const roster = state.roster;
   const lineupPlayers = useMemo(
@@ -17,6 +29,9 @@ function Home() {
   const teamOverall = lineupOverall(lineupPlayers) || (roster.length ? Math.round(roster.reduce((s, p) => s + p.overall, 0) / roster.length) : 60);
   const opponent = useMemo(() => pickTodaysOpponent(teamOverall), [teamOverall]);
   const coinsPerHour = state.fans * COIN_PER_FAN_PER_HOUR;
+
+  const pend = pendingClaim();
+  const canClaim = pend.buckets > 0;
 
   return (
     <div className="animate-float-up space-y-6">
@@ -31,7 +46,15 @@ function Home() {
           <BigStat label="Coins" value={state.coins.toFixed(2)} accent="gold" sub={`${COIN_PER_FAN_PER_HOUR} 🪙 per fan / hr`} />
           <BigStat label="Record" value={`${state.wins}–${state.losses}`} sub={`${state.packsOpened} packs opened`} />
         </div>
+
+        <ClaimTile
+          pend={pend}
+          canClaim={canClaim}
+          fans={state.fans}
+          onClaim={() => claimCoins()}
+        />
       </section>
+
 
       <section className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-[var(--shadow-card)]">
         <div className="flex items-center justify-between">
@@ -99,6 +122,60 @@ function rank(delta: number) {
   return "Long shot";
 }
 function fmt(n: number) { return n.toLocaleString(); }
+
+function ClaimTile({
+  pend, canClaim, fans, onClaim,
+}: {
+  pend: ReturnType<typeof pendingClaim>;
+  canClaim: boolean;
+  fans: number;
+  onClaim: () => void;
+}) {
+  const pctFilled = Math.min(100, (pend.buckets / MAX_CLAIM_BUCKETS) * 100);
+  const hours = Math.floor(pend.buckets / 4);
+  const mins = (pend.buckets % 4) * 15;
+  const nextMin = Math.floor(pend.msToNextBucket / 60000);
+  const nextSec = Math.floor((pend.msToNextBucket % 60000) / 1000);
+
+  return (
+    <div className="mt-5 rounded-xl border border-primary/40 bg-background/60 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Unclaimed coins</div>
+          <div className="mt-0.5 font-display text-3xl text-gradient-gold leading-none">
+            🪙 {pend.coins.toFixed(2)}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            {fans === 0
+              ? "Sign fans to start earning."
+              : pend.cappedBuckets
+                ? "Vault full — claim to keep earning!"
+                : pend.buckets > 0
+                  ? `${hours}h ${mins}m ready · next tick in ${nextMin}:${String(nextSec).padStart(2, "0")}`
+                  : `Next tick in ${nextMin}:${String(nextSec).padStart(2, "0")}`}
+          </div>
+        </div>
+        <button
+          onClick={onClaim}
+          disabled={!canClaim}
+          className="rounded-lg bg-[image:var(--gradient-gold)] px-4 py-2 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Claim
+        </button>
+      </div>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-background/70 border border-border/60">
+        <div
+          className="h-full bg-[image:var(--gradient-gold)] transition-[width] duration-500"
+          style={{ width: `${pctFilled}%` }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+        <span>15-min ticks</span>
+        <span>{pend.buckets}/{MAX_CLAIM_BUCKETS} · caps at 8h</span>
+      </div>
+    </div>
+  );
+}
 
 function ActionCard({ to, title, description, emoji, cta }: { to: string; title: string; description: string; emoji: string; cta: string }) {
   return (
