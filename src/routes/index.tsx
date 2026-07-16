@@ -1,6 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useGame } from "@/lib/game/store";
+import { useEffect, useMemo, useState } from "react";
+import {
+  claimCoins,
+  MAX_CLAIM_BUCKETS,
+  pendingClaim,
+  useGame,
+} from "@/lib/game/store";
 import { COIN_PER_FAN_PER_HOUR } from "@/lib/game/types";
 import { lineupOverall, pickTodaysOpponent } from "@/lib/game/sim";
 
@@ -8,6 +13,13 @@ export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
   const state = useGame();
+
+  // Re-render every second so the pending-claim tile stays live.
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const i = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(i);
+  }, []);
 
   const roster = state.roster;
   const lineupPlayers = useMemo(
@@ -17,6 +29,9 @@ function Home() {
   const teamOverall = lineupOverall(lineupPlayers) || (roster.length ? Math.round(roster.reduce((s, p) => s + p.overall, 0) / roster.length) : 60);
   const opponent = useMemo(() => pickTodaysOpponent(teamOverall), [teamOverall]);
   const coinsPerHour = state.fans * COIN_PER_FAN_PER_HOUR;
+
+  const pend = pendingClaim();
+  const canClaim = pend.buckets > 0;
 
   return (
     <div className="animate-float-up space-y-6">
@@ -31,7 +46,15 @@ function Home() {
           <BigStat label="Coins" value={state.coins.toFixed(2)} accent="gold" sub={`${COIN_PER_FAN_PER_HOUR} 🪙 per fan / hr`} />
           <BigStat label="Record" value={`${state.wins}–${state.losses}`} sub={`${state.packsOpened} packs opened`} />
         </div>
+
+        <ClaimTile
+          pend={pend}
+          canClaim={canClaim}
+          fans={state.fans}
+          onClaim={() => claimCoins()}
+        />
       </section>
+
 
       <section className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-[var(--shadow-card)]">
         <div className="flex items-center justify-between">
