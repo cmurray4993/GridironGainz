@@ -32,8 +32,14 @@ function GamePage() {
 
   useEffect(() => () => { timers.current.forEach(clearTimeout); }, []);
 
+  const [kick, setKick] = useState(() => kickoffStatus());
+  useEffect(() => {
+    const i = setInterval(() => setKick(kickoffStatus()), 1000);
+    return () => clearInterval(i);
+  }, []);
+
   const start = () => {
-    if (filled === 0) return;
+    if (filled === 0 || !kick.isLive) return;
     const r = simulateGame(lineupPlayers, opponent.overall, opponent.name);
     setResult(r);
     setShown([]);
