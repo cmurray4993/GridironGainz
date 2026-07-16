@@ -18,17 +18,16 @@ function ctParts(d: Date) {
   };
 }
 
-// Find the UTC instant that corresponds to a given Central-Time wall clock.
-// Handles DST by iterative correction (2 passes is enough).
+// Convert a Central-Time wall clock (Y,M,D,H) to a UTC instant, DST-aware.
 function ctWallToUTC(year: number, month: number, day: number, hour: number) {
-  // Start from the naive UTC guess, then correct by the current CT offset.
-  let guess = Date.UTC(year, month - 1, day, hour, 0, 0);
-  for (let i = 0; i < 2; i++) {
+  const targetUTC = Date.UTC(year, month - 1, day, hour, 0, 0);
+  let guess = targetUTC;
+  for (let i = 0; i < 3; i++) {
     const p = ctParts(new Date(guess));
-    const asUTC = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
-    const diff = asUTC - guess; // = offset(CT relative to UTC) in ms
-    guess = guess - diff + Date.UTC(year, month - 1, day, hour, 0, 0) - Date.UTC(year, month - 1, day, hour, 0, 0);
-    guess = Date.UTC(year, month - 1, day, hour, 0, 0) - diff;
+    const seenUTC = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+    const drift = seenUTC - targetUTC;
+    if (drift === 0) break;
+    guess -= drift;
   }
   return guess;
 }
