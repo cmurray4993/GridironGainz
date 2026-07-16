@@ -134,7 +134,6 @@ function removePlayerInternal(s: GameState, id: string): GameState {
 }
 
 export function sellPlayer(id: string): number {
-  collectPassive();
   const p = state.roster.find((r) => r.id === id);
   if (!p) return 0;
   const price = sellPrice(p);
