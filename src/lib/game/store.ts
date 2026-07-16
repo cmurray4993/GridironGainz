@@ -184,7 +184,4 @@ export function resetAll() {
   listeners.forEach((l) => l());
 }
 
-/* ---------- passive tick loop ---------- */
-if (typeof window !== "undefined") {
-  setInterval(() => collectPassive(), 15_000);
-}
+/* No auto-collect: coins must be manually claimed via claimCoins(). */
