@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RosterRouteImport } from './routes/roster'
 import { Route as PackRouteImport } from './routes/pack'
+import { Route as MarketRouteImport } from './routes/market'
 import { Route as LineupRouteImport } from './routes/lineup'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const RosterRoute = RosterRouteImport.update({
 const PackRoute = PackRouteImport.update({
   id: '/pack',
   path: '/pack',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketRoute = MarketRouteImport.update({
+  id: '/market',
+  path: '/market',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LineupRoute = LineupRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
+  '/market': typeof MarketRoute
   '/pack': typeof PackRoute
   '/roster': typeof RosterRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
+  '/market': typeof MarketRoute
   '/pack': typeof PackRoute
   '/roster': typeof RosterRoute
 }
@@ -60,21 +68,23 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
+  '/market': typeof MarketRoute
   '/pack': typeof PackRoute
   '/roster': typeof RosterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/game' | '/lineup' | '/pack' | '/roster'
+  fullPaths: '/' | '/game' | '/lineup' | '/market' | '/pack' | '/roster'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game' | '/lineup' | '/pack' | '/roster'
-  id: '__root__' | '/' | '/game' | '/lineup' | '/pack' | '/roster'
+  to: '/' | '/game' | '/lineup' | '/market' | '/pack' | '/roster'
+  id: '__root__' | '/' | '/game' | '/lineup' | '/market' | '/pack' | '/roster'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GameRoute: typeof GameRoute
   LineupRoute: typeof LineupRoute
+  MarketRoute: typeof MarketRoute
   PackRoute: typeof PackRoute
   RosterRoute: typeof RosterRoute
 }
@@ -93,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/pack'
       fullPath: '/pack'
       preLoaderRoute: typeof PackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/market': {
+      id: '/market'
+      path: '/market'
+      fullPath: '/market'
+      preLoaderRoute: typeof MarketRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lineup': {
@@ -123,6 +140,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GameRoute: GameRoute,
   LineupRoute: LineupRoute,
+  MarketRoute: MarketRoute,
   PackRoute: PackRoute,
   RosterRoute: RosterRoute,
 }

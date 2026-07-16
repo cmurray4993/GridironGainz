@@ -1,5 +1,17 @@
 import { useSyncExternalStore } from "react";
-import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, type GameState, type Player, type Position } from "./types";
+import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, type GameState, type Player, type Position, type Rarity } from "./types";
+
+const RARITY_SELL_MULT: Record<Rarity, number> = {
+  common: 0.8,
+  uncommon: 1.4,
+  rare: 2.4,
+  epic: 4.2,
+  legendary: 8,
+};
+
+export function sellPrice(p: Player): number {
+  return Math.max(5, Math.round(p.overall * RARITY_SELL_MULT[p.rarity]));
+}
 
 const KEY = "faf.state.v1";
 
@@ -71,6 +83,37 @@ export function addPlayers(players: Player[]) {
     packsOpened: s.packsOpened + 1,
   }));
 }
+
+function removePlayerInternal(s: GameState, id: string): GameState {
+  const p = s.roster.find((r) => r.id === id);
+  if (!p) return s;
+  const nextLineup = { ...s.lineup };
+  for (const pos of LINEUP_SLOTS) if (nextLineup[pos] === id) nextLineup[pos] = null;
+  return {
+    ...s,
+    roster: s.roster.filter((r) => r.id !== id),
+    fans: Math.max(0, s.fans - p.fanValue),
+    lineup: nextLineup,
+  };
+}
+
+export function sellPlayer(id: string): number {
+  collectPassive();
+  const p = state.roster.find((r) => r.id === id);
+  if (!p) return 0;
+  const price = sellPrice(p);
+  set((s) => {
+    const next = removePlayerInternal(s, id);
+    return { ...next, coins: next.coins + price };
+  });
+  return price;
+}
+
+export function discardPlayer(id: string) {
+  set((s) => removePlayerInternal(s, id));
+}
+
+
 
 export function spendCoins(amount: number): boolean {
   collectPassive();
