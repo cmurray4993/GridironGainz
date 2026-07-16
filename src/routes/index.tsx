@@ -123,6 +123,60 @@ function rank(delta: number) {
 }
 function fmt(n: number) { return n.toLocaleString(); }
 
+function ClaimTile({
+  pend, canClaim, fans, onClaim,
+}: {
+  pend: ReturnType<typeof pendingClaim>;
+  canClaim: boolean;
+  fans: number;
+  onClaim: () => void;
+}) {
+  const pctFilled = Math.min(100, (pend.buckets / MAX_CLAIM_BUCKETS) * 100);
+  const hours = Math.floor(pend.buckets / 4);
+  const mins = (pend.buckets % 4) * 15;
+  const nextMin = Math.floor(pend.msToNextBucket / 60000);
+  const nextSec = Math.floor((pend.msToNextBucket % 60000) / 1000);
+
+  return (
+    <div className="mt-5 rounded-xl border border-primary/40 bg-background/60 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Unclaimed coins</div>
+          <div className="mt-0.5 font-display text-3xl text-gradient-gold leading-none">
+            🪙 {pend.coins.toFixed(2)}
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            {fans === 0
+              ? "Sign fans to start earning."
+              : pend.cappedBuckets
+                ? "Vault full — claim to keep earning!"
+                : pend.buckets > 0
+                  ? `${hours}h ${mins}m ready · next tick in ${nextMin}:${String(nextSec).padStart(2, "0")}`
+                  : `Next tick in ${nextMin}:${String(nextSec).padStart(2, "0")}`}
+          </div>
+        </div>
+        <button
+          onClick={onClaim}
+          disabled={!canClaim}
+          className="rounded-lg bg-[image:var(--gradient-gold)] px-4 py-2 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Claim
+        </button>
+      </div>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-background/70 border border-border/60">
+        <div
+          className="h-full bg-[image:var(--gradient-gold)] transition-[width] duration-500"
+          style={{ width: `${pctFilled}%` }}
+        />
+      </div>
+      <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+        <span>15-min ticks</span>
+        <span>{pend.buckets}/{MAX_CLAIM_BUCKETS} · caps at 8h</span>
+      </div>
+    </div>
+  );
+}
+
 function ActionCard({ to, title, description, emoji, cta }: { to: string; title: string; description: string; emoji: string; cta: string }) {
   return (
     <Link to={to} className="group rounded-xl border border-border/70 bg-card/80 p-4 hover:border-primary/60 transition-colors">
