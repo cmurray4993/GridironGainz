@@ -8,6 +8,7 @@ import {
 } from "@/lib/game/store";
 import { COIN_PER_FAN_PER_HOUR } from "@/lib/game/types";
 import { lineupOverall, pickTodaysOpponent } from "@/lib/game/sim";
+import { KickoffCountdown } from "@/components/KickoffCountdown";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -59,14 +60,13 @@ function Home() {
       <section className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-[var(--shadow-card)]">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Today's matchup</div>
+            <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Tonight's matchup</div>
             <h2 className="mt-1 font-display text-2xl">Your Squad <span className="text-muted-foreground">vs</span> {opponent.name}</h2>
-          </div>
-          <div className="hidden sm:block text-right">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Kickoff</div>
-            <div className="font-display text-lg">Tonight</div>
+            <div className="mt-1 text-[11px] text-muted-foreground">Managed by a real player · matched at kickoff</div>
           </div>
         </div>
+
+        <div className="mt-4"><KickoffCountdown /></div>
 
         <div className="mt-4 grid grid-cols-3 items-center gap-4">
           <TeamCard label="Your OVR" value={teamOverall} tone="gold" />
@@ -79,7 +79,7 @@ function Home() {
 
         <div className="mt-5 flex flex-wrap gap-2">
           <Link to="/game" className="flex-1 min-w-[140px] rounded-lg bg-[image:var(--gradient-gold)] px-4 py-3 text-center font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95">
-            Play matchup
+            Go to matchup
           </Link>
           <Link to="/lineup" className="rounded-lg border border-border bg-secondary px-4 py-3 text-center text-sm hover:bg-secondary/70">
             Set lineup
