@@ -1,18 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { collectPassive, useGame } from "@/lib/game/store";
+import { useGame } from "@/lib/game/store";
 import { cn } from "@/lib/utils";
 
 export function TopBar() {
   const state = useGame();
   const [, force] = useState(0);
 
-  // Keep coins ticking visibly
+  // Re-render every second so pending-claim UI stays fresh.
   useEffect(() => {
-    const i = setInterval(() => {
-      collectPassive();
-      force((n) => n + 1);
-    }, 1000);
+    const i = setInterval(() => force((n) => n + 1), 1000);
     return () => clearInterval(i);
   }, []);
 
