@@ -64,16 +64,52 @@ export function useGame(): GameState {
   return useSyncExternalStore(subscribe, getState, serverSnapshot);
 }
 
-/* ---------- actions ---------- */
+/* ---------- passive claim system ----------
+ * Coins accumulate in 15-minute buckets from `lastTick` (last claim time).
+ * Cap: 8 hours (32 buckets). Anything beyond the cap is lost on claim so
+ * players are nudged to log back in and collect.
+ */
+export const CLAIM_BUCKET_MS = 15 * 60 * 1000;
+export const MAX_CLAIM_BUCKETS = 32; // 8 hours
 
-export function collectPassive() {
-  const now = Date.now();
-  const hours = (now - state.lastTick) / 3_600_000;
-  const earned = state.fans * COIN_PER_FAN_PER_HOUR * hours;
-  set((s) => ({ ...s, coins: s.coins + earned, lastTick: now }));
+export interface PendingClaim {
+  buckets: number;         // full 15-min buckets ready to claim (0-32)
+  coins: number;           // coins those buckets are worth
+  msToNextBucket: number;  // ms until the next bucket ticks
+  cappedBuckets: boolean;  // true if we're at the 8h cap
+  msSinceClaim: number;
 }
 
-export function tickNow() { collectPassive(); }
+export function pendingClaim(): PendingClaim {
+  const now = Date.now();
+  const elapsed = Math.max(0, now - state.lastTick);
+  const rawBuckets = Math.floor(elapsed / CLAIM_BUCKET_MS);
+  const buckets = Math.min(rawBuckets, MAX_CLAIM_BUCKETS);
+  const coinsPerBucket = state.fans * COIN_PER_FAN_PER_HOUR * 0.25;
+  return {
+    buckets,
+    coins: buckets * coinsPerBucket,
+    msToNextBucket:
+      buckets >= MAX_CLAIM_BUCKETS ? 0 : CLAIM_BUCKET_MS - (elapsed % CLAIM_BUCKET_MS),
+    cappedBuckets: rawBuckets >= MAX_CLAIM_BUCKETS,
+    msSinceClaim: elapsed,
+  };
+}
+
+export function claimCoins(): number {
+  const pend = pendingClaim();
+  if (pend.buckets <= 0) return 0;
+  const now = Date.now();
+  set((s) => ({
+    ...s,
+    coins: s.coins + pend.coins,
+    // Advance by the buckets we claimed so partial progress carries over.
+    // If capped, snap to `now` so the 8h window restarts fresh.
+    lastTick: pend.cappedBuckets ? now : s.lastTick + pend.buckets * CLAIM_BUCKET_MS,
+  }));
+  return pend.coins;
+}
+
 
 export function addPlayers(players: Player[]) {
   set((s) => ({
