@@ -151,7 +151,6 @@ export function discardPlayer(id: string) {
 
 
 export function spendCoins(amount: number): boolean {
-  collectPassive();
   if (state.coins < amount) return false;
   set((s) => ({ ...s, coins: s.coins - amount }));
   return true;
