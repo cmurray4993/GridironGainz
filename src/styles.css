@@ -93,11 +93,6 @@
 
   --gradient-field: radial-gradient(ellipse at top, oklch(0.24 0.05 260) 0%, oklch(0.13 0.02 260) 60%);
   --gradient-gold: linear-gradient(135deg, oklch(0.88 0.15 85), oklch(0.72 0.17 60));
-  --gradient-card-legendary: linear-gradient(135deg, oklch(0.82 0.18 75), oklch(0.62 0.22 30));
-  --gradient-card-epic: linear-gradient(135deg, oklch(0.7 0.22 305), oklch(0.5 0.2 275));
-  --gradient-card-rare: linear-gradient(135deg, oklch(0.72 0.18 250), oklch(0.5 0.18 240));
-  --gradient-card-uncommon: linear-gradient(135deg, oklch(0.78 0.17 145), oklch(0.55 0.16 155));
-  --gradient-card-common: linear-gradient(135deg, oklch(0.55 0.02 260), oklch(0.35 0.02 260));
 
   --shadow-glow: 0 0 40px oklch(0.82 0.16 82 / 0.35);
   --shadow-card: 0 20px 40px -12px oklch(0 0 0 / 0.6);
