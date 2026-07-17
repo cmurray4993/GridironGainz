@@ -16,7 +16,7 @@ type Phase = "ready" | "playing" | "final";
 function GamePage() {
   const { lineup, roster } = useGame();
   const lineupPlayers = useMemo(
-    () => LINEUP_SLOTS.map((pos) => (lineup[pos] ? roster.find((p) => p.id === lineup[pos]) ?? null : null)),
+    () => LINEUP_SLOTS.map((slot) => (lineup[slot] ? roster.find((p) => p.id === lineup[slot]) ?? null : null)),
     [lineup, roster],
   );
   const filled = lineupPlayers.filter(Boolean).length;
