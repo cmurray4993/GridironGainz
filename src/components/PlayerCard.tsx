@@ -241,7 +241,9 @@ const TONE: Record<string, string> = {
   cyan: "bg-[oklch(0.75_0.15_210)]",
   violet: "bg-[oklch(0.7_0.2_300)]",
   pink: "bg-[oklch(0.75_0.18_355)]",
+  emerald: "bg-[oklch(0.75_0.17_160)]",
 };
+
 
 function StatBar({ label, value, tone = "gold" }: { label: string; value: number; tone?: string }) {
   const pct = Math.max(0, Math.min(100, value));
