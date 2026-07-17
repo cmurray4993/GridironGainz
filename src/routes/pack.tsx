@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PlayerCard } from "@/components/PlayerCard";
-import { generatePack, generateProPack } from "@/lib/game/generate";
+import { generateBackyardHeroPack, generatePack, generateProPack } from "@/lib/game/generate";
 import { addPlayers, spendCoins, useGame } from "@/lib/game/store";
-import { PACK_COST, PACK_SIZE, PRO_PACK_COST, type Player } from "@/lib/game/types";
+import { BACKYARD_HERO_PACK_COST, PACK_COST, PACK_SIZE, PRO_PACK_COST, type Player } from "@/lib/game/types";
 
 export const Route = createFileRoute("/pack")({
   component: PackPage,
@@ -11,9 +11,9 @@ export const Route = createFileRoute("/pack")({
 });
 
 type Phase = "idle" | "opening" | "revealed";
-type PackKind = "standard" | "pro";
+type PackKind = "standard" | "pro" | "backyard";
 
-const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; gradient: string; emoji: string }> = {
+const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; gradient: string; emoji: string; tag?: string }> = {
   standard: {
     name: "Standard Pack",
     cost: PACK_COST,
@@ -28,6 +28,14 @@ const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; g
     gradient: "var(--gradient-card-elite)",
     emoji: "💎",
   },
+  backyard: {
+    name: "Backyard Heroes",
+    cost: BACKYARD_HERO_PACK_COST,
+    blurb: "Program I promo. Guaranteed signature pull. Silver+ fillers.",
+    gradient: "var(--gradient-card-elite)",
+    emoji: "🏆",
+    tag: "Promo — Program I",
+  },
 };
 
 function PackPage() {
@@ -41,7 +49,10 @@ function PackPage() {
     const cost = PACK_META[kind].cost;
     if (state.coins < cost) return;
     if (!spendCoins(cost)) return;
-    const players = kind === "pro" ? generateProPack() : generatePack(PACK_SIZE);
+    const players =
+      kind === "pro" ? generateProPack() :
+      kind === "backyard" ? generateBackyardHeroPack() :
+      generatePack(PACK_SIZE);
     setPull(players);
     setRevealed(0);
     setLastKind(kind);
@@ -54,6 +65,7 @@ function PackPage() {
       setPhase("revealed");
     }, 400 + players.length * 500 + 300);
   };
+
 
   const reset = () => { setPull([]); setPhase("idle"); setRevealed(0); };
 
