@@ -230,9 +230,22 @@ export function recordResult(win: boolean) {
 }
 
 export function resetAll() {
-  state = initialState();
+  state = { ...initialState(), userId: currentUserId };
   persist();
   listeners.forEach((l) => l());
+}
+
+export function openStarterPack(players: Player[]) {
+  set((s) => ({
+    ...s,
+    roster: [...s.roster, ...players],
+    fans: s.fans + players.reduce((a, p) => a + p.fanValue, 0),
+    starterPackOpened: true,
+  }));
+}
+
+export function devGrantCoins(amount: number) {
+  set((s) => ({ ...s, coins: s.coins + amount }));
 }
 
 /* No auto-collect: coins must be manually claimed via claimCoins(). */
