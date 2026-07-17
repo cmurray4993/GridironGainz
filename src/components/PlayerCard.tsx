@@ -20,7 +20,6 @@ const rarityLabel: Record<Player["rarity"], string> = {
 
 // Deterministic portrait/logo emoji per player so cards feel unique without art.
 const PORTRAITS = ["🏈", "💪", "⚡", "🔥", "🎯", "🚀", "🛡️", "👑", "🦁", "🐻", "🐺", "🦅"];
-const LOGOS = ["🛡️", "⚔️", "⚡", "🔱", "🏹", "⭐", "🔥", "🐺", "🦅", "🦁", "👑", "💎"];
 
 function hashCode(id: string): number {
   let h = 0;
