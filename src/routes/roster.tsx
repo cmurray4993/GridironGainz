@@ -305,26 +305,27 @@ function SlotCard({
 }
 
 function PickerModal({
-  position, roster, currentIds, onPick, onClose,
+  label, accepts, roster, currentIds, onPick, onClose,
 }: {
-  position: Position; roster: Player[]; currentIds: Set<string>;
+  label: string; accepts: Position[]; roster: Player[]; currentIds: Set<string>;
   onPick: (id: string) => void; onClose: () => void;
 }) {
-  const options = roster.filter((p) => p.position === position).sort((a, b) => b.overall - a.overall);
+  const options = roster.filter((p) => accepts.includes(p.position)).sort((a, b) => b.overall - a.overall);
+  const subtitle = accepts.length > 1 ? accepts.join(" / ") : "";
   return (
     <div className="fixed inset-0 z-40 grid place-items-end sm:place-items-center bg-black/70 backdrop-blur-sm p-3" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-border bg-background shadow-[var(--shadow-card)] flex flex-col animate-float-up">
         <header className="flex items-center justify-between p-4 border-b border-border">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Assign position</div>
-            <div className="font-display text-2xl">{position}</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Assign slot</div>
+            <div className="font-display text-2xl">{label}{subtitle && <span className="ml-2 text-xs text-muted-foreground uppercase tracking-widest">{subtitle}</span>}</div>
           </div>
           <button onClick={onClose} className="rounded-md px-2 py-1 text-sm text-muted-foreground hover:text-foreground">Close</button>
         </header>
         <div className="p-4 overflow-y-auto">
           {options.length === 0 ? (
             <div className="text-center py-10 text-sm text-muted-foreground">
-              No {position} on your roster. Open packs to find one.
+              No eligible {subtitle || label} on your roster. Open packs to find one.
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
