@@ -1,37 +1,29 @@
-## Goals
-1. Only Kickers can kick field goals in game sim.
-2. Add a position-unique attribute to every player card (shown on back, factored lightly into sim).
+Restyle the Offense lineup in `src/routes/roster.tsx` to a Madden-style formation and swap the slot mix. Defense unchanged.
 
-## Changes
+## New offense slots (7 total)
 
-### 1. Kicker-only field goals (`src/lib/game/sim.ts`)
-- Change `driveResult` scoring so a "fg" outcome only happens if the offense has a K on the roster; that K is credited with the FG (touches/fgs), separate from the drive's offensive skill player.
-- If no K is rostered, an FG-range outcome becomes a punt (0 pts) instead.
-- TDs still go to QB/RB/WR/TE/OL as today.
+Replace current offense slots with: `QB, RB, FLEX, WR1, WR2, TE, OL`.
 
-### 2. Position-unique attribute
+- Remove `K` from the offense grid. Kicker stays as its own slot used only by the sim for field goals — surface it on the Defense/Special screen (append `K` to that tab so all 15 slots stay assignable).
+- `FLEX` accepts any RB, WR, or TE, giving players room for strategy (extra WR for a spread look, second RB for power, second TE for heavy sets). Add `slotPosition("FLEX")` returning that union and update the picker/auto-fill filter in `roster.tsx` to allow those three positions. Sim reads `player.position` on the FLEX card, so no engine change needed.
 
-Add a new field `signature: { key: string; label: string; value: number }` on `Player` (computed at generation from overall ± jitter, 40–99). Mapping:
+## Formation layout (matches reference)
 
-| Pos | Attribute |
-|-----|-----------|
-| QB  | Accuracy |
-| RB  | Vision |
-| WR  | Route Running |
-| TE  | Blocking |
-| OL  | Pass Protection |
-| DL  | Pass Rush |
-| LB  | Tackling |
-| DB  | Coverage |
-| K   | Leg Power |
+```
+Front line:   [WR1]   [TE]   [OL]   [WR2]
+Backfield:         [RB]   [QB]   [FLEX]
+```
 
-Files:
-- `src/lib/game/types.ts` — add `POSITION_SIGNATURE` map + `signature` field on `Player`.
-- `src/lib/game/generate.ts` — populate `signature` for random players and for every entry in `SIGNATURES` (signature players get a fixed value so all copies match).
-- `src/components/PlayerCard.tsx` — show the attribute on the back of the card next to STR/SPD/IQ.
-- `src/lib/game/sim.ts` — small bonus: add `signature.value * 0.15` into `playerRating`, and specifically use K's Leg Power to influence FG success.
-- `src/lib/game/store.ts` (if needed) — bump state version so older rosters get the new field backfilled on load (or backfill on read to avoid a reset).
+- Front row: 4 cards evenly spaced.
+- Backfield: 3 cards centered in shotgun, QB in the middle.
+- Compact card size, no stretching; tighten row gaps so it reads as a formation.
+- Darken the field background and add a subtle stadium vignette for the moody arena feel from the reference.
 
-### Notes
-- Backfill (not a reset): on load, any roster player missing `signature` gets one derived from their overall + position, so existing test accounts don't lose cards.
-- Sim tuning stays subtle — position weights (STR/SPD/IQ) remain the dominant factor; signature attr is a small nudge.
+## Migration
+
+In `src/lib/game/store.ts` load(): drop any offense `K` assignment (kicker moves to the K slot on defense/special). Map prior `RB1` → `RB` and `RB2` → `FLEX`. Bump the state version so stale layouts don't wedge the new grid.
+
+## Scope
+
+- Files: `src/lib/game/types.ts` (slot list + `slotPosition` FLEX handling), `src/lib/game/store.ts` (migration + version bump), `src/routes/roster.tsx` (formation cells, picker filter, defense tab adds K), `src/routes/game.tsx` (lineup summary labels).
+- No changes to card art, pack logic, economy, or scoring math.
