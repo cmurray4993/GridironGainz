@@ -38,8 +38,11 @@ function GamePage() {
     return () => clearInterval(i);
   }, []);
 
+  const [testMode, setTestMode] = useState(false);
+  const canStart = filled > 0 && (kick.isLive || testMode);
+
   const start = () => {
-    if (filled === 0 || !kick.isLive) return;
+    if (filled === 0) return;
     const r = simulateGame(lineupPlayers, opponent.overall, opponent.name);
     setResult(r);
     setShown([]);
