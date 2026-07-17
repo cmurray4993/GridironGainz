@@ -280,28 +280,23 @@ function SlotCard({
   return (
     <button
       onClick={onPick}
-      className="group w-full text-left rounded-lg border border-border/70 bg-card/85 p-1 backdrop-blur hover:border-primary/60 transition-colors"
+      className="group mx-auto w-full max-w-[110px] text-left rounded-lg border border-border/70 bg-card/85 p-1 backdrop-blur hover:border-primary/60 transition-colors"
     >
       <div className="mb-1 flex items-center justify-between px-0.5">
         <div className="font-display text-[11px] leading-none">{label}</div>
         {player && (
           <button
             onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            className="text-[10px] leading-none text-muted-foreground hover:text-destructive"
+            className="text-[11px] leading-none text-muted-foreground hover:text-destructive"
           >
             ×
           </button>
         )}
       </div>
       {player ? (
-        <div className="mx-auto w-full" style={{ aspectRatio: "2 / 3" }}>
-          <PlayerCard player={player} compact className="h-full" />
-        </div>
+        <PlayerCard player={player} compact />
       ) : (
-        <div
-          className="grid w-full place-items-center rounded-md border border-dashed border-border/60 text-[10px] text-muted-foreground"
-          style={{ aspectRatio: "2 / 3" }}
-        >
+        <div className="grid h-[150px] w-full place-items-center rounded-md border border-dashed border-border/60 text-[10px] text-muted-foreground">
           + {label}
         </div>
       )}
