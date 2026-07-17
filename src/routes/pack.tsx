@@ -93,7 +93,7 @@ function PackPage() {
 
       {phase === "idle" && (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {(["standard", "pro", "backyard"] as PackKind[]).map((kind) => {
+          {(["standard", "position", "pro", "backyard"] as PackKind[]).map((kind) => {
             const meta = PACK_META[kind];
             const canAfford = state.coins >= meta.cost;
             const isPromo = kind === "backyard";
