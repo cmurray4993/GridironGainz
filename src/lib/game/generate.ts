@@ -197,14 +197,6 @@ export function generatePositionPack(position: Position): Player[] {
   else if (r < 0.06) rarity = "gold";
   else if (r < 0.40) rarity = "silver";
   else rarity = "bronze";
-  // Elite signatures may not exist at every position — fall back to gold.
-  if (rarity === "elite") {
-    const eliteAtPos = SIGNATURES.some((s) => s.rarity === "elite" && s.position === position);
-    // Non-signature elites are allowed too; buildPlayerWithRarity handles both.
-    if (!eliteAtPos) {
-      // still allow generic elite roll
-    }
-  }
   return [buildPlayerWithRarity(rarity, position)];
 }
 
