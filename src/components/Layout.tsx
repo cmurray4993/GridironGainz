@@ -53,8 +53,8 @@ export function BottomNav() {
     { to: "/", label: "Home", icon: "🏠" },
     { to: "/pack", label: "Pack", icon: "🎴" },
     { to: "/roster", label: "Roster", icon: "👥" },
-    { to: "/market", label: "Market", icon: "💰" },
     { to: "/lineup", label: "Lineup", icon: "📋" },
+    { to: "/market", label: "Market", icon: "💰" },
     { to: "/game", label: "Game", icon: "🏈" },
     { to: "/standings", label: "League", icon: "🏆" },
   ] as const;

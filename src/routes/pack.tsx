@@ -100,23 +100,33 @@ function PackPage() {
       {(phase === "opening" || phase === "revealed") && (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-            {pull.map((p, i) => (
-              <div key={p.id} className="min-h-[210px]">
-                {i < revealed ? (
-                  <div className="animate-card-reveal">
-                    <PlayerCard player={p} />
-                  </div>
-                ) : (
-                  <div className="h-full min-h-[200px] rounded-xl border border-primary/30 bg-[image:var(--gradient-card-elite)] relative overflow-hidden">
-                    <div className="absolute inset-2 rounded-lg bg-background/70 grid place-items-center">
-                      <div className="text-4xl opacity-60">🎴</div>
+            {pull.map((p, i) => {
+              const isRare = p.rarity === "gold" || p.rarity === "elite";
+              return (
+                <div key={p.id} className="min-h-[210px] relative">
+                  {i < revealed ? (
+                    <div className={isRare ? "animate-rare-reveal relative" : "animate-card-reveal"}>
+                      {isRare && (
+                        <>
+                          <div className="pointer-events-none absolute -inset-6 rare-rays-layer" />
+                          <div className="pointer-events-none absolute -inset-4 rare-flash-layer" />
+                        </>
+                      )}
+                      <PlayerCard player={p} />
                     </div>
-                    <div className="absolute inset-0 shimmer-overlay" />
-                  </div>
-                )}
-              </div>
-            ))}
+                  ) : (
+                    <div className="h-full min-h-[200px] rounded-xl border border-primary/30 bg-[image:var(--gradient-card-elite)] relative overflow-hidden">
+                      <div className="absolute inset-2 rounded-lg bg-background/70 grid place-items-center">
+                        <div className="text-4xl opacity-60">🎴</div>
+                      </div>
+                      <div className="absolute inset-0 shimmer-overlay" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
+
 
           {phase === "revealed" && (
             <div className="flex flex-wrap gap-2 pt-2">

@@ -1,6 +1,19 @@
 import { useState } from "react";
-import { COIN_PER_FAN_PER_HOUR, playerArchetype, type Player } from "@/lib/game/types";
+import { COIN_PER_FAN_PER_HOUR, playerArchetype, type Player, type Position } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
+import qbArt from "@/assets/art/qb.jpg";
+import rbArt from "@/assets/art/rb.jpg";
+import wrArt from "@/assets/art/wr.jpg";
+import olArt from "@/assets/art/ol.jpg";
+import dlArt from "@/assets/art/dl.jpg";
+import lbArt from "@/assets/art/lb.jpg";
+import dbArt from "@/assets/art/db.jpg";
+import kArt from "@/assets/art/k.jpg";
+
+const POSITION_ART: Record<Position, string> = {
+  QB: qbArt, RB: rbArt, WR: wrArt, OL: olArt,
+  DL: dlArt, LB: lbArt, DB: dbArt, K: kArt,
+};
 
 const rarityBg: Record<Player["rarity"], string> = {
   bronze: "rarity-bronze",
@@ -16,14 +29,6 @@ const rarityLabel: Record<Player["rarity"], string> = {
   elite: "Elite",
 };
 
-// Deterministic portrait/logo emoji per player so cards feel unique without art.
-const PORTRAITS = ["🏈", "💪", "⚡", "🔥", "🎯", "🚀", "🛡️", "👑", "🦁", "🐻", "🐺", "🦅"];
-
-function hashCode(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
 
 export function PlayerCard({
   player,
@@ -49,12 +54,12 @@ export function PlayerCard({
     setFlipped((f) => !f);
   };
 
-  const h = hashCode(player.id);
-  const portrait = PORTRAITS[h % PORTRAITS.length];
+  const art = POSITION_ART[player.position];
   const archetype = playerArchetype(player);
   const fansPerHr = +(player.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(2);
 
   const minHeight = compact ? 170 : 260;
+
 
   return (
     <div
@@ -86,47 +91,54 @@ export function PlayerCard({
             !onClick && "hover:-translate-y-0.5",
           )}
         >
-          <div className="m-[2px] rounded-[calc(var(--radius)-2px)] bg-background/75 backdrop-blur-sm p-3 h-full flex flex-col">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {rarityLabel[player.rarity]}
-                </div>
-                <div className="mt-0.5 font-display text-lg leading-tight truncate">{player.name}</div>
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{player.position}</div>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="font-display text-3xl text-gradient-gold leading-none">{player.overall}</div>
-                <div className="text-[9px] uppercase text-muted-foreground mt-0.5">OVR</div>
-              </div>
+          <div className="m-[2px] rounded-[calc(var(--radius)-2px)] h-full flex flex-col overflow-hidden relative">
+            <div className="absolute inset-0">
+              <img
+                src={art}
+                alt={`${player.position} art`}
+                loading="lazy"
+                className="h-full w-full object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_35%,rgba(0,0,0,0.15)_60%,rgba(0,0,0,0.9)_100%)]" />
             </div>
 
-            {!compact && (
-              <div className="mt-3 flex-1 grid place-items-center">
-                <div
-                  className={cn(
-                    "grid h-20 w-20 place-items-center rounded-full text-4xl border border-white/10",
-                    "bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_60%)]",
-                    rarityBg[player.rarity],
-                  )}
-                >
-                  <span>{portrait}</span>
+            <div className="relative z-10 p-3 flex flex-col h-full">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-widest text-white/80 drop-shadow">
+                    {rarityLabel[player.rarity]}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/70 drop-shadow">{player.position}</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="font-display text-3xl text-gradient-gold leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">{player.overall}</div>
+                  <div className="text-[9px] uppercase text-white/70 mt-0.5">OVR</div>
                 </div>
               </div>
-            )}
 
-            <div className="mt-2 flex items-center justify-end text-[11px]">
-              <span className="text-[oklch(0.7_0.18_25)] font-semibold">❤️ {player.fanValue}</span>
-            </div>
+              <div className="flex-1" />
 
-            {!onClick && (
-              <div className="mt-1 text-center text-[9px] uppercase tracking-widest text-muted-foreground opacity-0 group-hover:opacity-70 transition-opacity hidden sm:block">
-                Tap to flip
+              <div className="mt-2">
+                <div className="font-display text-lg leading-tight truncate text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{player.name}</div>
+                <div className="mt-1 flex items-center justify-between text-[11px]">
+                  <span className="text-white/60 uppercase tracking-widest text-[9px]">{player.position}</span>
+                  <span className="text-[oklch(0.85_0.18_25)] font-semibold drop-shadow">❤️ {player.fanValue}</span>
+                </div>
               </div>
-            )}
+
+              {!onClick && !compact && (
+                <div className="mt-1 text-center text-[9px] uppercase tracking-widest text-white/60 opacity-0 group-hover:opacity-80 transition-opacity hidden sm:block">
+                  Tap to flip
+                </div>
+              )}
+            </div>
           </div>
           <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity shimmer-overlay" />
+          {(player.rarity === "gold" || player.rarity === "elite") && (
+            <div className="pointer-events-none absolute inset-0 gold-shimmer-overlay opacity-40" />
+          )}
         </div>
+
 
         {/* BACK */}
         <div
