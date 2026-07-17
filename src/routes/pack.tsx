@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PlayerCard } from "@/components/PlayerCard";
-import { generateBackyardHeroPack, generatePack, generateProPack } from "@/lib/game/generate";
+import { generateBackyardHeroPack, generatePack, generatePositionPack, generateProPack } from "@/lib/game/generate";
 import { addPlayers, spendCoins, useGame } from "@/lib/game/store";
-import { BACKYARD_HERO_PACK_COST, PACK_COST, PACK_SIZE, PRO_PACK_COST, type Player } from "@/lib/game/types";
+import { BACKYARD_HERO_PACK_COST, PACK_COST, PACK_SIZE, POSITION_PACK_COST, POSITIONS, PRO_PACK_COST, type Player, type Position } from "@/lib/game/types";
 
 export const Route = createFileRoute("/pack")({
   component: PackPage,
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/pack")({
 });
 
 type Phase = "idle" | "opening" | "revealed";
-type PackKind = "standard" | "pro" | "backyard";
+type PackKind = "standard" | "position" | "pro" | "backyard";
 
 const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; gradient: string; emoji: string; tag?: string }> = {
   standard: {
@@ -20,6 +20,14 @@ const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; g
     blurb: "5 players. Elite pulls are rare.",
     gradient: "var(--gradient-card-elite)",
     emoji: "🎴",
+  },
+  position: {
+    name: "Position Pack",
+    cost: POSITION_PACK_COST,
+    blurb: "Pick a position. 1 player. 5% Gold, 1% Elite.",
+    gradient: "var(--gradient-card-elite)",
+    emoji: "🎯",
+    tag: "Targeted",
   },
   pro: {
     name: "Pro Pack",
