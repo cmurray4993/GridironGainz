@@ -145,11 +145,10 @@
   box-shadow: var(--shadow-glow);
 }
 
-@utility rarity-common { background: var(--gradient-card-common); }
-@utility rarity-uncommon { background: var(--gradient-card-uncommon); }
-@utility rarity-rare { background: var(--gradient-card-rare); }
-@utility rarity-epic { background: var(--gradient-card-epic); }
-@utility rarity-legendary { background: var(--gradient-card-legendary); }
+@utility rarity-bronze { background: var(--gradient-card-bronze); }
+@utility rarity-silver { background: var(--gradient-card-silver); }
+@utility rarity-gold { background: var(--gradient-card-gold); }
+@utility rarity-elite { background: var(--gradient-card-elite); }
 
 @keyframes card-flip {
   0% { transform: rotateY(180deg) scale(0.8); opacity: 0; }
