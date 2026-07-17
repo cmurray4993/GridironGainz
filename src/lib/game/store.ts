@@ -98,6 +98,19 @@ function load(uid: string | null): GameState {
     });
 
     merged.fans = merged.roster.reduce((a, p) => a + p.fanValue, 0);
+
+    // Migrate old position-keyed lineup ("WR" -> "WR1", etc.) to slot-id keys.
+    const freshLineup = Object.fromEntries(LINEUP_SLOTS.map((s) => [s, null])) as GameState["lineup"];
+    const legacyMap: Record<string, string> = { WR: "WR1", RB: "RB1", DL: "DL1", LB: "LB1", DB: "DB1" };
+    for (const [k, v] of Object.entries(merged.lineup ?? {})) {
+      if (!v) continue;
+      const target = LINEUP_SLOTS.includes(k) ? k : (legacyMap[k] ?? k);
+      if (LINEUP_SLOTS.includes(target) && freshLineup[target] == null) {
+        freshLineup[target] = v;
+      }
+    }
+    merged.lineup = freshLineup;
+
     return merged;
   } catch {
     return { ...initialState(), userId: uid };
