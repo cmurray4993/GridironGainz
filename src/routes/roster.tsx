@@ -133,9 +133,37 @@ function RosterView() {
   );
 }
 
+type Side = "offense" | "defense";
+
+// Formation cell: grid col-start / col-span / row (1-indexed) inside a 6-col grid
+type Cell = { pos: Position; col: number; span?: number; row: number; label?: string };
+
+// Offense: shotgun spread
+// Row 1 (line): WR left | OL center-left | TE center-right | K far right
+// Row 2 (backfield): RB left | QB center
+const OFFENSE_FORMATION: Cell[] = [
+  { pos: "WR", col: 1, row: 1 },
+  { pos: "OL", col: 3, row: 1 },
+  { pos: "TE", col: 4, row: 1 },
+  { pos: "K",  col: 6, row: 1 },
+  { pos: "RB", col: 2, row: 2 },
+  { pos: "QB", col: 3, span: 2, row: 2 },
+];
+
+// Defense: 3-level look
+// Row 1: DL front (spans middle)
+// Row 2: LB (spans middle)
+// Row 3: DB (deep, spans middle)
+const DEFENSE_FORMATION: Cell[] = [
+  { pos: "DL", col: 3, span: 2, row: 1 },
+  { pos: "LB", col: 3, span: 2, row: 2 },
+  { pos: "DB", col: 3, span: 2, row: 3 },
+];
+
 function LineupView() {
   const { roster, lineup } = useGame();
   const [picking, setPicking] = useState<Position | null>(null);
+  const [side, setSide] = useState<Side>("offense");
 
   const byId = useMemo(() => new Map(roster.map((p) => [p.id, p])), [roster]);
   const currentPlayers = LINEUP_SLOTS.map((pos) => (lineup[pos] ? byId.get(lineup[pos]!) ?? null : null));
@@ -154,6 +182,9 @@ function LineupView() {
 
   const clear = () => LINEUP_SLOTS.forEach((p) => setLineup(p, null));
 
+  const formation = side === "offense" ? OFFENSE_FORMATION : DEFENSE_FORMATION;
+  const rows = Math.max(...formation.map((c) => c.row));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -168,30 +199,33 @@ function LineupView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {LINEUP_SLOTS.map((pos) => {
-          const p = lineup[pos] ? byId.get(lineup[pos]!) : null;
+      <div className="inline-flex rounded-full border border-border bg-card/60 p-1 text-xs">
+        <TabBtn active={side === "offense"} onClick={() => setSide("offense")}>Offense</TabBtn>
+        <TabBtn active={side === "defense"} onClick={() => setSide("defense")}>Defense</TabBtn>
+      </div>
+
+      <FormationField rows={rows}>
+        {formation.map((cell) => {
+          const p = lineup[cell.pos] ? byId.get(lineup[cell.pos]!) : null;
           return (
-            <button
-              key={pos}
-              onClick={() => setPicking(pos)}
-              className="group text-left rounded-xl border border-border/70 bg-card/70 p-2 hover:border-primary/60 transition-colors min-h-[220px]"
+            <div
+              key={cell.pos}
+              style={{
+                gridColumn: `${cell.col} / span ${cell.span ?? 1}`,
+                gridRow: cell.row,
+              }}
+              className="flex justify-center"
             >
-              <div className="mb-2 flex items-center justify-between px-1">
-                <div className="font-display text-lg">{pos}</div>
-                {p && <button onClick={(e) => { e.stopPropagation(); setLineup(pos, null); }} className="text-[10px] uppercase text-muted-foreground hover:text-destructive">Remove</button>}
-              </div>
-              {p ? (
-                <PlayerCard player={p} />
-              ) : (
-                <div className="grid h-[180px] place-items-center rounded-lg border border-dashed border-border/60 text-sm text-muted-foreground">
-                  + Assign {pos}
-                </div>
-              )}
-            </button>
+              <SlotCard
+                pos={cell.pos}
+                player={p ?? null}
+                onPick={() => setPicking(cell.pos)}
+                onRemove={() => setLineup(cell.pos, null)}
+              />
+            </div>
           );
         })}
-      </div>
+      </FormationField>
 
       {picking && (
         <PickerModal
@@ -203,6 +237,60 @@ function LineupView() {
         />
       )}
     </div>
+  );
+}
+
+function FormationField({ rows, children }: { rows: number; children: React.ReactNode }) {
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl border border-emerald-900/60 p-3 sm:p-5"
+      style={{
+        backgroundImage:
+          "repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 40px), linear-gradient(180deg, #0b3d1f 0%, #0a2f18 100%)",
+      }}
+    >
+      {/* yard lines accents */}
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-white/30" />
+      <div
+        className="relative grid gap-2 sm:gap-3"
+        style={{
+          gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+          gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SlotCard({
+  pos, player, onPick, onRemove,
+}: { pos: Position; player: Player | null; onPick: () => void; onRemove: () => void }) {
+  return (
+    <button
+      onClick={onPick}
+      className="group w-full max-w-[160px] text-left rounded-xl border border-border/70 bg-card/85 p-2 backdrop-blur hover:border-primary/60 transition-colors"
+    >
+      <div className="mb-1.5 flex items-center justify-between px-1">
+        <div className="font-display text-sm">{pos}</div>
+        {player && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            className="text-[9px] uppercase text-muted-foreground hover:text-destructive"
+          >
+            ×
+          </button>
+        )}
+      </div>
+      {player ? (
+        <PlayerCard player={player} />
+      ) : (
+        <div className="grid h-[150px] place-items-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
+          + {pos}
+        </div>
+      )}
+    </button>
   );
 }
 
