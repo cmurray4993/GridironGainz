@@ -1,4 +1,4 @@
-export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
+export type Rarity = "bronze" | "silver" | "gold" | "elite";
 
 export type Position = "QB" | "RB" | "WR" | "OL" | "DL" | "LB" | "DB" | "K";
 
