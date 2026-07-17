@@ -1,20 +1,37 @@
-Plan:
+## Goals
+1. Only Kickers can kick field goals in game sim.
+2. Add a position-unique attribute to every player card (shown on back, factored lightly into sim).
 
-1. Stop loading wallet libraries on every page
-- Remove the global Solana wallet wrapper from the root app shell.
-- This keeps Home/auth from importing the Solana stack during startup, so the app can finish loading normally.
+## Changes
 
-2. Make the wallet page client-only
-- Move Phantom/Solflare provider setup and wallet transaction logic behind a hydrated client-only wrapper on `/wallet`.
-- Keep the `/wallet` route itself lightweight so the rest of the app does not crash if wallet libraries have a browser/runtime issue.
+### 1. Kicker-only field goals (`src/lib/game/sim.ts`)
+- Change `driveResult` scoring so a "fg" outcome only happens if the offense has a K on the roster; that K is credited with the FG (touches/fgs), separate from the drive's offensive skill player.
+- If no K is rostered, an FG-range outcome becomes a punt (0 pts) instead.
+- TDs still go to QB/RB/WR/TE/OL as today.
 
-3. Add the needed browser polyfill locally
-- Add a small browser-only `Buffer` setup before the Solana client code runs, because the recent runtime error points to a missing `Buffer.from` path inside the wallet/Solana bundle.
-- Do this only for the wallet feature, not globally across the whole app.
+### 2. Position-unique attribute
 
-4. Add a safe wallet fallback
-- If Phantom/Solflare code still fails to initialize, show a clear wallet-unavailable panel on `/wallet` instead of leaving the entire app stuck on “Loading…”.
+Add a new field `signature: { key: string; label: string; value: number }` on `Player` (computed at generation from overall ± jitter, 40–99). Mapping:
 
-5. Verify
-- Flush the preview and confirm `/` loads past the Loading screen.
-- Open `/wallet` and confirm the wallet UI renders or shows the fallback, without breaking Home/auth.
+| Pos | Attribute |
+|-----|-----------|
+| QB  | Accuracy |
+| RB  | Vision |
+| WR  | Route Running |
+| TE  | Blocking |
+| OL  | Pass Protection |
+| DL  | Pass Rush |
+| LB  | Tackling |
+| DB  | Coverage |
+| K   | Leg Power |
+
+Files:
+- `src/lib/game/types.ts` — add `POSITION_SIGNATURE` map + `signature` field on `Player`.
+- `src/lib/game/generate.ts` — populate `signature` for random players and for every entry in `SIGNATURES` (signature players get a fixed value so all copies match).
+- `src/components/PlayerCard.tsx` — show the attribute on the back of the card next to STR/SPD/IQ.
+- `src/lib/game/sim.ts` — small bonus: add `signature.value * 0.15` into `playerRating`, and specifically use K's Leg Power to influence FG success.
+- `src/lib/game/store.ts` (if needed) — bump state version so older rosters get the new field backfilled on load (or backfill on read to avoid a reset).
+
+### Notes
+- Backfill (not a reset): on load, any roster player missing `signature` gets one derived from their overall + position, so existing test accounts don't lose cards.
+- Sim tuning stays subtle — position weights (STR/SPD/IQ) remain the dominant factor; signature attr is a small nudge.
