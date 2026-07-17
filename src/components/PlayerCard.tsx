@@ -93,14 +93,25 @@ export function PlayerCard({
         >
           <div className="m-[2px] rounded-[calc(var(--radius)-2px)] h-full flex flex-col overflow-hidden relative">
             <div className="absolute inset-0">
-              <img
-                src={art}
-                alt={`${player.position} art`}
-                loading="lazy"
-                className="h-full w-full object-cover object-center"
-              />
+              {player.rarity === "gold" || player.rarity === "elite" ? (
+                <div className="h-full w-full bg-[radial-gradient(ellipse_at_center,oklch(0.28_0.06_80)_0%,oklch(0.14_0.02_260)_70%,oklch(0.08_0.01_260)_100%)] flex items-center justify-center">
+                  <div className="text-center px-4">
+                    <div className="font-display text-5xl text-gradient-gold opacity-90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{player.position}</div>
+                    <div className="mt-2 text-[9px] uppercase tracking-widest text-white/50">Signature art</div>
+                    <div className="text-[9px] uppercase tracking-widest text-white/40">Coming soon</div>
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={art}
+                  alt={`${player.position} art`}
+                  loading="lazy"
+                  className="h-full w-full object-cover object-center"
+                />
+              )}
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_35%,rgba(0,0,0,0.15)_60%,rgba(0,0,0,0.9)_100%)]" />
             </div>
+
 
             <div className="relative z-10 p-3 flex flex-col h-full">
               <div className="flex items-start justify-between gap-2">
