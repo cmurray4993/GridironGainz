@@ -1,4 +1,12 @@
-import { POSITIONS, RARITY_META, computeFanValue, type Player, type Position, type Rarity } from "./types";
+import { POSITION_SIGNATURE, POSITIONS, RARITY_META, computeFanValue, type Player, type PlayerSignatureAttr, type Position, type Rarity } from "./types";
+
+export function makeSignatureAttr(position: Position, overall: number, fixed?: number): PlayerSignatureAttr {
+  const meta = POSITION_SIGNATURE[position];
+  const jitter = fixed != null ? 0 : Math.floor(Math.random() * 17) - 8;
+  const value = Math.max(40, Math.min(99, (fixed ?? overall) + jitter));
+  return { key: meta.key, label: meta.label, value };
+}
+
 
 const CANONICAL_NAMES: Record<Rarity, Record<Position, string>> = {
   bronze: {
