@@ -1,4 +1,4 @@
-Update the `PlayerCard` component so the front face only shows the Fan Value indicator (❤️ {player.fanValue}) and no longer shows the popularity badge (⭐ Pop {player.popularity}). Keep the Popularity stat bar on the back of the card unchanged.
+Update the `PlayerCard` component so the front face no longer displays the small deterministic placeholder team logo in the bottom-right corner of the portrait. Keep the portrait circle and all other front/back content unchanged.
 
 **Technical detail:**
-- In `src/components/PlayerCard.tsx`, remove the `<span>` containing `⭐ Pop {player.popularity}` inside the front-face bottom row. Restructure the remaining row so the Fan Value indicator stays centered or right-aligned as appropriate, and remove any layout classes that were only needed for the two-element split.
+- In `src/components/PlayerCard.tsx`, remove the `<div>` with absolute positioning that renders the `{logo}` emoji inside the front face. Remove the related `LOGOS` array and `logo` variable if they are no longer used elsewhere.
