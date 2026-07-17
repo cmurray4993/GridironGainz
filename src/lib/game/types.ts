@@ -14,8 +14,29 @@ export interface Player {
   strength: number;
   speed: number;
   iq: number;
+  popularity: number;
   fanValue: number;
   rarity: Rarity;
+}
+
+export function computeFanValue(overall: number, popularity: number): number {
+  return Math.round(overall * 0.75 + popularity * 0.25);
+}
+
+export type Archetype = "Speedster" | "Bruiser" | "Genius" | "Balanced";
+
+export function playerArchetype(p: Pick<Player, "strength" | "speed" | "iq">): Archetype {
+  const { strength: s, speed: sp, iq: iq } = p;
+  const max = Math.max(s, sp, iq);
+  const min = Math.min(s, sp, iq);
+  if (max - min <= 6) return "Balanced";
+  if (max === sp) return "Speedster";
+  if (max === s) return "Bruiser";
+  return "Genius";
+}
+
+export function fansPerHour(p: Player): number {
+  return +(p.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(3);
 }
 
 export interface GameState {

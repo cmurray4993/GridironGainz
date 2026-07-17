@@ -184,3 +184,26 @@
   background-size: 200% 100%;
   animation: shimmer 2.5s infinite;
 }
+
+@utility card-flip-scene {
+  perspective: 1200px;
+}
+@utility card-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-style: preserve-3d;
+}
+@utility card-flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+@utility card-flip-back {
+  transform: rotateY(180deg);
+}
+@utility card-flipped {
+  transform: rotateY(180deg);
+}

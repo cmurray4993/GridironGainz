@@ -1,4 +1,4 @@
-import { POSITIONS, RARITY_META, type Player, type Position, type Rarity } from "./types";
+import { POSITIONS, RARITY_META, computeFanValue, type Player, type Position, type Rarity } from "./types";
 
 const FIRST = ["Jax","Cade","Rio","Deshaun","Tariq","Marcus","Kai","Elijah","Zion","Trey","Damon","Rome","Beau","Ace","Nico","Kobe","Silas","Odell","Jaxon","Malik","Deon","Reese","Bryce","Tate","Cash","Onyx","Rex","Blaze","Sterling","Quinton","Amari","Roman","Miles","Kingsley","Titus","Emmitt","Ronan","Dax","Cruz","Wyatt"];
 const LAST = ["Steele","Hawke","Vega","Bishop","Cross","Storm","Rivers","Knox","Reign","Cole","Blackwood","Vaughn","Kingsley","Ashford","Lang","Monroe","Holt","Sinclair","Rhodes","Sable","Vance","Kane","Fox","North","Pierce","Wilder","Locke","Sable","Marsh","Beckett","Ellis","Grady","Slater","Thorn","Cavanaugh","Rooks","Duval","Larkin","Whit","Ozuna"];
@@ -31,7 +31,12 @@ export function generatePlayer(forcedPosition?: Position): Player {
   const speed = clamp(base + jitter());
   const iq = clamp(base + jitter());
 
-  const fanValue = randInt(meta.fanMin, meta.fanMax);
+  const popularity = clamp(
+    Math.round(overall * 0.6 + randInt(meta.fanMin, meta.fanMax) * 0.3 + randInt(-8, 12)),
+    30,
+    99,
+  );
+  const fanValue = computeFanValue(overall, popularity);
 
   return {
     id: crypto.randomUUID(),
@@ -41,6 +46,7 @@ export function generatePlayer(forcedPosition?: Position): Player {
     strength,
     speed,
     iq,
+    popularity,
     fanValue,
     rarity,
   };
