@@ -176,3 +176,36 @@ export function generateProPack(): Player[] {
     generatePlayerAtLeast("gold"),
   ];
 }
+
+// Backyard Heroes Promo — Program I
+// Signature cards live on specific rarity+position rolls. Force those
+// rolls to guarantee the pull lands on a signature name.
+type SigSpec = { rarity: Rarity; position: Position };
+const BACKYARD_HERO_SIGS: SigSpec[] = [
+  { rarity: "gold", position: "WR" }, // Busta "Fly" Jones OR Creighton Murray
+  { rarity: "gold", position: "RB" }, // Gringo Guth
+  { rarity: "gold", position: "DL" }, // Sleepy Cringle
+  { rarity: "gold", position: "DB" }, // Talon "7 Iron" Reynolds
+  { rarity: "gold", position: "LB" }, // Ty "Teethman" Smith
+  { rarity: "elite", position: "OL" }, // Gary Gainz (86 OVR)
+];
+
+function generateSignaturePromo(): Player {
+  const spec = rand(BACKYARD_HERO_SIGS);
+  return buildPlayerWithRarity(spec.rarity, spec.position);
+}
+
+export function generateBackyardHeroPack(): Player[] {
+  // 5 cards. Guarantees 1 signature promo. 40% chance for a second signature.
+  // Filler cards are Silver+ so the pack feels premium.
+  const players: Player[] = [generateSignaturePromo()];
+  if (Math.random() < 0.4) players.push(generateSignaturePromo());
+  while (players.length < 5) players.push(generatePlayerAtLeast("silver"));
+  // Shuffle so the signature isn't always first.
+  for (let i = players.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [players[i], players[j]] = [players[j], players[i]];
+  }
+  return players;
+}
+

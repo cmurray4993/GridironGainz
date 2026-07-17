@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PlayerCard } from "@/components/PlayerCard";
-import { generatePack, generateProPack } from "@/lib/game/generate";
+import { generateBackyardHeroPack, generatePack, generateProPack } from "@/lib/game/generate";
 import { addPlayers, spendCoins, useGame } from "@/lib/game/store";
-import { PACK_COST, PACK_SIZE, PRO_PACK_COST, type Player } from "@/lib/game/types";
+import { BACKYARD_HERO_PACK_COST, PACK_COST, PACK_SIZE, PRO_PACK_COST, type Player } from "@/lib/game/types";
 
 export const Route = createFileRoute("/pack")({
   component: PackPage,
@@ -11,9 +11,9 @@ export const Route = createFileRoute("/pack")({
 });
 
 type Phase = "idle" | "opening" | "revealed";
-type PackKind = "standard" | "pro";
+type PackKind = "standard" | "pro" | "backyard";
 
-const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; gradient: string; emoji: string }> = {
+const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; gradient: string; emoji: string; tag?: string }> = {
   standard: {
     name: "Standard Pack",
     cost: PACK_COST,
@@ -28,6 +28,14 @@ const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; g
     gradient: "var(--gradient-card-elite)",
     emoji: "💎",
   },
+  backyard: {
+    name: "Backyard Heroes",
+    cost: BACKYARD_HERO_PACK_COST,
+    blurb: "Program I promo. Guaranteed signature pull. Silver+ fillers.",
+    gradient: "var(--gradient-card-elite)",
+    emoji: "🏆",
+    tag: "Promo — Program I",
+  },
 };
 
 function PackPage() {
@@ -41,7 +49,10 @@ function PackPage() {
     const cost = PACK_META[kind].cost;
     if (state.coins < cost) return;
     if (!spendCoins(cost)) return;
-    const players = kind === "pro" ? generateProPack() : generatePack(PACK_SIZE);
+    const players =
+      kind === "pro" ? generateProPack() :
+      kind === "backyard" ? generateBackyardHeroPack() :
+      generatePack(PACK_SIZE);
     setPull(players);
     setRevealed(0);
     setLastKind(kind);
@@ -55,6 +66,7 @@ function PackPage() {
     }, 400 + players.length * 500 + 300);
   };
 
+
   const reset = () => { setPull([]); setPhase("idle"); setRevealed(0); };
 
   return (
@@ -66,10 +78,11 @@ function PackPage() {
       </header>
 
       {phase === "idle" && (
-        <div className="grid gap-5 sm:grid-cols-2">
-          {(["standard", "pro"] as PackKind[]).map((kind) => {
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {(["standard", "pro", "backyard"] as PackKind[]).map((kind) => {
             const meta = PACK_META[kind];
             const canAfford = state.coins >= meta.cost;
+            const isPromo = kind === "backyard";
             return (
               <button
                 key={kind}
@@ -77,13 +90,18 @@ function PackPage() {
                 disabled={!canAfford}
                 className="group relative text-left"
               >
-                <div className={`relative h-72 w-full overflow-hidden rounded-2xl border ${kind === "pro" ? "border-primary/60" : "border-primary/40"} bg-[image:var(--gradient-card-elite)] shadow-[var(--shadow-card)] transition-transform ${canAfford ? "group-hover:-translate-y-1 animate-pulse-glow" : "opacity-60"}`}>
+                <div className={`relative h-72 w-full overflow-hidden rounded-2xl border ${isPromo ? "border-primary" : kind === "pro" ? "border-primary/60" : "border-primary/40"} bg-[image:var(--gradient-card-elite)] shadow-[var(--shadow-card)] transition-transform ${canAfford ? "group-hover:-translate-y-1 animate-pulse-glow" : "opacity-60"}`}>
                   <div className="absolute inset-0 shimmer-overlay opacity-60" />
+                  {isPromo && (
+                    <div className="absolute left-2 top-2 z-10 rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary-foreground">
+                      Limited
+                    </div>
+                  )}
                   <div className="absolute inset-2 rounded-xl bg-background/70 p-4 flex flex-col items-center justify-center text-center">
                     <div className="text-[10px] uppercase tracking-[0.4em] text-primary/80">
-                      {kind === "pro" ? "Premium" : "Fourth & Fortune"}
+                      {meta.tag ?? (kind === "pro" ? "Premium" : "Fourth & Fortune")}
                     </div>
-                    <div className="mt-2 font-display text-4xl text-gradient-gold">{meta.name}</div>
+                    <div className="mt-2 font-display text-3xl text-gradient-gold">{meta.name}</div>
                     <div className="mt-3 text-5xl">{meta.emoji}</div>
                     <div className="mt-3 text-xs text-muted-foreground px-3">{meta.blurb}</div>
                   </div>
@@ -96,6 +114,7 @@ function PackPage() {
           })}
         </div>
       )}
+
 
       {(phase === "opening" || phase === "revealed") && (
         <div className="space-y-4">
