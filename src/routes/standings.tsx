@@ -129,7 +129,7 @@ function StandingsPage() {
         <div className="flex items-baseline justify-between">
           <h2 className="font-display text-xl">Standings</h2>
           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Top 8 make playoffs · Bottom 2 relegate
+            Top {PROMOTE_COUNT} promote · Bottom {RELEGATE_COUNT} relegate
           </div>
         </div>
         <div className="mt-3 overflow-hidden rounded-lg border border-border/60">
@@ -143,33 +143,38 @@ function StandingsPage() {
                 <th className="py-2 px-2 text-right hidden sm:table-cell">PF</th>
                 <th className="py-2 px-2 text-right hidden sm:table-cell">PA</th>
                 <th className="py-2 px-2 text-right">Diff</th>
+                <th className="py-2 px-2 text-right">SOL</th>
               </tr>
             </thead>
             <tbody>
               {standings.map((row, i) => {
-                const playoff = i < 8;
-                const relegate = i >= standings.length - 2;
+                const pos = i + 1;
+                const promote = pos <= PROMOTE_COUNT;
+                const relegate = pos > standings.length - RELEGATE_COUNT;
+                const prize = solPrizeFor(tier, pos);
                 return (
                   <tr
                     key={row.id}
                     className={cn(
                       "border-t border-border/50",
                       row.isYou && "bg-primary/10",
-                      !row.isYou && playoff && "bg-emerald-500/5",
+                      !row.isYou && promote && "bg-emerald-500/5",
                       !row.isYou && relegate && "bg-red-500/5",
                     )}
                   >
                     <td className="py-2 px-2 text-muted-foreground tabular-nums">
                       <span className={cn(
                         "inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold",
-                        playoff && "bg-emerald-500/20 text-emerald-300",
+                        promote && "bg-emerald-500/20 text-emerald-300",
                         relegate && "bg-red-500/20 text-red-300",
-                        !playoff && !relegate && "text-muted-foreground",
-                      )}>{i + 1}</span>
+                        !promote && !relegate && "text-muted-foreground",
+                      )}>{pos}</span>
                     </td>
                     <td className="py-2 px-2">
                       <span className={cn("font-semibold", row.isYou && "text-primary")}>{row.name}</span>
-                      {i === 0 && <span className="ml-2 text-[10px] uppercase tracking-widest text-primary">#1 Seed</span>}
+                      {pos === 1 && <span className="ml-2 text-[10px] uppercase tracking-widest text-primary">Champion</span>}
+                      {promote && pos !== 1 && <span className="ml-2 text-[10px] uppercase tracking-widest text-emerald-300">↑ Promote</span>}
+                      {relegate && <span className="ml-2 text-[10px] uppercase tracking-widest text-red-300">↓ Drop</span>}
                     </td>
                     <td className="py-2 px-2 text-right tabular-nums">{row.wins}</td>
                     <td className="py-2 px-2 text-right tabular-nums">{row.losses}</td>
@@ -177,6 +182,10 @@ function StandingsPage() {
                     <td className="py-2 px-2 text-right tabular-nums hidden sm:table-cell">{row.pointsAgainst}</td>
                     <td className={cn("py-2 px-2 text-right tabular-nums font-semibold", row.pointsFor - row.pointsAgainst > 0 ? "text-emerald-400" : row.pointsFor - row.pointsAgainst < 0 ? "text-red-400" : "text-muted-foreground")}>
                       {row.pointsFor - row.pointsAgainst > 0 ? "+" : ""}{row.pointsFor - row.pointsAgainst}
+                    </td>
+                    <td className="py-2 px-2 text-right tabular-nums text-primary/90">
+                      ◎ {formatSol(prize.sol)}
+                      <div className="text-[9px] text-muted-foreground">{prize.pct.toFixed(2)}%</div>
                     </td>
                   </tr>
                 );
@@ -186,7 +195,7 @@ function StandingsPage() {
         </div>
         {yourIdx >= 0 && (
           <div className="mt-3 text-[11px] text-muted-foreground">
-            You're sitting <span className="text-foreground font-semibold">#{yourIdx + 1}</span> of {standings.length}. {yourIdx < 8 ? "In playoff position." : yourIdx >= standings.length - 2 ? "Watch out — relegation zone." : `${8 - yourIdx > 0 ? `${yourIdx - 7} spots out of a playoff berth` : ""}`}
+            You're sitting <span className="text-foreground font-semibold">#{yourIdx + 1}</span> of {standings.length}. {yourIdx < PROMOTE_COUNT ? "In promotion zone." : yourIdx >= standings.length - RELEGATE_COUNT ? "Watch out — relegation zone." : `${yourIdx - (PROMOTE_COUNT - 1)} spot${yourIdx - (PROMOTE_COUNT - 1) === 1 ? "" : "s"} out of promotion.`}
           </div>
         )}
       </section>
