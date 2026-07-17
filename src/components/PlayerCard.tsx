@@ -65,7 +65,9 @@ export function PlayerCard({
     setFlipped((f) => !f);
   };
 
-  const art = POSITION_ART[player.position];
+  const sigArt = SIGNATURE_ART[player.name];
+  const art = sigArt ?? POSITION_ART[player.position];
+  const hasSignatureArt = Boolean(sigArt);
   const archetype = playerArchetype(player);
   const fansPerHr = +(player.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(2);
 
