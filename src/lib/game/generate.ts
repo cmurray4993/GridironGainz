@@ -140,14 +140,11 @@ function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Playe
 
   // Elite signature: Gary Gainz, the 86 OVR OL
   if (rarity === "elite" && position === "OL") {
-    name = 'Gary "Gainz" Halberstadt';
+    name = 'Gary Gainz';
     overall = 86;
     strength = clamp(86 + randInt(4, 8));
     iq = clamp(86 + randInt(-2, 4));
     speed = clamp(86 - randInt(8, 14));
-  }
-  if (rarity === "elite" && position === "OL") {
-    name = 'Gary Gainz';
   }
 
   const popularity = clamp(
