@@ -169,6 +169,23 @@ function GamePage() {
           )}
         </section>
       )}
+
+      {phase === "final" && result && (
+        <section className="rounded-xl border border-border/70 bg-card/70 p-4 space-y-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Box score</div>
+          <div className="grid grid-cols-2 gap-3">
+            <TeamStatCard label="Your squad" score={result.homeScore} stats={result.homeStats} accent="text-gradient-gold" />
+            <TeamStatCard label={result.opponentName} score={result.awayScore} stats={result.awayStats} accent="text-[oklch(0.72_0.2_28)]" />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <PlayerStatTable title="Your players" rows={result.homePlayers} />
+            <PlayerStatTable title={`${result.opponentName}`} rows={result.awayPlayers} />
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Team OVR {result.homeOverall} vs {result.opponentOverall} · Speed→Strength→IQ→Speed matchups + variance drove the outcome.
+          </div>
+        </section>
+      )}
     </div>
   );
 }
