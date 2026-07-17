@@ -31,7 +31,7 @@ const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; g
   backyard: {
     name: "Backyard Heroes",
     cost: BACKYARD_HERO_PACK_COST,
-    blurb: "Program I promo. Guaranteed signature pull. Silver+ fillers.",
+    blurb: "1 Bronze+, 3 Silver+, 1 Gold+. High chance at a signature promo.",
     gradient: "var(--gradient-card-elite)",
     emoji: "🏆",
     tag: "Promo — Program I",
