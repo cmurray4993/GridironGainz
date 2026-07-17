@@ -30,6 +30,13 @@ export function TopBar() {
           <Stat icon="🪙" value={fmt(state.coins)} tone="gold" />
           <Stat icon="🎟️" value={fmt(state.fans)} tone="fan" />
           <Link
+            to="/wallet"
+            title="Wallet"
+            className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            ◎ {(state.sol ?? 0).toFixed(2)}
+          </Link>
+          <Link
             to="/settings"
             title="Settings"
             className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
@@ -38,6 +45,7 @@ export function TopBar() {
           </Link>
           <SignOutButton />
         </div>
+
       </div>
     </header>
   );

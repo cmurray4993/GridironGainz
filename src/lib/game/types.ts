@@ -51,7 +51,10 @@ export interface GameState {
   starterPackOpened?: boolean;
   userId?: string | null;
   teamName?: string;
+  sol?: number;
+  walletAddress?: string;
 }
+
 
 // How much each position leans on strength / speed / iq (weights sum ~1)
 export const POSITION_WEIGHTS: Record<Position, { str: number; spd: number; iq: number }> = {
