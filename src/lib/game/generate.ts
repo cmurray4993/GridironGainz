@@ -105,18 +105,25 @@ interface SignatureSpec {
   speed: number;
   iq: number;
   popularity: number;
+  /** In the Backyard Heroes promo pool. */
+  backyard?: boolean;
 }
 
 export const SIGNATURES: SignatureSpec[] = [
-  { name: 'Busta "Fly" Jones',        rarity: "gold",  position: "WR", overall: 82, strength: 78, speed: 94, iq: 68, popularity: 88 },
-  { name: 'Josiah "The Messiah" Ball',rarity: "gold",  position: "WR", overall: 84, strength: 80, speed: 90, iq: 86, popularity: 92 },
-  { name: 'Creighton Murray',         rarity: "gold",  position: "TE", overall: 83, strength: 88, speed: 80, iq: 88, popularity: 84 },
-  { name: 'Gringo Guth',              rarity: "gold",  position: "RB", overall: 82, strength: 89, speed: 85, iq: 74, popularity: 82 },
-  { name: 'Sleepy Cringle',           rarity: "gold",  position: "DL", overall: 82, strength: 92, speed: 74, iq: 82, popularity: 80 },
-  { name: 'Talon "7 Iron" Reynolds',  rarity: "gold",  position: "DB", overall: 83, strength: 76, speed: 92, iq: 88, popularity: 81 },
-  { name: 'Ty "Teethman" Smith',      rarity: "gold",  position: "LB", overall: 82, strength: 90, speed: 82, iq: 85, popularity: 80 },
-  { name: 'Josiah "8 Man" Mettling',  rarity: "gold",  position: "LB", overall: 84, strength: 92, speed: 84, iq: 86, popularity: 83 },
-  { name: 'Gary Gainz',               rarity: "elite", position: "OL", overall: 86, strength: 94, speed: 74, iq: 88, popularity: 90 },
+  { name: 'Busta "Fly" Jones',        rarity: "gold",  position: "WR", overall: 82, strength: 78, speed: 94, iq: 68, popularity: 88, backyard: true },
+  { name: 'Josiah "The Messiah" Ball',rarity: "gold",  position: "WR", overall: 84, strength: 80, speed: 90, iq: 86, popularity: 92, backyard: true },
+  { name: 'Creighton Murray',         rarity: "gold",  position: "QB", overall: 83, strength: 82, speed: 74, iq: 90, popularity: 84, backyard: true },
+  { name: 'Gringo Guth',              rarity: "gold",  position: "RB", overall: 82, strength: 89, speed: 85, iq: 74, popularity: 82, backyard: true },
+  { name: 'Sleepy Cringle',           rarity: "gold",  position: "DL", overall: 82, strength: 92, speed: 74, iq: 82, popularity: 80, backyard: true },
+  { name: 'Talon "7 Iron" Reynolds',  rarity: "gold",  position: "DB", overall: 83, strength: 76, speed: 92, iq: 88, popularity: 81, backyard: true },
+  { name: 'Ty "Teethman" Smith',      rarity: "gold",  position: "LB", overall: 82, strength: 90, speed: 82, iq: 85, popularity: 80, backyard: true },
+  { name: 'Josiah "8 Man" Mettling',  rarity: "gold",  position: "LB", overall: 84, strength: 92, speed: 84, iq: 86, popularity: 83, backyard: true },
+  { name: 'Breck "Coach Razor" Guthrie', rarity: "gold", position: "RB", overall: 83, strength: 86, speed: 88, iq: 82, popularity: 85, backyard: true },
+  { name: 'Gary Gainz',               rarity: "elite", position: "OL", overall: 86, strength: 94, speed: 74, iq: 88, popularity: 90, backyard: true },
+
+  // Non-backyard signatures — obtainable via regular Gold/Elite rolls.
+  { name: 'Mason "Bait Man" Baker',   rarity: "gold",  position: "QB", overall: 83, strength: 76, speed: 78, iq: 92, popularity: 82 },
+  { name: 'Carter "Combine" Carter',  rarity: "gold",  position: "OL", overall: 82, strength: 93, speed: 66, iq: 80, popularity: 78 },
 ];
 
 function buildFromSignature(sig: SignatureSpec): Player {
@@ -195,7 +202,7 @@ export function generateBackyardHeroPack(): Player[] {
   const players: Player[] = floors.map((floor) => {
     if (Math.random() < SIG_CHANCE) {
       const minIdx = RARITY_ORDER.indexOf(floor);
-      const eligible = SIGNATURES.filter((s) => RARITY_ORDER.indexOf(s.rarity) >= minIdx);
+      const eligible = SIGNATURES.filter((s) => s.backyard && RARITY_ORDER.indexOf(s.rarity) >= minIdx);
       if (eligible.length) return buildFromSignature(rand(eligible));
     }
     return generatePlayerAtLeast(floor);

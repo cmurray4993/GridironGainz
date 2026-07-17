@@ -19,6 +19,9 @@ import sigGringo from "@/assets/art/sig-gringo-guth.jpg";
 import sigSleepy from "@/assets/art/sig-sleepy-cringle.jpg";
 import sigMettling from "@/assets/art/sig-josiah-mettling.jpg";
 import sigBall from "@/assets/art/sig-josiah-ball.jpg";
+import sigBreck from "@/assets/art/sig-breck-guthrie.jpg";
+import sigCarter from "@/assets/art/sig-carter-carter.jpg";
+import sigMason from "@/assets/art/sig-mason-baker.jpg";
 
 const POSITION_ART: Record<Position, string> = {
   QB: qbArt, RB: rbArt, WR: wrArt, TE: teArt, OL: olArt,
@@ -35,6 +38,9 @@ const SIGNATURE_ART: Record<string, string> = {
   'Sleepy Cringle': sigSleepy,
   'Josiah "8 Man" Mettling': sigMettling,
   'Josiah "The Messiah" Ball': sigBall,
+  'Breck "Coach Razor" Guthrie': sigBreck,
+  'Carter "Combine" Carter': sigCarter,
+  'Mason "Bait Man" Baker': sigMason,
 };
 
 const rarityBg: Record<Player["rarity"], string> = {
@@ -131,6 +137,11 @@ export function PlayerCard({
                     <div className="mt-2 text-[9px] uppercase tracking-widest text-white/50">Signature art</div>
                     <div className="text-[9px] uppercase tracking-widest text-white/40">Coming soon</div>
                   </div>
+                </div>
+              )}
+              {player.name === 'Breck "Coach Razor" Guthrie' && (
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-12 rounded-sm border border-[oklch(0.85_0.17_25)]/80 bg-black/55 px-1.5 py-0.5 font-display text-[9px] uppercase tracking-[0.25em] text-[oklch(0.9_0.17_25)] shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+                  Coach Razor
                 </div>
               )}
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_35%,rgba(0,0,0,0.15)_60%,rgba(0,0,0,0.9)_100%)]" />
