@@ -211,8 +211,12 @@ export function PlayerCard({
               <StatBar label="Strength" value={player.strength} tone="red" />
               <StatBar label="Speed" value={player.speed} tone="cyan" />
               <StatBar label="IQ" value={player.iq} tone="violet" />
+              {player.signature && (
+                <StatBar label={player.signature.label} value={player.signature.value} tone="emerald" />
+              )}
               <StatBar label="Popularity" value={player.popularity} tone="pink" />
             </div>
+
 
             <div className="mt-auto grid grid-cols-2 gap-2 pt-1 text-[10px]">
               <div className="rounded-md bg-white/5 px-2 py-1">
