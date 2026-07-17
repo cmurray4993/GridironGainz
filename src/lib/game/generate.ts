@@ -90,9 +90,9 @@ export function generatePlayerAtLeast(minRarity: Rarity): Player {
   return buildPlayerWithRarity(minRarity);
 }
 
-function buildPlayerWithRarity(rarity: Rarity): Player {
+function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Player {
   const meta = RARITY_META[rarity];
-  const position = rand(POSITIONS);
+  const position = forcedPosition ?? rand(POSITIONS);
   const overall = randInt(meta.overallMin, meta.overallMax);
   const jitter = () => randInt(-8, 8);
   let strength = clamp(overall + jitter());
