@@ -226,14 +226,14 @@ export function spendCoins(amount: number): boolean {
   return true;
 }
 
-export function setLineup(position: Position, playerId: string | null) {
+export function setLineup(slot: string, playerId: string | null) {
   set((s) => {
     const next = { ...s.lineup };
     // clear any slot currently holding this player
     if (playerId) {
       for (const p of LINEUP_SLOTS) if (next[p] === playerId) next[p] = null;
     }
-    next[position] = playerId;
+    next[slot] = playerId;
     return { ...s, lineup: next };
   });
 }
