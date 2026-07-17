@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as StandingsRouteImport } from './routes/standings'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RosterRouteImport } from './routes/roster'
 import { Route as PackRouteImport } from './routes/pack'
 import { Route as MarketRouteImport } from './routes/market'
@@ -27,6 +28,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
 const StandingsRoute = StandingsRouteImport.update({
   id: '/standings',
   path: '/standings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RosterRoute = RosterRouteImport.update({
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/market': typeof MarketRoute
   '/pack': typeof PackRoute
   '/roster': typeof RosterRoute
+  '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
   '/welcome': typeof WelcomeRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/market': typeof MarketRoute
   '/pack': typeof PackRoute
   '/roster': typeof RosterRoute
+  '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
   '/welcome': typeof WelcomeRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/market': typeof MarketRoute
   '/pack': typeof PackRoute
   '/roster': typeof RosterRoute
+  '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
   '/welcome': typeof WelcomeRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/market'
     | '/pack'
     | '/roster'
+    | '/settings'
     | '/standings'
     | '/welcome'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/market'
     | '/pack'
     | '/roster'
+    | '/settings'
     | '/standings'
     | '/welcome'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/market'
     | '/pack'
     | '/roster'
+    | '/settings'
     | '/standings'
     | '/welcome'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   MarketRoute: typeof MarketRoute
   PackRoute: typeof PackRoute
   RosterRoute: typeof RosterRoute
+  SettingsRoute: typeof SettingsRoute
   StandingsRoute: typeof StandingsRoute
   WelcomeRoute: typeof WelcomeRoute
 }
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/standings'
       fullPath: '/standings'
       preLoaderRoute: typeof StandingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/roster': {
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketRoute: MarketRoute,
   PackRoute: PackRoute,
   RosterRoute: RosterRoute,
+  SettingsRoute: SettingsRoute,
   StandingsRoute: StandingsRoute,
   WelcomeRoute: WelcomeRoute,
 }
