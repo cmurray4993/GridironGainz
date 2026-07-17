@@ -63,12 +63,21 @@ export const POSITION_WEIGHTS: Record<Position, { str: number; spd: number; iq: 
 };
 
 export const RARITY_META: Record<Rarity, { label: string; weight: number; overallMin: number; overallMax: number; fanMin: number; fanMax: number }> = {
-  common:    { label: "Common",    weight: 60, overallMin: 55, overallMax: 70, fanMin: 5,   fanMax: 20 },
-  uncommon:  { label: "Uncommon",  weight: 25, overallMin: 65, overallMax: 78, fanMin: 15,  fanMax: 45 },
-  rare:      { label: "Rare",      weight: 10, overallMin: 74, overallMax: 85, fanMin: 40,  fanMax: 90 },
-  epic:      { label: "Epic",      weight: 4,  overallMin: 82, overallMax: 92, fanMin: 80,  fanMax: 180 },
-  legendary: { label: "Legendary", weight: 1,  overallMin: 90, overallMax: 99, fanMin: 200, fanMax: 500 },
+  bronze: { label: "Bronze", weight: 60, overallMin: 60, overallMax: 69, fanMin: 5,  fanMax: 25 },
+  silver: { label: "Silver", weight: 28, overallMin: 70, overallMax: 79, fanMin: 20, fanMax: 60 },
+  gold:   { label: "Gold",   weight: 10, overallMin: 80, overallMax: 84, fanMin: 55, fanMax: 120 },
+  elite:  { label: "Elite",  weight: 2,  overallMin: 85, overallMax: 86, fanMin: 100, fanMax: 220 },
 };
+
+// Max overall currently obtainable in the game.
+export const MAX_OVERALL = 86;
+
+export function rarityFromOverall(overall: number): Rarity {
+  if (overall >= 85) return "elite";
+  if (overall >= 80) return "gold";
+  if (overall >= 70) return "silver";
+  return "bronze";
+}
 
 export const COIN_PER_FAN_PER_HOUR = 0.01;
 export const PACK_COST = 250;
