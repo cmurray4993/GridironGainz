@@ -147,7 +147,9 @@ function buildFromSignature(sig: SignatureSpec): Player {
     popularity: sig.popularity,
     fanValue: computeFanValue(sig.overall, sig.popularity),
     rarity: sig.rarity,
+    signature: makeSignatureAttr(sig.position, sig.overall, sig.overall),
   };
+
 }
 
 function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Player {
