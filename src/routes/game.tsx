@@ -189,3 +189,70 @@ function GamePage() {
     </div>
   );
 }
+
+function TeamStatCard({ label, score, stats, accent }: { label: string; score: number; stats: TeamStats; accent: string }) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground truncate">{label}</div>
+      <div className={`font-display text-4xl tabular-nums ${accent}`}>{score}</div>
+      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+        <StatRow k="TDs" v={stats.tds} />
+        <StatRow k="FGs" v={stats.fgs} />
+        <StatRow k="Punts" v={stats.punts} />
+        <StatRow k="Turnovers" v={stats.turnovers} />
+        {stats.bigPlays > 0 && <StatRow k="Big plays" v={stats.bigPlays} />}
+      </dl>
+      {(stats.topScorer && (stats.topScorer.tds + stats.topScorer.fgs) > 0) && (
+        <div className="mt-2 text-[11px] text-muted-foreground">
+          <span className="text-primary">MVP</span> · {stats.topScorer.name} ({stats.topScorer.position}) — {stats.topScorer.tds} TD / {stats.topScorer.fgs} FG
+        </div>
+      )}
+      {(stats.topDefender && (stats.topDefender.ints + stats.topDefender.stops) > 0) && (
+        <div className="text-[11px] text-muted-foreground">
+          <span className="text-primary">Defender</span> · {stats.topDefender.name} ({stats.topDefender.position}) — {stats.topDefender.stops} stops / {stats.topDefender.ints} INT
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatRow({ k, v }: { k: string; v: number }) {
+  return (
+    <>
+      <dt className="text-muted-foreground">{k}</dt>
+      <dd className="text-right tabular-nums">{v}</dd>
+    </>
+  );
+}
+
+function PlayerStatTable({ title, rows }: { title: string; rows: PlayerStat[] }) {
+  const active = rows.filter((r) => r.touches + r.stops + r.ints > 0);
+  if (!active.length) return null;
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground truncate">{title}</div>
+      <table className="mt-2 w-full text-xs">
+        <thead className="text-[10px] uppercase text-muted-foreground">
+          <tr>
+            <th className="text-left font-normal">Player</th>
+            <th className="text-right font-normal">TD</th>
+            <th className="text-right font-normal">FG</th>
+            <th className="text-right font-normal">Stop</th>
+            <th className="text-right font-normal">INT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {active.map((r) => (
+            <tr key={r.id} className="border-t border-border/40">
+              <td className="py-1 pr-1 truncate">{r.name} <span className="text-muted-foreground">{r.position}</span></td>
+              <td className="text-right tabular-nums">{r.tds}</td>
+              <td className="text-right tabular-nums">{r.fgs}</td>
+              <td className="text-right tabular-nums">{r.stops}</td>
+              <td className="text-right tabular-nums">{r.ints}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
