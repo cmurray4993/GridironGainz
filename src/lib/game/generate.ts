@@ -94,63 +94,63 @@ export function generatePlayerAtLeast(minRarity: Rarity): Player {
   return buildPlayerWithRarity(minRarity);
 }
 
+// Signature player registry — fixed identity, overall, and stats so every
+// copy of a signature card is stat-for-stat identical.
+interface SignatureSpec {
+  name: string;
+  rarity: Rarity;
+  position: Position;
+  overall: number;
+  strength: number;
+  speed: number;
+  iq: number;
+  popularity: number;
+}
+
+export const SIGNATURES: SignatureSpec[] = [
+  { name: 'Busta "Fly" Jones',        rarity: "gold",  position: "WR", overall: 82, strength: 78, speed: 94, iq: 68, popularity: 88 },
+  { name: 'Josiah "The Messiah" Ball',rarity: "gold",  position: "WR", overall: 84, strength: 80, speed: 90, iq: 86, popularity: 92 },
+  { name: 'Creighton Murray',         rarity: "gold",  position: "TE", overall: 83, strength: 88, speed: 80, iq: 88, popularity: 84 },
+  { name: 'Gringo Guth',              rarity: "gold",  position: "RB", overall: 82, strength: 89, speed: 85, iq: 74, popularity: 82 },
+  { name: 'Sleepy Cringle',           rarity: "gold",  position: "DL", overall: 82, strength: 92, speed: 74, iq: 82, popularity: 80 },
+  { name: 'Talon "7 Iron" Reynolds',  rarity: "gold",  position: "DB", overall: 83, strength: 76, speed: 92, iq: 88, popularity: 81 },
+  { name: 'Ty "Teethman" Smith',      rarity: "gold",  position: "LB", overall: 82, strength: 90, speed: 82, iq: 85, popularity: 80 },
+  { name: 'Josiah "8 Man" Mettling',  rarity: "gold",  position: "LB", overall: 84, strength: 92, speed: 84, iq: 86, popularity: 83 },
+  { name: 'Gary Gainz',               rarity: "elite", position: "OL", overall: 86, strength: 94, speed: 74, iq: 88, popularity: 90 },
+];
+
+function buildFromSignature(sig: SignatureSpec): Player {
+  return {
+    id: crypto.randomUUID(),
+    name: sig.name,
+    position: sig.position,
+    overall: sig.overall,
+    strength: sig.strength,
+    speed: sig.speed,
+    iq: sig.iq,
+    popularity: sig.popularity,
+    fanValue: computeFanValue(sig.overall, sig.popularity),
+    rarity: sig.rarity,
+  };
+}
+
 function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Player {
   const meta = RARITY_META[rarity];
   const position = forcedPosition ?? rand(POSITIONS);
-  let overall = randInt(meta.overallMin, meta.overallMax);
+
+  // If the (rarity, position) has signature candidates, pick one of them —
+  // all copies of a given signature are stat-identical.
+  if (rarity === "gold" || rarity === "elite") {
+    const candidates = SIGNATURES.filter((s) => s.rarity === rarity && s.position === position);
+    if (candidates.length) return buildFromSignature(rand(candidates));
+  }
+
+  const overall = randInt(meta.overallMin, meta.overallMax);
   const jitter = () => randInt(-8, 8);
-  let strength = clamp(overall + jitter());
-  let speed = clamp(overall + jitter());
-  let iq = clamp(overall + jitter());
-  let name = canonicalName(rarity, position);
-
-  // Signature gold prospects with tuned stats
-  if (rarity === "gold") {
-    if (position === "WR") {
-      // WR gold pool: Busta or Creighton (TE-flavored WR)
-      if (Math.random() < 0.5) {
-        name = 'Busta "Fly" Jones';
-        speed = clamp(overall + randInt(8, 13));
-        iq = clamp(overall - randInt(10, 16));
-        strength = clamp(overall + randInt(-4, 4));
-      } else {
-        name = 'Creighton Murray';
-        strength = clamp(overall + randInt(4, 9));
-        iq = clamp(overall + randInt(2, 7));
-        speed = clamp(overall + randInt(-3, 3));
-      }
-    } else if (position === "RB") {
-      name = 'Gringo Guth';
-      strength = clamp(overall + randInt(4, 9));
-      speed = clamp(overall + randInt(2, 7));
-      iq = clamp(overall + randInt(-6, 2));
-    } else if (position === "DL") {
-      name = 'Sleepy Cringle';
-      strength = clamp(overall + randInt(6, 11));
-      iq = clamp(overall + randInt(-2, 4));
-      speed = clamp(overall + randInt(-6, 2));
-    } else if (position === "DB") {
-      name = 'Talon "7 Iron" Reynolds';
-      speed = clamp(overall + randInt(6, 11));
-      iq = clamp(overall + randInt(2, 6));
-      strength = clamp(overall + randInt(-6, 0));
-    } else if (position === "LB") {
-      name = 'Ty "Teethman" Smith';
-      strength = clamp(overall + randInt(5, 10));
-      speed = clamp(overall + randInt(-2, 4));
-      iq = clamp(overall + randInt(0, 5));
-    }
-  }
-
-  // Elite signature: Gary Gainz, the 86 OVR OL
-  if (rarity === "elite" && position === "OL") {
-    name = 'Gary Gainz';
-    overall = 86;
-    strength = clamp(86 + randInt(4, 8));
-    iq = clamp(86 + randInt(-2, 4));
-    speed = clamp(86 - randInt(8, 14));
-  }
-
+  const strength = clamp(overall + jitter());
+  const speed = clamp(overall + jitter());
+  const iq = clamp(overall + jitter());
+  const name = canonicalName(rarity, position);
   const popularity = clamp(
     Math.round(overall * 0.6 + randInt(meta.fanMin, meta.fanMax) * 0.3 + randInt(-8, 12)),
     30,
@@ -181,22 +181,8 @@ export function generateProPack(): Player[] {
   ];
 }
 
-// Backyard Heroes Promo — Program I
-// Signature cards live on specific rarity+position rolls. Force those
-// rolls to guarantee the pull lands on a signature name.
-type SigSpec = { rarity: Rarity; position: Position };
-const BACKYARD_HERO_SIGS: SigSpec[] = [
-  { rarity: "gold", position: "WR" }, // Busta "Fly" Jones OR Creighton Murray
-  { rarity: "gold", position: "RB" }, // Gringo Guth
-  { rarity: "gold", position: "DL" }, // Sleepy Cringle
-  { rarity: "gold", position: "DB" }, // Talon "7 Iron" Reynolds
-  { rarity: "gold", position: "LB" }, // Ty "Teethman" Smith
-  { rarity: "elite", position: "OL" }, // Gary Gainz (86 OVR)
-];
-
 function generateSignaturePromo(): Player {
-  const spec = rand(BACKYARD_HERO_SIGS);
-  return buildPlayerWithRarity(spec.rarity, spec.position);
+  return buildFromSignature(rand(SIGNATURES));
 }
 
 export function generateBackyardHeroPack(): Player[] {
