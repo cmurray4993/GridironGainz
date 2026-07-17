@@ -124,6 +124,7 @@ export const SIGNATURES: SignatureSpec[] = [
   // Non-backyard signatures — obtainable via regular Gold/Elite rolls.
   { name: 'Mason "Bait Man" Baker',   rarity: "gold",  position: "QB", overall: 83, strength: 76, speed: 78, iq: 92, popularity: 82 },
   { name: 'Carter "Combine" Carter',  rarity: "gold",  position: "OL", overall: 82, strength: 93, speed: 66, iq: 80, popularity: 78 },
+  { name: 'Sammy "Wheely" Wheeler',   rarity: "gold",  position: "K",  overall: 83, strength: 70, speed: 78, iq: 92, popularity: 84 },
 ];
 
 function buildFromSignature(sig: SignatureSpec): Player {

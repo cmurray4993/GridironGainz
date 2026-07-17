@@ -29,6 +29,13 @@ export function TopBar() {
         <div className="flex items-center gap-2 text-sm">
           <Stat icon="🪙" value={fmt(state.coins)} tone="gold" />
           <Stat icon="🎟️" value={fmt(state.fans)} tone="fan" />
+          <Link
+            to="/settings"
+            title="Settings"
+            className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+          >
+            ⚙︎
+          </Link>
           <SignOutButton />
         </div>
       </div>

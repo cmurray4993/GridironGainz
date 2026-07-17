@@ -65,7 +65,7 @@ function Home() {
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Tonight's matchup</div>
-            <h2 className="mt-1 font-display text-2xl">Your Squad <span className="text-muted-foreground">vs</span> {opponent.name}</h2>
+            <h2 className="mt-1 font-display text-2xl">{state.teamName ?? "Your Squad"} <span className="text-muted-foreground">vs</span> {opponent.name}</h2>
             <div className="mt-1 text-[11px] text-muted-foreground">Managed by a real player · matched at kickoff</div>
           </div>
         </div>
