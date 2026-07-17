@@ -16,6 +16,9 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
+        // Wallet libraries expect the Node Buffer API in the browser. Bundle the
+        // browser polyfill instead of letting Vite externalize the builtin.
+        buffer: resolve("node_modules/buffer/index.js"),
         // @solana/web3.js imports rpc-websockets from the package root, but that
         // package does not expose a workerd/worker export condition. Point Vite
         // at the browser ESM build directly so the Cloudflare worker build can resolve it.
