@@ -268,4 +268,13 @@ export function setTeamName(name: string) {
   set((s) => ({ ...s, teamName: clean || undefined }));
 }
 
+export function addSol(amount: number) {
+  set((s) => ({ ...s, sol: (s.sol ?? 0) + amount }));
+}
+
+export function setWalletAddress(addr: string | null) {
+  set((s) => ({ ...s, walletAddress: addr ?? undefined }));
+}
+
 /* No auto-collect: coins must be manually claimed via claimCoins(). */
+
