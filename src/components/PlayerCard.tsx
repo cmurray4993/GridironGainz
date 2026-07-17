@@ -143,7 +143,7 @@ export function PlayerCard({
               <div className="flex-1" />
 
               <div className="mt-2">
-                <div className="font-display text-lg leading-tight truncate text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{player.name}</div>
+                <div className="font-display text-base sm:text-lg leading-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] break-words">{player.name}</div>
                 <div className="mt-1 flex items-center justify-between text-[11px]">
                   <span className="text-white/60 uppercase tracking-widest text-[9px]">{player.position}</span>
                   <span className="text-[oklch(0.85_0.18_25)] font-semibold drop-shadow">❤️ {player.fanValue}</span>
