@@ -59,3 +59,55 @@ function clamp(v: number, min = 40, max = 99) {
 export function generatePack(size: number): Player[] {
   return Array.from({ length: size }, () => generatePlayer());
 }
+
+const RARITY_ORDER: Rarity[] = ["bronze", "silver", "gold", "elite"];
+
+export function generatePlayerAtLeast(minRarity: Rarity): Player {
+  const minIdx = RARITY_ORDER.indexOf(minRarity);
+  // Reroll rarity using existing weights, but reject anything below min.
+  for (let i = 0; i < 40; i++) {
+    const r = rollRarity();
+    if (RARITY_ORDER.indexOf(r) >= minIdx) {
+      return buildPlayerWithRarity(r);
+    }
+  }
+  return buildPlayerWithRarity(minRarity);
+}
+
+function buildPlayerWithRarity(rarity: Rarity): Player {
+  const meta = RARITY_META[rarity];
+  const position = rand(POSITIONS);
+  const overall = randInt(meta.overallMin, meta.overallMax);
+  const jitter = () => randInt(-8, 8);
+  const strength = clamp(overall + jitter());
+  const speed = clamp(overall + jitter());
+  const iq = clamp(overall + jitter());
+  const popularity = clamp(
+    Math.round(overall * 0.6 + randInt(meta.fanMin, meta.fanMax) * 0.3 + randInt(-8, 12)),
+    30,
+    99,
+  );
+  return {
+    id: crypto.randomUUID(),
+    name: `${rand(FIRST)} ${rand(LAST)}`,
+    position,
+    overall,
+    strength,
+    speed,
+    iq,
+    popularity,
+    fanValue: computeFanValue(overall, popularity),
+    rarity,
+  };
+}
+
+export function generateProPack(): Player[] {
+  // 3 bronze+, 1 silver+, 1 gold+
+  return [
+    generatePlayerAtLeast("bronze"),
+    generatePlayerAtLeast("bronze"),
+    generatePlayerAtLeast("bronze"),
+    generatePlayerAtLeast("silver"),
+    generatePlayerAtLeast("gold"),
+  ];
+}
