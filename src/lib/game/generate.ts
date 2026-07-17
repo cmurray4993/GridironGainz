@@ -186,12 +186,20 @@ function generateSignaturePromo(): Player {
 }
 
 export function generateBackyardHeroPack(): Player[] {
-  // 5 cards. Guarantees 1 signature promo. 40% chance for a second signature.
-  // Filler cards are Silver+ so the pack feels premium.
-  const players: Player[] = [generateSignaturePromo()];
-  if (Math.random() < 0.4) players.push(generateSignaturePromo());
-  while (players.length < 5) players.push(generatePlayerAtLeast("silver"));
-  // Shuffle so the signature isn't always first.
+  // 5 cards: 1 Bronze+, 3 Silver+, 1 Gold+.
+  // Each slot has a chance to upgrade into a signature promo pull, as long
+  // as the signature's rarity meets that slot's floor. ~25% per slot ≈ 1
+  // signature per pack on average, with a real chance at multiples.
+  const floors: Rarity[] = ["bronze", "silver", "silver", "silver", "gold"];
+  const SIG_CHANCE = 0.25;
+  const players: Player[] = floors.map((floor) => {
+    if (Math.random() < SIG_CHANCE) {
+      const minIdx = RARITY_ORDER.indexOf(floor);
+      const eligible = SIGNATURES.filter((s) => RARITY_ORDER.indexOf(s.rarity) >= minIdx);
+      if (eligible.length) return buildFromSignature(rand(eligible));
+    }
+    return generatePlayerAtLeast(floor);
+  });
   for (let i = players.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [players[i], players[j]] = [players[j], players[i]];
