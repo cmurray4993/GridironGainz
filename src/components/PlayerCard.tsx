@@ -1,6 +1,19 @@
 import { useState } from "react";
-import { COIN_PER_FAN_PER_HOUR, playerArchetype, type Player } from "@/lib/game/types";
+import { COIN_PER_FAN_PER_HOUR, playerArchetype, type Player, type Position } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
+import qbArt from "@/assets/art/qb.jpg";
+import rbArt from "@/assets/art/rb.jpg";
+import wrArt from "@/assets/art/wr.jpg";
+import olArt from "@/assets/art/ol.jpg";
+import dlArt from "@/assets/art/dl.jpg";
+import lbArt from "@/assets/art/lb.jpg";
+import dbArt from "@/assets/art/db.jpg";
+import kArt from "@/assets/art/k.jpg";
+
+const POSITION_ART: Record<Position, string> = {
+  QB: qbArt, RB: rbArt, WR: wrArt, OL: olArt,
+  DL: dlArt, LB: lbArt, DB: dbArt, K: kArt,
+};
 
 const rarityBg: Record<Player["rarity"], string> = {
   bronze: "rarity-bronze",
@@ -16,14 +29,6 @@ const rarityLabel: Record<Player["rarity"], string> = {
   elite: "Elite",
 };
 
-// Deterministic portrait/logo emoji per player so cards feel unique without art.
-const PORTRAITS = ["🏈", "💪", "⚡", "🔥", "🎯", "🚀", "🛡️", "👑", "🦁", "🐻", "🐺", "🦅"];
-
-function hashCode(id: string): number {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
 
 export function PlayerCard({
   player,
