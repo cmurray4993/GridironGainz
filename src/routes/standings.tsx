@@ -118,8 +118,8 @@ function StandingsPage() {
           </div>
           <div className="text-right text-[11px] text-muted-foreground">
             <div>Win: <span className="text-foreground font-semibold">{league.regularWin} 🪙</span> · +{league.fanBonus} 🎟️</div>
-            <div>Playoff win: <span className="text-foreground font-semibold">{league.playoffPrize} 🪙</span></div>
-            <div>Champion: <span className="text-primary font-semibold">{league.championPrize.toLocaleString()} 🪙</span></div>
+            <div>Champion payout: <span className="text-primary font-semibold">◎ {formatSol(solPrizeFor(tier, 1).sol)} SOL</span></div>
+            <div>Last place: <span className="text-foreground font-semibold">◎ {formatSol(solPrizeFor(tier, TEAMS_PER_LEAGUE).sol)} SOL</span></div>
           </div>
         </div>
       </section>
