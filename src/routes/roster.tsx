@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { PlayerCard } from "@/components/PlayerCard";
 import { discardPlayer, sellPlayer, sellPrice, setLineup, useGame } from "@/lib/game/store";
-import { LINEUP_SLOTS, POSITIONS, type Player, type Position, type Rarity } from "@/lib/game/types";
+import { LINEUP_SLOTS, POSITIONS, slotPosition, type Player, type Position, type Rarity } from "@/lib/game/types";
 import { lineupOverall } from "@/lib/game/sim";
 import { cn } from "@/lib/utils";
 
@@ -135,52 +135,61 @@ function RosterView() {
 
 type Side = "offense" | "defense";
 
-// Formation cell: grid col-start / col-span / row (1-indexed) inside a 6-col grid
-type Cell = { pos: Position; col: number; span?: number; row: number; label?: string };
+// Formation cell references a lineup slot ID (e.g. "WR1"). label overrides
+// the position label shown in the slot header.
+type Cell = { slot: string; col: number; span?: number; row: number; label?: string };
 
-// Offense: shotgun spread
-// Row 1 (line): WR left | OL center-left | TE center-right | K far right
-// Row 2 (backfield): RB left | QB center
+// Offense: 4-col field. WR flanks the ends, OL/TE inside; shotgun backfield below.
+// Row 1 (LOS):  WR1 | OL | TE | WR2
+// Row 2 (back): RB1 | QB | .. | RB2   (QB centered)
 const OFFENSE_FORMATION: Cell[] = [
-  { pos: "WR", col: 1, row: 1 },
-  { pos: "OL", col: 3, row: 1 },
-  { pos: "TE", col: 4, row: 1 },
-  { pos: "K",  col: 6, row: 1 },
-  { pos: "RB", col: 2, row: 2 },
-  { pos: "QB", col: 3, span: 2, row: 2 },
+  { slot: "WR1", col: 1, row: 1 },
+  { slot: "OL",  col: 2, row: 1 },
+  { slot: "TE",  col: 3, row: 1 },
+  { slot: "WR2", col: 4, row: 1 },
+  { slot: "RB1", col: 1, row: 2 },
+  { slot: "QB",  col: 2, span: 2, row: 2 },
+  { slot: "RB2", col: 4, row: 2 },
 ];
 
-// Defense: 3-level look
-// Row 1: DL front (spans middle)
-// Row 2: LB (spans middle)
-// Row 3: DB (deep, spans middle)
+// Defense: 3-4 look on a 4-col field.
+// Row 1: DL1 | DL2 (span 2) | DL3
+// Row 2: .. LB1 | LB2 ..
+// Row 3: DB1 | .. | .. | DB2
 const DEFENSE_FORMATION: Cell[] = [
-  { pos: "DL", col: 3, span: 2, row: 1 },
-  { pos: "LB", col: 3, span: 2, row: 2 },
-  { pos: "DB", col: 3, span: 2, row: 3 },
+  { slot: "DL1", col: 1, row: 1 },
+  { slot: "DL2", col: 2, span: 2, row: 1 },
+  { slot: "DL3", col: 4, row: 1 },
+  { slot: "LB1", col: 2, row: 2 },
+  { slot: "LB2", col: 3, row: 2 },
+  { slot: "DB1", col: 1, row: 3 },
+  { slot: "DB2", col: 4, row: 3 },
 ];
+
+const FIELD_COLS = 4;
 
 function LineupView() {
   const { roster, lineup } = useGame();
-  const [picking, setPicking] = useState<Position | null>(null);
+  const [picking, setPicking] = useState<{ slot: string; position: Position } | null>(null);
   const [side, setSide] = useState<Side>("offense");
 
   const byId = useMemo(() => new Map(roster.map((p) => [p.id, p])), [roster]);
-  const currentPlayers = LINEUP_SLOTS.map((pos) => (lineup[pos] ? byId.get(lineup[pos]!) ?? null : null));
+  const currentPlayers = LINEUP_SLOTS.map((slot) => (lineup[slot] ? byId.get(lineup[slot]!) ?? null : null));
   const ovr = lineupOverall(currentPlayers);
 
   const autoFill = () => {
     const used = new Set<string>();
-    for (const pos of LINEUP_SLOTS) {
+    for (const slot of LINEUP_SLOTS) {
+      const pos = slotPosition(slot);
       const best = roster
         .filter((p) => p.position === pos && !used.has(p.id))
         .sort((a, b) => b.overall - a.overall)[0];
-      if (best) { setLineup(pos, best.id); used.add(best.id); }
-      else setLineup(pos, null);
+      if (best) { setLineup(slot, best.id); used.add(best.id); }
+      else setLineup(slot, null);
     }
   };
 
-  const clear = () => LINEUP_SLOTS.forEach((p) => setLineup(p, null));
+  const clear = () => LINEUP_SLOTS.forEach((s) => setLineup(s, null));
 
   const formation = side === "offense" ? OFFENSE_FORMATION : DEFENSE_FORMATION;
   const rows = Math.max(...formation.map((c) => c.row));
@@ -206,21 +215,22 @@ function LineupView() {
 
       <FormationField rows={rows}>
         {formation.map((cell) => {
-          const p = lineup[cell.pos] ? byId.get(lineup[cell.pos]!) : null;
+          const pos = slotPosition(cell.slot);
+          const p = lineup[cell.slot] ? byId.get(lineup[cell.slot]!) : null;
           return (
             <div
-              key={cell.pos}
+              key={cell.slot}
               style={{
                 gridColumn: `${cell.col} / span ${cell.span ?? 1}`,
                 gridRow: cell.row,
               }}
-              className="flex justify-center"
+              className="flex items-start justify-center"
             >
               <SlotCard
-                pos={cell.pos}
+                label={pos}
                 player={p ?? null}
-                onPick={() => setPicking(cell.pos)}
-                onRemove={() => setLineup(cell.pos, null)}
+                onPick={() => setPicking({ slot: cell.slot, position: pos })}
+                onRemove={() => setLineup(cell.slot, null)}
               />
             </div>
           );
@@ -229,10 +239,10 @@ function LineupView() {
 
       {picking && (
         <PickerModal
-          position={picking}
+          position={picking.position}
           roster={roster}
           currentIds={new Set(Object.values(lineup).filter(Boolean) as string[])}
-          onPick={(id) => { setLineup(picking, id); setPicking(null); }}
+          onPick={(id) => { setLineup(picking.slot, id); setPicking(null); }}
           onClose={() => setPicking(null)}
         />
       )}
@@ -249,13 +259,13 @@ function FormationField({ rows, children }: { rows: number; children: React.Reac
           "repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 1px, transparent 1px 40px), linear-gradient(180deg, #0b3d1f 0%, #0a2f18 100%)",
       }}
     >
-      {/* yard lines accents */}
-      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-white/30" />
+      <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-white/25" />
       <div
         className="relative grid gap-2 sm:gap-3"
         style={{
-          gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-          gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+          gridTemplateColumns: `repeat(${FIELD_COLS}, minmax(0, 1fr))`,
+          gridAutoRows: "min-content",
+          rowGap: rows > 2 ? "0.5rem" : "1rem",
         }}
       >
         {children}
@@ -265,29 +275,29 @@ function FormationField({ rows, children }: { rows: number; children: React.Reac
 }
 
 function SlotCard({
-  pos, player, onPick, onRemove,
-}: { pos: Position; player: Player | null; onPick: () => void; onRemove: () => void }) {
+  label, player, onPick, onRemove,
+}: { label: string; player: Player | null; onPick: () => void; onRemove: () => void }) {
   return (
     <button
       onClick={onPick}
-      className="group w-full max-w-[160px] text-left rounded-xl border border-border/70 bg-card/85 p-2 backdrop-blur hover:border-primary/60 transition-colors"
+      className="group mx-auto w-full max-w-[110px] text-left rounded-lg border border-border/70 bg-card/85 p-1 backdrop-blur hover:border-primary/60 transition-colors"
     >
-      <div className="mb-1.5 flex items-center justify-between px-1">
-        <div className="font-display text-sm">{pos}</div>
+      <div className="mb-1 flex items-center justify-between px-0.5">
+        <div className="font-display text-[11px] leading-none">{label}</div>
         {player && (
           <button
             onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            className="text-[9px] uppercase text-muted-foreground hover:text-destructive"
+            className="text-[11px] leading-none text-muted-foreground hover:text-destructive"
           >
             ×
           </button>
         )}
       </div>
       {player ? (
-        <PlayerCard player={player} />
+        <PlayerCard player={player} compact />
       ) : (
-        <div className="grid h-[150px] place-items-center rounded-lg border border-dashed border-border/60 text-xs text-muted-foreground">
-          + {pos}
+        <div className="grid h-[150px] w-full place-items-center rounded-md border border-dashed border-border/60 text-[10px] text-muted-foreground">
+          + {label}
         </div>
       )}
     </button>

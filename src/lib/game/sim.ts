@@ -1,5 +1,5 @@
 import { generatePlayer } from "./generate";
-import { LINEUP_SLOTS, POSITION_WEIGHTS, type Player, type Position } from "./types";
+import { LINEUP_SLOTS, POSITION_WEIGHTS, slotPosition, type Player, type Position } from "./types";
 
 export interface PlayerStat {
   id: string;
@@ -91,8 +91,8 @@ export function lineupOverall(lineup: (Player | null)[]): number {
 }
 
 function synthOpponentLineup(overall: number): Player[] {
-  return LINEUP_SLOTS.map((pos) => {
-    const p = generatePlayer(pos);
+  return LINEUP_SLOTS.map((slot) => {
+    const p = generatePlayer(slotPosition(slot));
     // rebalance to target overall
     const delta = overall - p.overall;
     return {
