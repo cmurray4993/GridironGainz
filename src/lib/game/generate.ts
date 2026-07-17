@@ -124,9 +124,31 @@ function buildPlayerWithRarity(rarity: Rarity): Player {
   const position = rand(POSITIONS);
   const overall = randInt(meta.overallMin, meta.overallMax);
   const jitter = () => randInt(-8, 8);
-  const strength = clamp(overall + jitter());
-  const speed = clamp(overall + jitter());
-  const iq = clamp(overall + jitter());
+  let strength = clamp(overall + jitter());
+  let speed = clamp(overall + jitter());
+  let iq = clamp(overall + jitter());
+  let name = canonicalName(rarity, position);
+
+  // Signature gold prospects with tuned stats
+  if (rarity === "gold") {
+    if (position === "WR") {
+      name = 'Busta "Fly" Jones';
+      speed = clamp(overall + randInt(8, 13));   // blazing
+      iq = clamp(overall - randInt(10, 16));      // not smart
+      strength = clamp(overall + randInt(-4, 4));
+    } else if (position === "RB") {
+      name = 'Gringo Guth';
+      strength = clamp(overall + randInt(4, 9));
+      speed = clamp(overall + randInt(2, 7));
+      iq = clamp(overall + randInt(-6, 2));
+    } else if (position === "DL") {
+      name = 'Sleepy Cringle';
+      strength = clamp(overall + randInt(6, 11));
+      iq = clamp(overall + randInt(-2, 4));
+      speed = clamp(overall + randInt(-6, 2));
+    }
+  }
+
   const popularity = clamp(
     Math.round(overall * 0.6 + randInt(meta.fanMin, meta.fanMax) * 0.3 + randInt(-8, 12)),
     30,
@@ -134,7 +156,7 @@ function buildPlayerWithRarity(rarity: Rarity): Player {
   );
   return {
     id: crypto.randomUUID(),
-    name: canonicalName(rarity, position),
+    name,
     position,
     overall,
     strength,
