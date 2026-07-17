@@ -130,7 +130,14 @@ export function PlayerCard({
                   loading="lazy"
                   className="h-full w-full object-cover object-center"
                 />
-              ) : (
+              )}
+              {player.name === 'Breck "Coach Razor" Guthrie' && (
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-12 rounded-sm border border-[oklch(0.85_0.17_25)]/80 bg-black/55 px-1.5 py-0.5 font-display text-[9px] uppercase tracking-[0.25em] text-[oklch(0.9_0.17_25)] shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+                  Coach Razor
+                </div>
+              )}
+              {false && (
+                <div />
                 <div className="h-full w-full bg-[radial-gradient(ellipse_at_center,oklch(0.28_0.06_80)_0%,oklch(0.14_0.02_260)_70%,oklch(0.08_0.01_260)_100%)] flex items-center justify-center">
                   <div className="text-center px-4">
                     <div className="font-display text-5xl text-gradient-gold opacity-90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{player.position}</div>
