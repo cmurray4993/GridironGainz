@@ -43,7 +43,7 @@ function PackPage() {
       <header>
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary/80">Store</div>
         <h1 className="mt-1 font-display text-3xl">Open a Pack</h1>
-        <p className="text-sm text-muted-foreground">5 players per pack. Legendary pulls are rare and fan magnets.</p>
+        <p className="text-sm text-muted-foreground">5 players per pack. Elite pulls are rare and fan magnets.</p>
       </header>
 
       {phase === "idle" && (
@@ -53,7 +53,7 @@ function PackPage() {
             disabled={!canAfford}
             className="group relative"
           >
-            <div className={`relative h-80 w-56 overflow-hidden rounded-2xl border border-primary/40 bg-[image:var(--gradient-card-legendary)] shadow-[var(--shadow-card)] transition-transform ${canAfford ? "group-hover:-translate-y-2 animate-pulse-glow" : "opacity-60"}`}>
+            <div className={`relative h-80 w-56 overflow-hidden rounded-2xl border border-primary/40 bg-[image:var(--gradient-card-elite)] shadow-[var(--shadow-card)] transition-transform ${canAfford ? "group-hover:-translate-y-2 animate-pulse-glow" : "opacity-60"}`}>
               <div className="absolute inset-0 shimmer-overlay opacity-60" />
               <div className="absolute inset-2 rounded-xl bg-background/70 grid place-items-center text-center p-4">
                 <div>
@@ -86,7 +86,7 @@ function PackPage() {
                     <PlayerCard player={p} />
                   </div>
                 ) : (
-                  <div className="h-full min-h-[200px] rounded-xl border border-primary/30 bg-[image:var(--gradient-card-legendary)] relative overflow-hidden">
+                  <div className="h-full min-h-[200px] rounded-xl border border-primary/30 bg-[image:var(--gradient-card-elite)] relative overflow-hidden">
                     <div className="absolute inset-2 rounded-lg bg-background/70 grid place-items-center">
                       <div className="text-4xl opacity-60">🎴</div>
                     </div>

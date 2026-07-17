@@ -19,7 +19,7 @@ function RosterPage() {
   const [filter, setFilter] = useState<Position | "ALL">("ALL");
   const [sort, setSort] = useState<"overall" | "fan" | "rarity">("overall");
 
-  const rarityRank: Record<Rarity, number> = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
+  const rarityRank: Record<Rarity, number> = { elite: 4, gold: 3, silver: 2, bronze: 1 };
   const shown = useMemo(() => {
     return roster
       .filter((p) => filter === "ALL" || p.position === filter)

@@ -15,7 +15,7 @@ export function rollRarity(): Rarity {
     n -= meta.weight;
     if (n <= 0) return key as Rarity;
   }
-  return "common";
+  return "bronze";
 }
 
 export function generatePlayer(forcedPosition?: Position): Player {

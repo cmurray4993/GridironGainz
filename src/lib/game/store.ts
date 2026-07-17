@@ -1,12 +1,11 @@
 import { useSyncExternalStore } from "react";
-import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, computeFanValue, type GameState, type Player, type Position, type Rarity } from "./types";
+import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, computeFanValue, rarityFromOverall, type GameState, type Player, type Position, type Rarity } from "./types";
 
 const RARITY_SELL_MULT: Record<Rarity, number> = {
-  common: 0.8,
-  uncommon: 1.4,
-  rare: 2.4,
-  epic: 4.2,
-  legendary: 8,
+  bronze: 0.8,
+  silver: 1.6,
+  gold: 3.0,
+  elite: 5.5,
 };
 
 export function sellPrice(p: Player): number {
@@ -36,12 +35,26 @@ function load(): GameState {
     if (!raw) return initialState();
     const parsed = JSON.parse(raw) as GameState;
     const merged = { ...initialState(), ...parsed };
-    // Backfill popularity + recompute fanValue for legacy saves.
+    // Backfill popularity + recompute fanValue for legacy saves,
+    // clamp overall to current cap, and remap legacy rarities.
     merged.roster = merged.roster.map((p) => {
+      const overall = Math.min(86, Math.max(60, p.overall));
+      const strength = Math.min(99, p.strength);
+      const speed = Math.min(99, p.speed);
+      const iq = Math.min(99, p.iq);
       const popularity = typeof p.popularity === "number"
         ? p.popularity
-        : Math.max(30, Math.min(99, Math.round(p.overall * 0.7 + (p.fanValue ?? 0) * 0.1)));
-      return { ...p, popularity, fanValue: computeFanValue(p.overall, popularity) };
+        : Math.max(30, Math.min(99, Math.round(overall * 0.7 + (p.fanValue ?? 0) * 0.1)));
+      return {
+        ...p,
+        overall,
+        strength,
+        speed,
+        iq,
+        popularity,
+        rarity: rarityFromOverall(overall),
+        fanValue: computeFanValue(overall, popularity),
+      };
     });
     merged.fans = merged.roster.reduce((a, p) => a + p.fanValue, 0);
     return merged;

@@ -3,19 +3,17 @@ import { COIN_PER_FAN_PER_HOUR, playerArchetype, type Player } from "@/lib/game/
 import { cn } from "@/lib/utils";
 
 const rarityBg: Record<Player["rarity"], string> = {
-  common: "rarity-common",
-  uncommon: "rarity-uncommon",
-  rare: "rarity-rare",
-  epic: "rarity-epic",
-  legendary: "rarity-legendary",
+  bronze: "rarity-bronze",
+  silver: "rarity-silver",
+  gold: "rarity-gold",
+  elite: "rarity-elite",
 };
 
 const rarityLabel: Record<Player["rarity"], string> = {
-  common: "Common",
-  uncommon: "Uncommon",
-  rare: "Rare",
-  epic: "Epic",
-  legendary: "Legendary",
+  bronze: "Bronze",
+  silver: "Silver",
+  gold: "Gold",
+  elite: "Elite",
 };
 
 // Deterministic portrait/logo emoji per player so cards feel unique without art.

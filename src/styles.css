@@ -35,11 +35,10 @@
   --color-coin: var(--coin);
   --color-fan: var(--fan);
 
-  --color-rarity-common: var(--rarity-common);
-  --color-rarity-uncommon: var(--rarity-uncommon);
-  --color-rarity-rare: var(--rarity-rare);
-  --color-rarity-epic: var(--rarity-epic);
-  --color-rarity-legendary: var(--rarity-legendary);
+  --color-rarity-bronze: var(--rarity-bronze);
+  --color-rarity-silver: var(--rarity-silver);
+  --color-rarity-gold: var(--rarity-gold);
+  --color-rarity-elite: var(--rarity-elite);
 
   --font-display: "Bebas Neue", "Impact", sans-serif;
   --font-sans: "Inter", system-ui, sans-serif;
@@ -81,19 +80,19 @@
   --coin: oklch(0.85 0.17 88);
   --fan: oklch(0.7 0.18 25);
 
-  --rarity-common: oklch(0.72 0.02 260);
-  --rarity-uncommon: oklch(0.78 0.17 145);
-  --rarity-rare: oklch(0.72 0.18 250);
-  --rarity-epic: oklch(0.7 0.22 305);
-  --rarity-legendary: oklch(0.82 0.18 75);
+  /* Rarity tiers: bronze -> silver -> gold -> elite */
+  --rarity-bronze: oklch(0.62 0.11 55);
+  --rarity-silver: oklch(0.82 0.02 260);
+  --rarity-gold: oklch(0.82 0.16 82);
+  --rarity-elite: oklch(0.68 0.22 20);
+
+  --gradient-card-elite: linear-gradient(135deg, oklch(0.75 0.22 30), oklch(0.5 0.24 350));
+  --gradient-card-gold: linear-gradient(135deg, oklch(0.86 0.16 88), oklch(0.6 0.16 60));
+  --gradient-card-silver: linear-gradient(135deg, oklch(0.88 0.02 260), oklch(0.6 0.02 260));
+  --gradient-card-bronze: linear-gradient(135deg, oklch(0.68 0.12 55), oklch(0.4 0.09 45));
 
   --gradient-field: radial-gradient(ellipse at top, oklch(0.24 0.05 260) 0%, oklch(0.13 0.02 260) 60%);
   --gradient-gold: linear-gradient(135deg, oklch(0.88 0.15 85), oklch(0.72 0.17 60));
-  --gradient-card-legendary: linear-gradient(135deg, oklch(0.82 0.18 75), oklch(0.62 0.22 30));
-  --gradient-card-epic: linear-gradient(135deg, oklch(0.7 0.22 305), oklch(0.5 0.2 275));
-  --gradient-card-rare: linear-gradient(135deg, oklch(0.72 0.18 250), oklch(0.5 0.18 240));
-  --gradient-card-uncommon: linear-gradient(135deg, oklch(0.78 0.17 145), oklch(0.55 0.16 155));
-  --gradient-card-common: linear-gradient(135deg, oklch(0.55 0.02 260), oklch(0.35 0.02 260));
 
   --shadow-glow: 0 0 40px oklch(0.82 0.16 82 / 0.35);
   --shadow-card: 0 20px 40px -12px oklch(0 0 0 / 0.6);
@@ -146,11 +145,10 @@
   box-shadow: var(--shadow-glow);
 }
 
-@utility rarity-common { background: var(--gradient-card-common); }
-@utility rarity-uncommon { background: var(--gradient-card-uncommon); }
-@utility rarity-rare { background: var(--gradient-card-rare); }
-@utility rarity-epic { background: var(--gradient-card-epic); }
-@utility rarity-legendary { background: var(--gradient-card-legendary); }
+@utility rarity-bronze { background: var(--gradient-card-bronze); }
+@utility rarity-silver { background: var(--gradient-card-silver); }
+@utility rarity-gold { background: var(--gradient-card-gold); }
+@utility rarity-elite { background: var(--gradient-card-elite); }
 
 @keyframes card-flip {
   0% { transform: rotateY(180deg) scale(0.8); opacity: 0; }

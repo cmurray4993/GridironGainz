@@ -9,7 +9,7 @@ export const Route = createFileRoute("/market")({
   head: () => ({ meta: [{ title: "Marketplace — Fourth & Fortune" }] }),
 });
 
-const rarityRank: Record<Rarity, number> = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
+const rarityRank: Record<Rarity, number> = { elite: 4, gold: 3, silver: 2, bronze: 1 };
 
 function MarketPage() {
   const { roster, lineup } = useGame();
