@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { recordResult, useGame } from "@/lib/game/store";
-import { LINEUP_SLOTS } from "@/lib/game/types";
+import { LINEUP_SLOTS, slotPosition } from "@/lib/game/types";
 import { lineupOverall, pickTodaysOpponent, simulateGame, type SimResult, type TeamStats, type PlayerStat } from "@/lib/game/sim";
 import { KickoffCountdown } from "@/components/KickoffCountdown";
 import { kickoffStatus } from "@/lib/game/kickoff";
