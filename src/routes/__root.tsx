@@ -14,7 +14,6 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav, TopBar } from "@/components/Layout";
 import { useAuth } from "@/hooks/useAuth";
-import { SolanaWalletProvider } from "@/lib/solana/WalletProvider";
 
 
 function NotFoundComponent() {
@@ -95,9 +94,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <SolanaWalletProvider>
-        <AuthGate />
-      </SolanaWalletProvider>
+      <AuthGate />
     </QueryClientProvider>
   );
 }
