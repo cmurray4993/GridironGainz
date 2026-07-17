@@ -128,13 +128,19 @@ function GamePage() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={start}
-              disabled={filled === 0 || !kick.isLive}
+              disabled={!canStart}
               className="flex-1 min-w-[180px] rounded-lg bg-[image:var(--gradient-gold)] px-4 py-3 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:opacity-50"
             >
-              {filled === 0 ? "Set a lineup first" : kick.isLive ? "Kickoff" : "Locked until 7:00 PM CT"}
+              {filled === 0 ? "Set a lineup first" : kick.isLive ? "Kickoff" : testMode ? "Run test kickoff" : "Locked until 7:00 PM CT"}
             </button>
             <Link to="/lineup" className="rounded-lg border border-border bg-secondary px-4 py-3 text-sm">Edit lineup</Link>
           </div>
+          {!kick.isLive && (
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <input type="checkbox" checked={testMode} onChange={(e) => setTestMode(e.target.checked)} />
+              Dev: simulate now (bypass 7:00 PM CT lock)
+            </label>
+          )}
           <p className="text-xs text-muted-foreground">Matches lock in at 7:00 PM Central daily. Set your lineup before kickoff — the sim runs against another manager's squad. Speed beats strength · Strength beats IQ · IQ beats speed.</p>
         </section>
       )}
