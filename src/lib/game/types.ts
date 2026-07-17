@@ -4,7 +4,7 @@ export type Position = "QB" | "RB" | "WR" | "TE" | "OL" | "DL" | "LB" | "DB" | "
 
 export const POSITIONS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K"];
 
-export const LINEUP_SLOTS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB"];
+export const LINEUP_SLOTS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K"];
 
 export interface PlayerSignatureAttr {
   key: string;
