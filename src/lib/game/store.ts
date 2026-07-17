@@ -13,7 +13,7 @@ export function sellPrice(p: Player): number {
   return Math.max(5, Math.round(p.overall * RARITY_SELL_MULT[p.rarity]));
 }
 
-const BASE_KEY = "faf.state.v2";
+const BASE_KEY = "faf.state.v3";
 let currentUserId: string | null = null;
 
 function storageKey(uid: string | null): string {
@@ -99,9 +99,13 @@ function load(uid: string | null): GameState {
 
     merged.fans = merged.roster.reduce((a, p) => a + p.fanValue, 0);
 
-    // Migrate old position-keyed lineup ("WR" -> "WR1", etc.) to slot-id keys.
+    // Migrate legacy position-keyed lineups to slot-id keys and reshape
+    // for the new offense (QB / RB / FLEX / WR1 / WR2 / TE / OL, no K on offense).
     const freshLineup = Object.fromEntries(LINEUP_SLOTS.map((s) => [s, null])) as GameState["lineup"];
-    const legacyMap: Record<string, string> = { WR: "WR1", RB: "RB1", DL: "DL1", LB: "LB1", DB: "DB1" };
+    const legacyMap: Record<string, string> = {
+      WR: "WR1", DL: "DL1", LB: "LB1", DB: "DB1",
+      RB1: "RB", RB2: "FLEX", // v2 -> v3 offense reshape
+    };
     for (const [k, v] of Object.entries(merged.lineup ?? {})) {
       if (!v) continue;
       const target = LINEUP_SLOTS.includes(k) ? k : (legacyMap[k] ?? k);

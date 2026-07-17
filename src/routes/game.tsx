@@ -116,7 +116,7 @@ function GamePage() {
                 const p = lineupPlayers[i];
                 return (
                   <div key={slot} className={`rounded-lg border p-2 text-center text-xs ${p ? "border-border bg-secondary" : "border-dashed border-border/60 text-muted-foreground"}`}>
-                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{slotPosition(slot)}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{slot === "FLEX" ? "FLEX" : slotPosition(slot)}</div>
                     <div className="font-semibold truncate">{p ? p.name.split(" ")[1] : "—"}</div>
                     <div className="text-[10px] text-muted-foreground">{p ? `OVR ${p.overall}` : ""}</div>
                   </div>

@@ -5,19 +5,28 @@ export type Position = "QB" | "RB" | "WR" | "TE" | "OL" | "DL" | "LB" | "DB" | "
 export const POSITIONS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K"];
 
 // Starting-lineup slot IDs. Positions with multiple starters get numeric
-// suffixes (WR1/WR2, RB1/RB2, DL1/DL2/DL3, LB1/LB2, DB1/DB2). Use
-// slotPosition() to recover the Position for weights / player eligibility.
+// suffixes (WR1/WR2, DL1/DL2/DL3, LB1/LB2, DB1/DB2). FLEX accepts RB/WR/TE.
+// Use slotPosition() to recover the base Position used for opponent synth
+// and stat weights; use slotAccepts() for the picker allow-list.
 export const LINEUP_SLOTS: string[] = [
   // Offense (7)
-  "QB", "RB1", "RB2", "WR1", "WR2", "TE", "OL",
+  "QB", "RB", "FLEX", "WR1", "WR2", "TE", "OL",
   // Special teams
   "K",
   // Defense (7)
   "DL1", "DL2", "DL3", "LB1", "LB2", "DB1", "DB2",
 ];
 
+export const FLEX_POSITIONS: Position[] = ["RB", "WR", "TE"];
+
 export function slotPosition(slot: string): Position {
+  if (slot === "FLEX") return "RB";
   return slot.replace(/\d+$/, "") as Position;
+}
+
+export function slotAccepts(slot: string): Position[] {
+  if (slot === "FLEX") return FLEX_POSITIONS;
+  return [slotPosition(slot)];
 }
 
 export interface PlayerSignatureAttr {
