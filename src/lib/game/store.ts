@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, computeFanValue, rarityFromOverall, type GameState, type Player, type Position, type Rarity } from "./types";
-import { canonicalName, SIGNATURES } from "./generate";
+import { canonicalName, makeSignatureAttr, SIGNATURES } from "./generate";
 
 const RARITY_SELL_MULT: Record<Rarity, number> = {
   bronze: 0.8,
