@@ -92,6 +92,8 @@ function load(uid: string | null): GameState {
         rarity,
         fanValue: computeFanValue(overall, popularity),
         name,
+        signature: p.signature ?? makeSignatureAttr(p.position, overall, overall),
+
       };
     });
 
