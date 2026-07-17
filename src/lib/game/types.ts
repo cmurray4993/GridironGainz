@@ -4,7 +4,21 @@ export type Position = "QB" | "RB" | "WR" | "TE" | "OL" | "DL" | "LB" | "DB" | "
 
 export const POSITIONS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K"];
 
-export const LINEUP_SLOTS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K"];
+// Starting-lineup slot IDs. Positions with multiple starters get numeric
+// suffixes (WR1/WR2, RB1/RB2, DL1/DL2/DL3, LB1/LB2, DB1/DB2). Use
+// slotPosition() to recover the Position for weights / player eligibility.
+export const LINEUP_SLOTS: string[] = [
+  // Offense (7)
+  "QB", "RB1", "RB2", "WR1", "WR2", "TE", "OL",
+  // Special teams
+  "K",
+  // Defense (7)
+  "DL1", "DL2", "DL3", "LB1", "LB2", "DB1", "DB2",
+];
+
+export function slotPosition(slot: string): Position {
+  return slot.replace(/\d+$/, "") as Position;
+}
 
 export interface PlayerSignatureAttr {
   key: string;
