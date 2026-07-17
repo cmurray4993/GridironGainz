@@ -9,10 +9,21 @@ import dlArt from "@/assets/art/dl.jpg";
 import lbArt from "@/assets/art/lb.jpg";
 import dbArt from "@/assets/art/db.jpg";
 import kArt from "@/assets/art/k.jpg";
+import sigCreighton from "@/assets/art/sig-creighton-murray.jpg";
+import sigTalon from "@/assets/art/sig-talon-reynolds.jpg";
+import sigTy from "@/assets/art/sig-ty-smith.jpg";
+import sigGary from "@/assets/art/sig-gary-gainz.jpg";
 
 const POSITION_ART: Record<Position, string> = {
   QB: qbArt, RB: rbArt, WR: wrArt, OL: olArt,
   DL: dlArt, LB: lbArt, DB: dbArt, K: kArt,
+};
+
+const SIGNATURE_ART: Record<string, string> = {
+  'Creighton Murray': sigCreighton,
+  'Talon "7 Iron" Reynolds': sigTalon,
+  'Ty "Teethman" Smith': sigTy,
+  'Gary Gainz': sigGary,
 };
 
 const rarityBg: Record<Player["rarity"], string> = {
