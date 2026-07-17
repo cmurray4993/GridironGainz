@@ -112,11 +112,11 @@ function GamePage() {
           <div className="rounded-xl border border-border/70 bg-card/70 p-4">
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Lineup</div>
             <div className="mt-2 grid grid-cols-4 gap-2 sm:grid-cols-7">
-              {LINEUP_SLOTS.map((pos, i) => {
+              {LINEUP_SLOTS.map((slot, i) => {
                 const p = lineupPlayers[i];
                 return (
-                  <div key={pos} className={`rounded-lg border p-2 text-center text-xs ${p ? "border-border bg-secondary" : "border-dashed border-border/60 text-muted-foreground"}`}>
-                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{pos}</div>
+                  <div key={slot} className={`rounded-lg border p-2 text-center text-xs ${p ? "border-border bg-secondary" : "border-dashed border-border/60 text-muted-foreground"}`}>
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{slotPosition(slot)}</div>
                     <div className="font-semibold truncate">{p ? p.name.split(" ")[1] : "—"}</div>
                     <div className="text-[10px] text-muted-foreground">{p ? `OVR ${p.overall}` : ""}</div>
                   </div>
