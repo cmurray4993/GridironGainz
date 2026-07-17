@@ -13,7 +13,7 @@ export function sellPrice(p: Player): number {
   return Math.max(5, Math.round(p.overall * RARITY_SELL_MULT[p.rarity]));
 }
 
-const BASE_KEY = "faf.state.v1";
+const BASE_KEY = "faf.state.v2";
 let currentUserId: string | null = null;
 
 function storageKey(uid: string | null): string {
