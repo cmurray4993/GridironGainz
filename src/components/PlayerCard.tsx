@@ -122,10 +122,7 @@ export function PlayerCard({
               </div>
             )}
 
-            <div className="mt-2 flex items-center justify-between text-[11px]">
-              <span className="rounded-full bg-white/5 px-2 py-0.5 text-muted-foreground">
-                ⭐ Pop {player.popularity}
-              </span>
+            <div className="mt-2 flex items-center justify-end text-[11px]">
               <span className="text-[oklch(0.7_0.18_25)] font-semibold">❤️ {player.fanValue}</span>
             </div>
 
