@@ -1,33 +1,16 @@
-## Goal
-Generate 8 cinematic character portraits — one recurring "base athlete" per position — and use them as the default card art for Bronze and Silver cards. Gold and Elite cards will render without art (empty portrait slot) until unique custom players are added later.
+## Fix: card back text bleeding through the front
 
-## Character brief (per position)
-Each character has a unique face, hairstyle, skin tone, and personality, with a consistent jersey design across the roster (dark navy + gold accents to match the Fourth & Fortune palette). Stylized cartoon-illustration style like the reference upload, but framed cinematically over a moody stadium-lit background.
+**Root cause:** In `src/styles.css`, `card-flip-face` sets `backface-visibility: hidden` but the front face has no explicit `transform`. Combined with child elements that create their own stacking/rendering contexts (the `<img>`, the gradient overlays, the shimmer layers), Chrome and mobile Safari fail to hide the back face — you see the mirrored "BRONZE / EMMITT VAUGHN / 60" from the back leaking through.
 
-- **QB** — athletic build, confident, throwing glove, short hair, team jersey
-- **RB** — compact muscular build, aggressive, powerful legs, arm sleeve
-- **WR** — lean athletic build, fast stance, confident smile, gloves
-- **OL** — very large muscular build, broad shoulders, serious, thick neck
-- **DL** *(user to fill in later — default: massive frame, snarling intensity, eye black, torn sleeves)*
-- **LB** — powerful athletic build, intense, defensive stance
-- **DB** — lean explosive build, alert, speed-focused physique
-- **K** *(user to fill in later — default: lean, focused, calm expression, kicking cleat forward)*
+**Change (CSS only, in `src/styles.css`):**
 
-Each image saved to `src/assets/art/{pos}.jpg` (overwriting existing position art) at 1024x1024, standard quality.
+1. Give the front face an explicit `transform: rotateY(0deg)` so both faces are 3D-transformed siblings — backface culling only works reliably when both faces have a transform.
+2. Add `-webkit-transform: rotateY(...)` variants for iOS Safari.
+3. Add `transform-style: preserve-3d` to `card-flip-face` so nested absolutely-positioned children inherit the 3D context instead of flattening.
+4. Add `will-change: transform` to `card-flip-inner` to promote it to its own compositor layer (prevents subpixel bleed during the flip).
 
-## Card art wiring
-In `src/components/PlayerCard.tsx`:
-- Bronze and Silver cards → render the position character from `POSITION_ART` (current behavior, new images).
-- Gold and Elite cards → **do not render the position image**. Instead show a subtle placeholder (dark gradient panel with the position glyph and a small "Custom art coming soon" caption) so those slots feel intentionally reserved for unique athletes later.
-- Keep the gold-shimmer overlay on Gold/Elite so they still feel premium.
-- No changes to stats, back-of-card, flip behavior, or rarity logic.
+No component code changes, no behavior changes — just a CSS patch to the four `@utility` blocks at the bottom of `src/styles.css`.
 
 ## Out of scope
-- No new positions (TE not added).
-- No changes to player generation, rarity thresholds, or sim.
-- Gold/Elite custom character art will be generated later per player.
 
-## Technical notes
-- Use `imagegen--generate_image` with `model: "standard"` for each of the 8 positions, `transparent_background: false`, JPG output.
-- Prompts will share a style suffix: "stylized cartoon illustration, thick clean outlines, cinematic stadium lighting, dark navy and gold team jersey, moody rim light, dramatic low-angle framing, painterly shading, high detail, portrait framing centered on character."
-- After images regenerate, edit `PlayerCard.tsx` front face so `player.rarity === "gold" || "elite"` skips the `<img>` and renders the reserved-slot panel instead.
+The nested-`<button>` hydration warning on `/lineup` is a separate issue and is not addressed here.
