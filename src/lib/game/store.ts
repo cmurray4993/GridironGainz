@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, computeFanValue, rarityFromOverall, type GameState, type Player, type Position, type Rarity } from "./types";
+import { canonicalName } from "./generate";
 
 const RARITY_SELL_MULT: Record<Rarity, number> = {
   bronze: 0.8,
@@ -45,6 +46,7 @@ function load(): GameState {
       const popularity = typeof p.popularity === "number"
         ? p.popularity
         : Math.max(30, Math.min(99, Math.round(overall * 0.7 + (p.fanValue ?? 0) * 0.1)));
+      const rarity = rarityFromOverall(overall);
       return {
         ...p,
         overall,
@@ -52,10 +54,12 @@ function load(): GameState {
         speed,
         iq,
         popularity,
-        rarity: rarityFromOverall(overall),
+        rarity,
         fanValue: computeFanValue(overall, popularity),
+        name: canonicalName(rarity, p.position),
       };
     });
+
     merged.fans = merged.roster.reduce((a, p) => a + p.fanValue, 0);
     return merged;
   } catch {

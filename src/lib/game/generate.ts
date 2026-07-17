@@ -1,7 +1,52 @@
 import { POSITIONS, RARITY_META, computeFanValue, type Player, type Position, type Rarity } from "./types";
 
-const FIRST = ["Jax","Cade","Rio","Deshaun","Tariq","Marcus","Kai","Elijah","Zion","Trey","Damon","Rome","Beau","Ace","Nico","Kobe","Silas","Odell","Jaxon","Malik","Deon","Reese","Bryce","Tate","Cash","Onyx","Rex","Blaze","Sterling","Quinton","Amari","Roman","Miles","Kingsley","Titus","Emmitt","Ronan","Dax","Cruz","Wyatt"];
-const LAST = ["Steele","Hawke","Vega","Bishop","Cross","Storm","Rivers","Knox","Reign","Cole","Blackwood","Vaughn","Kingsley","Ashford","Lang","Monroe","Holt","Sinclair","Rhodes","Sable","Vance","Kane","Fox","North","Pierce","Wilder","Locke","Sable","Marsh","Beckett","Ellis","Grady","Slater","Thorn","Cavanaugh","Rooks","Duval","Larkin","Whit","Ozuna"];
+const CANONICAL_NAMES: Record<Rarity, Record<Position, string>> = {
+  bronze: {
+    QB: 'Buck "Strong Arm" McGee',
+    RB: 'Tank "Downhill" Briggs',
+    WR: 'Deacon "Sure Hands" Reyes',
+    OL: 'Big Moe "The Wall" Kowalski',
+    DL: 'Rocco "Trench Beast" Malone',
+    LB: 'Chip "Middle Man" Doyle',
+    DB: 'Ace "Sticky" Fontaine',
+    K:  'Boots "Doink" Sanderson',
+  },
+  silver: {
+    QB: 'Rex "Gunslinger" Callahan',
+    RB: 'Duke "Chain Mover" Ramsey',
+    WR: 'Flash "Slot Machine" Ortega',
+    OL: 'Hoss "Anchor" Van Zandt',
+    DL: 'Bull "Sack Man" Okafor',
+    LB: 'Ryder "Sideline" Kingsley',
+    DB: 'Neo "Ball Hawk" Vega',
+    K:  'Splits "Ice Water" Barrett',
+  },
+  gold: {
+    QB: 'Unsigned "Prospect" QB',
+    RB: 'Unsigned "Prospect" RB',
+    WR: 'Unsigned "Prospect" WR',
+    OL: 'Unsigned "Prospect" OL',
+    DL: 'Unsigned "Prospect" DL',
+    LB: 'Unsigned "Prospect" LB',
+    DB: 'Unsigned "Prospect" DB',
+    K:  'Unsigned "Prospect" K',
+  },
+  elite: {
+    QB: 'Unsigned "Prospect" QB',
+    RB: 'Unsigned "Prospect" RB',
+    WR: 'Unsigned "Prospect" WR',
+    OL: 'Unsigned "Prospect" OL',
+    DL: 'Unsigned "Prospect" DL',
+    LB: 'Unsigned "Prospect" LB',
+    DB: 'Unsigned "Prospect" DB',
+    K:  'Unsigned "Prospect" K',
+  },
+};
+
+export function canonicalName(rarity: Rarity, position: Position): string {
+  return CANONICAL_NAMES[rarity][position];
+}
+
 
 function rand<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 function randInt(min: number, max: number): number {
@@ -40,7 +85,7 @@ export function generatePlayer(forcedPosition?: Position): Player {
 
   return {
     id: crypto.randomUUID(),
-    name: `${rand(FIRST)} ${rand(LAST)}`,
+    name: canonicalName(rarity, position),
     position,
     overall,
     strength,
@@ -89,7 +134,7 @@ function buildPlayerWithRarity(rarity: Rarity): Player {
   );
   return {
     id: crypto.randomUUID(),
-    name: `${rand(FIRST)} ${rand(LAST)}`,
+    name: canonicalName(rarity, position),
     position,
     overall,
     strength,
