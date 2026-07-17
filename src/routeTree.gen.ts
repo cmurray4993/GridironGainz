@@ -15,6 +15,7 @@ import { Route as PackRouteImport } from './routes/pack'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as LineupRouteImport } from './routes/lineup'
 import { Route as GameRouteImport } from './routes/game'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 
 const StandingsRoute = StandingsRouteImport.update({
@@ -47,6 +48,11 @@ const GameRoute = GameRouteImport.update({
   path: '/game',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -55,6 +61,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
   '/market': typeof MarketRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
   '/market': typeof MarketRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
   '/market': typeof MarketRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/game'
     | '/lineup'
     | '/market'
@@ -92,10 +102,19 @@ export interface FileRouteTypes {
     | '/roster'
     | '/standings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game' | '/lineup' | '/market' | '/pack' | '/roster' | '/standings'
+  to:
+    | '/'
+    | '/auth'
+    | '/game'
+    | '/lineup'
+    | '/market'
+    | '/pack'
+    | '/roster'
+    | '/standings'
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/game'
     | '/lineup'
     | '/market'
@@ -106,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   GameRoute: typeof GameRoute
   LineupRoute: typeof LineupRoute
   MarketRoute: typeof MarketRoute
@@ -158,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -170,6 +197,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   GameRoute: GameRoute,
   LineupRoute: LineupRoute,
   MarketRoute: MarketRoute,
