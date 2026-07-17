@@ -185,6 +185,8 @@ function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Playe
     popularity,
     fanValue: computeFanValue(overall, popularity),
     rarity,
+    signature: makeSignatureAttr(position, overall),
+
   };
 }
 
