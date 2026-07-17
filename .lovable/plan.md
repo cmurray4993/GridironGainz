@@ -1,46 +1,17 @@
-## Goal
-Every card at a given (position, rarity) shares one canonical name in the format `First "Descriptive" Last`. Bronze and Silver get position-themed nicknames; Gold and Elite show `Unsigned Prospect` until custom players are added.
+## Rebalance Backyard Heroes — Program I pack
 
-## Name map
-Add `CANONICAL_NAMES: Record<Rarity, Record<Position, string>>` in `src/lib/game/generate.ts`. Every player generated (standard pack, pro pack, migration) looks up its name from this table — no more random first/last name rolls.
+Adjust the promo pack composition in `src/lib/game/generate.ts` so it's less overpowered while still feeling premium.
 
-```
-Bronze
-  QB  Buck "Strong Arm" McGee
-  RB  Tank "Downhill" Briggs
-  WR  Deacon "Sure Hands" Reyes
-  OL  Big Moe "The Wall" Kowalski
-  DL  Rocco "Trench Beast" Malone
-  LB  Chip "Middle Man" Doyle
-  DB  Ace "Sticky" Fontaine
-  K   Boots "Doink" Sanderson
+### New pack contents (5 cards, still 25,000 🪙)
+- 1× Bronze or better
+- 3× Silver or better
+- 1× Gold or better
+- Promo signature chance layered on top: each of the 5 slots has a chance to be upgraded to a signature pull, tuned so the average pack yields ~1 signature (roughly 25% per slot). This preserves the "high chance to pull a promo" feel without guaranteeing one.
 
-Silver
-  QB  Rex "Gunslinger" Callahan
-  RB  Duke "Chain Mover" Ramsey
-  WR  Flash "Slot Machine" Ortega
-  OL  Hoss "Anchor" Van Zandt
-  DL  Bull "Sack Man" Okafor
-  LB  Ryder "Sideline to Sideline" Kingsley
-  DB  Neo "Ball Hawk" Vega
-  K   Splits "Ice Water" Barrett
+### Files touched
+- `src/lib/game/generate.ts` — rewrite `generateBackyardHeroPack()` to build the fixed rarity floors above, then roll per-slot signature upgrades that respect each slot's minimum rarity (a signature only replaces a slot if the signature's rarity meets that floor).
 
-Gold   → Unsigned "Prospect" [POS]
-Elite  → Unsigned "Prospect" [POS]
-```
+### Store copy
+- `src/routes/pack.tsx` — update the Backyard Heroes `blurb` to: "1 Bronze+, 3 Silver+, 1 Gold+. High chance at a signature promo."
 
-Gold/Elite use a shared placeholder like `Unsigned "Prospect" QB` so the card back still identifies the position.
-
-## Code changes
-- `src/lib/game/generate.ts`
-  - Add `CANONICAL_NAMES` table above.
-  - Replace `name: \`${rand(FIRST)} ${rand(LAST)}\`` in `generatePlayer` and `buildPlayerWithRarity` with a lookup: `name: canonicalName(rarity, position)`.
-  - Remove the now-unused `FIRST` / `LAST` arrays.
-- `src/lib/game/store.ts`
-  - In the existing migration block, after normalizing rarity, overwrite `p.name` with `canonicalName(p.rarity, p.position)` so current rosters instantly reflect the new names (no need for the user to re-pull).
-- Front of card and lineup slot render `player.name` as-is; the quoted nickname reads naturally.
-
-## Out of scope
-- No sim, economy, or rarity-threshold changes.
-- Duplicate names are intentional (that's the "recurring character" feel you asked for).
-- Gold/Elite names will be replaced when unique custom players are added later.
+No other screens, costs, or systems change.
