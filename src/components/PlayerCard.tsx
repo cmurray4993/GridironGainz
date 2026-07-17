@@ -20,7 +20,6 @@ const rarityLabel: Record<Player["rarity"], string> = {
 
 // Deterministic portrait/logo emoji per player so cards feel unique without art.
 const PORTRAITS = ["🏈", "💪", "⚡", "🔥", "🎯", "🚀", "🛡️", "👑", "🦁", "🐻", "🐺", "🦅"];
-const LOGOS = ["🛡️", "⚔️", "⚡", "🔱", "🏹", "⭐", "🔥", "🐺", "🦅", "🦁", "👑", "💎"];
 
 function hashCode(id: string): number {
   let h = 0;
@@ -54,7 +53,6 @@ export function PlayerCard({
 
   const h = hashCode(player.id);
   const portrait = PORTRAITS[h % PORTRAITS.length];
-  const logo = LOGOS[(h >> 3) % LOGOS.length];
   const archetype = playerArchetype(player);
   const fansPerHr = +(player.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(2);
 
@@ -106,7 +104,7 @@ export function PlayerCard({
             </div>
 
             {!compact && (
-              <div className="mt-3 flex-1 grid place-items-center relative">
+              <div className="mt-3 flex-1 grid place-items-center">
                 <div
                   className={cn(
                     "grid h-20 w-20 place-items-center rounded-full text-4xl border border-white/10",
@@ -115,9 +113,6 @@ export function PlayerCard({
                   )}
                 >
                   <span>{portrait}</span>
-                </div>
-                <div className="absolute right-1 bottom-1 grid h-7 w-7 place-items-center rounded-full border border-white/15 bg-background/80 text-sm">
-                  {logo}
                 </div>
               </div>
             )}
