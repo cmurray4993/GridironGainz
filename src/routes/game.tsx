@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { recordResult, useGame } from "@/lib/game/store";
 import { LINEUP_SLOTS } from "@/lib/game/types";
-import { lineupOverall, pickTodaysOpponent, simulateGame, type SimResult } from "@/lib/game/sim";
+import { lineupOverall, pickTodaysOpponent, simulateGame, type SimResult, type TeamStats, type PlayerStat } from "@/lib/game/sim";
 import { KickoffCountdown } from "@/components/KickoffCountdown";
 import { kickoffStatus } from "@/lib/game/kickoff";
 
@@ -38,8 +38,11 @@ function GamePage() {
     return () => clearInterval(i);
   }, []);
 
+  const [testMode, setTestMode] = useState(false);
+  const canStart = filled > 0 && (kick.isLive || testMode);
+
   const start = () => {
-    if (filled === 0 || !kick.isLive) return;
+    if (filled === 0) return;
     const r = simulateGame(lineupPlayers, opponent.overall, opponent.name);
     setResult(r);
     setShown([]);
@@ -125,13 +128,19 @@ function GamePage() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={start}
-              disabled={filled === 0 || !kick.isLive}
+              disabled={!canStart}
               className="flex-1 min-w-[180px] rounded-lg bg-[image:var(--gradient-gold)] px-4 py-3 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:opacity-50"
             >
-              {filled === 0 ? "Set a lineup first" : kick.isLive ? "Kickoff" : "Locked until 7:00 PM CT"}
+              {filled === 0 ? "Set a lineup first" : kick.isLive ? "Kickoff" : testMode ? "Run test kickoff" : "Locked until 7:00 PM CT"}
             </button>
             <Link to="/lineup" className="rounded-lg border border-border bg-secondary px-4 py-3 text-sm">Edit lineup</Link>
           </div>
+          {!kick.isLive && (
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <input type="checkbox" checked={testMode} onChange={(e) => setTestMode(e.target.checked)} />
+              Dev: simulate now (bypass 7:00 PM CT lock)
+            </label>
+          )}
           <p className="text-xs text-muted-foreground">Matches lock in at 7:00 PM Central daily. Set your lineup before kickoff — the sim runs against another manager's squad. Speed beats strength · Strength beats IQ · IQ beats speed.</p>
         </section>
       )}
@@ -160,6 +169,90 @@ function GamePage() {
           )}
         </section>
       )}
+
+      {phase === "final" && result && (
+        <section className="rounded-xl border border-border/70 bg-card/70 p-4 space-y-4">
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Box score</div>
+          <div className="grid grid-cols-2 gap-3">
+            <TeamStatCard label="Your squad" score={result.homeScore} stats={result.homeStats} accent="text-gradient-gold" />
+            <TeamStatCard label={result.opponentName} score={result.awayScore} stats={result.awayStats} accent="text-[oklch(0.72_0.2_28)]" />
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <PlayerStatTable title="Your players" rows={result.homePlayers} />
+            <PlayerStatTable title={`${result.opponentName}`} rows={result.awayPlayers} />
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Team OVR {result.homeOverall} vs {result.opponentOverall} · Speed→Strength→IQ→Speed matchups + variance drove the outcome.
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function TeamStatCard({ label, score, stats, accent }: { label: string; score: number; stats: TeamStats; accent: string }) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground truncate">{label}</div>
+      <div className={`font-display text-4xl tabular-nums ${accent}`}>{score}</div>
+      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+        <StatRow k="TDs" v={stats.tds} />
+        <StatRow k="FGs" v={stats.fgs} />
+        <StatRow k="Punts" v={stats.punts} />
+        <StatRow k="Turnovers" v={stats.turnovers} />
+        {stats.bigPlays > 0 && <StatRow k="Big plays" v={stats.bigPlays} />}
+      </dl>
+      {(stats.topScorer && (stats.topScorer.tds + stats.topScorer.fgs) > 0) && (
+        <div className="mt-2 text-[11px] text-muted-foreground">
+          <span className="text-primary">MVP</span> · {stats.topScorer.name} ({stats.topScorer.position}) — {stats.topScorer.tds} TD / {stats.topScorer.fgs} FG
+        </div>
+      )}
+      {(stats.topDefender && (stats.topDefender.ints + stats.topDefender.stops) > 0) && (
+        <div className="text-[11px] text-muted-foreground">
+          <span className="text-primary">Defender</span> · {stats.topDefender.name} ({stats.topDefender.position}) — {stats.topDefender.stops} stops / {stats.topDefender.ints} INT
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatRow({ k, v }: { k: string; v: number }) {
+  return (
+    <>
+      <dt className="text-muted-foreground">{k}</dt>
+      <dd className="text-right tabular-nums">{v}</dd>
+    </>
+  );
+}
+
+function PlayerStatTable({ title, rows }: { title: string; rows: PlayerStat[] }) {
+  const active = rows.filter((r) => r.touches + r.stops + r.ints > 0);
+  if (!active.length) return null;
+  return (
+    <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground truncate">{title}</div>
+      <table className="mt-2 w-full text-xs">
+        <thead className="text-[10px] uppercase text-muted-foreground">
+          <tr>
+            <th className="text-left font-normal">Player</th>
+            <th className="text-right font-normal">TD</th>
+            <th className="text-right font-normal">FG</th>
+            <th className="text-right font-normal">Stop</th>
+            <th className="text-right font-normal">INT</th>
+          </tr>
+        </thead>
+        <tbody>
+          {active.map((r) => (
+            <tr key={r.id} className="border-t border-border/40">
+              <td className="py-1 pr-1 truncate">{r.name} <span className="text-muted-foreground">{r.position}</span></td>
+              <td className="text-right tabular-nums">{r.tds}</td>
+              <td className="text-right tabular-nums">{r.fgs}</td>
+              <td className="text-right tabular-nums">{r.stops}</td>
+              <td className="text-right tabular-nums">{r.ints}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

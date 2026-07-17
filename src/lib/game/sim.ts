@@ -1,6 +1,27 @@
 import { generatePlayer } from "./generate";
 import { LINEUP_SLOTS, POSITION_WEIGHTS, type Player, type Position } from "./types";
 
+export interface PlayerStat {
+  id: string;
+  name: string;
+  position: Position;
+  touches: number;
+  tds: number;
+  fgs: number;
+  stops: number;
+  ints: number;
+}
+
+export interface TeamStats {
+  tds: number;
+  fgs: number;
+  punts: number;
+  turnovers: number;
+  bigPlays: number;
+  topScorer?: PlayerStat;
+  topDefender?: PlayerStat;
+}
+
 export interface SimResult {
   homeScore: number;
   awayScore: number;
@@ -9,6 +30,10 @@ export interface SimResult {
   opponentOverall: number;
   homeOverall: number;
   opponentName: string;
+  homeStats: TeamStats;
+  awayStats: TeamStats;
+  homePlayers: PlayerStat[];
+  awayPlayers: PlayerStat[];
 }
 
 const OPPONENT_NAMES = [
@@ -86,9 +111,19 @@ export function simulateGame(homeLineup: (Player | null)[], opponentOverall: num
   const home = homeLineup.filter(Boolean) as Player[];
   const away = synthOpponentLineup(opponentOverall);
 
+  const homeStatsMap = new Map<string, PlayerStat>();
+  const awayStatsMap = new Map<string, PlayerStat>();
+  const ensure = (map: Map<string, PlayerStat>, p: Player): PlayerStat => {
+    let s = map.get(p.id);
+    if (!s) { s = { id: p.id, name: p.name, position: p.position, touches: 0, tds: 0, fgs: 0, stops: 0, ints: 0 }; map.set(p.id, s); }
+    return s;
+  };
+
   let homeScore = 0;
   let awayScore = 0;
   const log: string[] = [];
+  const homeTeam: TeamStats = { tds: 0, fgs: 0, punts: 0, turnovers: 0, bigPlays: 0 };
+  const awayTeam: TeamStats = { tds: 0, fgs: 0, punts: 0, turnovers: 0, bigPlays: 0 };
 
   const quarters = 4;
   const drivesPerQuarter = 2;
@@ -96,58 +131,76 @@ export function simulateGame(homeLineup: (Player | null)[], opponentOverall: num
   for (let q = 1; q <= quarters; q++) {
     log.push(`— Q${q} —`);
     for (let d = 0; d < drivesPerQuarter; d++) {
-      const homeDrive = driveResult(home, away, "home");
-      homeScore += homeDrive.points;
-      log.push(`${playTag()} ${homeDrive.narration} (${homeScore}-${awayScore})`);
+      const hd = driveResult(home, away, "home");
+      homeScore += hd.points;
+      applyStats(hd, ensure(homeStatsMap, hd.offPlayer), ensure(awayStatsMap, hd.defPlayer), homeTeam);
+      log.push(`▸ ${hd.narration} (${homeScore}-${awayScore})`);
 
-      const awayDrive = driveResult(away, home, "away", opponentName);
-      awayScore += awayDrive.points;
-      log.push(`${playTag()} ${awayDrive.narration} (${homeScore}-${awayScore})`);
+      const ad = driveResult(away, home, "away", opponentName);
+      awayScore += ad.points;
+      applyStats(ad, ensure(awayStatsMap, ad.offPlayer), ensure(homeStatsMap, ad.defPlayer), awayTeam);
+      log.push(`▸ ${ad.narration} (${homeScore}-${awayScore})`);
     }
   }
 
-  // Coin flip upset chance for close games
   if (Math.abs(homeScore - awayScore) <= 3 && Math.random() < 0.15) {
     const swing = Math.random() < 0.5 ? 3 : 7;
-    if (Math.random() < 0.5) { homeScore += swing; log.push(`⚡ Late fourth-and-fortune conversion! +${swing} home.`); }
-    else { awayScore += swing; log.push(`⚡ ${opponentName} strike back in the closing seconds! +${swing}.`); }
+    if (Math.random() < 0.5) { homeScore += swing; homeTeam.bigPlays++; log.push(`⚡ Late fourth-and-fortune conversion! +${swing} home.`); }
+    else { awayScore += swing; awayTeam.bigPlays++; log.push(`⚡ ${opponentName} strike back in the closing seconds! +${swing}.`); }
   }
 
   const win = homeScore > awayScore;
   log.push(win ? `🏆 Final: Your squad ${homeScore} - ${awayScore} ${opponentName}` : `💔 Final: ${opponentName} ${awayScore} - ${homeScore} Your squad`);
 
+  const homePlayers = [...homeStatsMap.values()];
+  const awayPlayers = [...awayStatsMap.values()];
+  homeTeam.topScorer = [...homePlayers].sort((a, b) => (b.tds * 7 + b.fgs * 3) - (a.tds * 7 + a.fgs * 3))[0];
+  homeTeam.topDefender = [...homePlayers].sort((a, b) => (b.ints * 3 + b.stops) - (a.ints * 3 + a.stops))[0];
+  awayTeam.topScorer = [...awayPlayers].sort((a, b) => (b.tds * 7 + b.fgs * 3) - (a.tds * 7 + a.fgs * 3))[0];
+  awayTeam.topDefender = [...awayPlayers].sort((a, b) => (b.ints * 3 + b.stops) - (a.ints * 3 + a.stops))[0];
+
   return {
     homeScore, awayScore, win, log,
-    opponentOverall,
-    opponentName,
+    opponentOverall, opponentName,
     homeOverall: lineupOverall(homeLineup),
+    homeStats: homeTeam, awayStats: awayTeam,
+    homePlayers, awayPlayers,
   };
 }
 
-function playTag() {
-  return `▸`;
+interface DriveOutcome {
+  points: number;
+  narration: string;
+  offPlayer: Player;
+  defPlayer: Player;
+  kind: "td" | "fg" | "punt" | "stuff" | "int" | "none";
 }
 
-function driveResult(offense: Player[], defense: Player[], side: "home" | "away", awayName?: string) {
-  if (!offense.length) return { points: 0, narration: "No players available — turnover on downs." };
+function applyStats(d: DriveOutcome, off: PlayerStat, def: PlayerStat, team: TeamStats) {
+  off.touches++;
+  if (d.kind === "td") { off.tds++; team.tds++; }
+  else if (d.kind === "fg") { off.fgs++; team.fgs++; }
+  else if (d.kind === "punt") { team.punts++; def.stops++; }
+  else if (d.kind === "stuff") { team.punts++; def.stops++; }
+  else if (d.kind === "int") { team.turnovers++; def.ints++; }
+}
 
+function driveResult(offense: Player[], defense: Player[], side: "home" | "away", awayName?: string): DriveOutcome {
   const off = offense[Math.floor(Math.random() * offense.length)];
   const def = defense[Math.floor(Math.random() * defense.length)];
   const play = PLAY_TYPES[Math.floor(Math.random() * PLAY_TYPES.length)];
 
   const offRating = playerRating(off) * rpsBonus(off, def);
   const defRating = playerRating(def);
-
-  // Underdog upset factor — noise scales with rating gap so weaker teams can win
   const gap = offRating - defRating;
-  const noise = (Math.random() - 0.5) * 40; // big variance = upset potential
+  const noise = (Math.random() - 0.5) * 40;
   const outcome = gap + noise;
 
   const who = side === "home" ? off.name : `${awayName ?? "Away"}'s ${off.name}`;
 
-  if (outcome > 18) return { points: 7, narration: `${who} breaks the ${play} for a TOUCHDOWN.` };
-  if (outcome > 8)  return { points: 3, narration: `${who} grinds out the ${play}; drive stalls, field goal is good.` };
-  if (outcome > -6) return { points: 0, narration: `${who} runs the ${play} but ${def.name} stuffs it. Punt.` };
-  if (outcome > -18) return { points: 0, narration: `${def.name} reads the ${play} and forces a three-and-out.` };
-  return { points: 0, narration: `${def.name} jumps the ${play} — INTERCEPTION!` };
+  if (outcome > 18) return { points: 7, narration: `${who} breaks the ${play} for a TOUCHDOWN.`, offPlayer: off, defPlayer: def, kind: "td" };
+  if (outcome > 8)  return { points: 3, narration: `${who} grinds out the ${play}; drive stalls, field goal is good.`, offPlayer: off, defPlayer: def, kind: "fg" };
+  if (outcome > -6) return { points: 0, narration: `${who} runs the ${play} but ${def.name} stuffs it. Punt.`, offPlayer: off, defPlayer: def, kind: "punt" };
+  if (outcome > -18) return { points: 0, narration: `${def.name} reads the ${play} and forces a three-and-out.`, offPlayer: off, defPlayer: def, kind: "stuff" };
+  return { points: 0, narration: `${def.name} jumps the ${play} — INTERCEPTION!`, offPlayer: off, defPlayer: def, kind: "int" };
 }
