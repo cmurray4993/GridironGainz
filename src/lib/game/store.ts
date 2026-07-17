@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, computeFanValue, rarityFromOverall, type GameState, type Player, type Position, type Rarity } from "./types";
-import { canonicalName } from "./generate";
+import { canonicalName, SIGNATURES } from "./generate";
 
 const RARITY_SELL_MULT: Record<Rarity, number> = {
   bronze: 0.8,
@@ -52,6 +52,22 @@ function load(uid: string | null): GameState {
     // Backfill popularity + recompute fanValue for legacy saves,
     // clamp overall to current cap, and remap legacy rarities.
     merged.roster = merged.roster.map((p) => {
+      // Signature players are canonical: snap every copy to the registry stats.
+      const sig = SIGNATURES.find((s) => s.name === p.name);
+      if (sig) {
+        return {
+          ...p,
+          name: sig.name,
+          position: sig.position,
+          rarity: sig.rarity,
+          overall: sig.overall,
+          strength: sig.strength,
+          speed: sig.speed,
+          iq: sig.iq,
+          popularity: sig.popularity,
+          fanValue: computeFanValue(sig.overall, sig.popularity),
+        };
+      }
       const overall = Math.min(86, Math.max(60, p.overall));
       const strength = Math.min(99, p.strength);
       const speed = Math.min(99, p.speed);
@@ -60,7 +76,6 @@ function load(uid: string | null): GameState {
         ? p.popularity
         : Math.max(30, Math.min(99, Math.round(overall * 0.7 + (p.fanValue ?? 0) * 0.1)));
       const rarity = rarityFromOverall(overall);
-      // Preserve custom gold/elite names; only re-canonicalize bronze/silver.
       const canonical = canonicalName(rarity, p.position);
       const name = (rarity === "gold" || rarity === "elite") && p.name && !p.name.startsWith("Unsigned")
         ? p.name

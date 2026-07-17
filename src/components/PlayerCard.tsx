@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import qbArt from "@/assets/art/qb.jpg";
 import rbArt from "@/assets/art/rb.jpg";
 import wrArt from "@/assets/art/wr.jpg";
+import teArt from "@/assets/art/te.jpg";
 import olArt from "@/assets/art/ol.jpg";
 import dlArt from "@/assets/art/dl.jpg";
 import lbArt from "@/assets/art/lb.jpg";
@@ -13,9 +14,14 @@ import sigCreighton from "@/assets/art/sig-creighton-murray.jpg";
 import sigTalon from "@/assets/art/sig-talon-reynolds.jpg";
 import sigTy from "@/assets/art/sig-ty-smith.jpg";
 import sigGary from "@/assets/art/sig-gary-gainz.jpg";
+import sigBusta from "@/assets/art/sig-busta-jones.jpg";
+import sigGringo from "@/assets/art/sig-gringo-guth.jpg";
+import sigSleepy from "@/assets/art/sig-sleepy-cringle.jpg";
+import sigMettling from "@/assets/art/sig-josiah-mettling.jpg";
+import sigBall from "@/assets/art/sig-josiah-ball.jpg";
 
 const POSITION_ART: Record<Position, string> = {
-  QB: qbArt, RB: rbArt, WR: wrArt, OL: olArt,
+  QB: qbArt, RB: rbArt, WR: wrArt, TE: teArt, OL: olArt,
   DL: dlArt, LB: lbArt, DB: dbArt, K: kArt,
 };
 
@@ -24,6 +30,11 @@ const SIGNATURE_ART: Record<string, string> = {
   'Talon "7 Iron" Reynolds': sigTalon,
   'Ty "Teethman" Smith': sigTy,
   'Gary Gainz': sigGary,
+  'Busta "Fly" Jones': sigBusta,
+  'Gringo Guth': sigGringo,
+  'Sleepy Cringle': sigSleepy,
+  'Josiah "8 Man" Mettling': sigMettling,
+  'Josiah "The Messiah" Ball': sigBall,
 };
 
 const rarityBg: Record<Player["rarity"], string> = {

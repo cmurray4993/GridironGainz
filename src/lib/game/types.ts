@@ -1,10 +1,10 @@
 export type Rarity = "bronze" | "silver" | "gold" | "elite";
 
-export type Position = "QB" | "RB" | "WR" | "OL" | "DL" | "LB" | "DB" | "K";
+export type Position = "QB" | "RB" | "WR" | "TE" | "OL" | "DL" | "LB" | "DB" | "K";
 
-export const POSITIONS: Position[] = ["QB", "RB", "WR", "OL", "DL", "LB", "DB", "K"];
+export const POSITIONS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K"];
 
-export const LINEUP_SLOTS: Position[] = ["QB", "RB", "WR", "OL", "DL", "LB", "DB"];
+export const LINEUP_SLOTS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB"];
 
 export interface Player {
   id: string;
@@ -57,6 +57,7 @@ export const POSITION_WEIGHTS: Record<Position, { str: number; spd: number; iq: 
   QB: { str: 0.15, spd: 0.20, iq: 0.65 },
   RB: { str: 0.40, spd: 0.45, iq: 0.15 },
   WR: { str: 0.15, spd: 0.60, iq: 0.25 },
+  TE: { str: 0.40, spd: 0.30, iq: 0.30 },
   OL: { str: 0.65, spd: 0.10, iq: 0.25 },
   DL: { str: 0.60, spd: 0.25, iq: 0.15 },
   LB: { str: 0.40, spd: 0.30, iq: 0.30 },
