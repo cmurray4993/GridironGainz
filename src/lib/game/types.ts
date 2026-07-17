@@ -82,3 +82,5 @@ export function rarityFromOverall(overall: number): Rarity {
 export const COIN_PER_FAN_PER_HOUR = 0.01;
 export const PACK_COST = 250;
 export const PACK_SIZE = 5;
+export const PRO_PACK_COST = 7500;
+export const PRO_PACK_SIZE = 5;
