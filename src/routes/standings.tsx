@@ -227,26 +227,63 @@ function StandingsPage() {
 
       {/* Prize + promotion ladder */}
       <section className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-[var(--shadow-card)]">
-        <h2 className="font-display text-xl">League ladder & prizes</h2>
-        <p className="mt-1 text-[11px] text-muted-foreground">Win your league to promote. Finish last two to drop a tier next season.</p>
+        <div className="flex items-baseline justify-between gap-2">
+          <h2 className="font-display text-xl">SOL prize pool</h2>
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Total per season</div>
+            <div className="font-display text-lg text-gradient-gold">◎ {TOTAL_SEASON_POT_SOL} SOL</div>
+          </div>
+        </div>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          Every seat in every league gets a share of the pot at season end. Top {PROMOTE_COUNT} promote, bottom {RELEGATE_COUNT} relegate.
+        </p>
         <div className="mt-3 space-y-2">
           {[...LEAGUE_ORDER].reverse().map((t) => {
             const meta = LEAGUES[t];
             const active = t === tier;
             const tierNum = LEAGUE_ORDER.indexOf(t) + 1;
+            const champ = solPrizeFor(t, 1);
+            const last = solPrizeFor(t, TEAMS_PER_LEAGUE);
+            const tierTotal = Array.from({ length: TEAMS_PER_LEAGUE }, (_, i) => solPrizeFor(t, i + 1).sol).reduce((a, b) => a + b, 0);
             return (
               <div key={t} className={cn(
-                "flex items-center gap-3 rounded-lg border p-3",
+                "rounded-lg border p-3",
                 active ? "border-primary bg-primary/10" : "border-border/60 bg-background/40",
               )}>
-                <div className="grid h-10 w-10 place-items-center rounded-lg text-xl" style={{ background: `${meta.color}22`, color: meta.color }}>{meta.emoji}</div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-display text-base truncate">Tier {tierNum} · {meta.name}</div>
-                  <div className="text-[10px] text-muted-foreground">Win {meta.regularWin} 🪙 · Playoff {meta.playoffPrize} 🪙</div>
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-lg text-xl" style={{ background: `${meta.color}22`, color: meta.color }}>{meta.emoji}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-display text-base truncate">Tier {tierNum} · {meta.name}</div>
+                    <div className="text-[10px] text-muted-foreground">Tier share ◎ {formatSol(tierTotal)} SOL · Win {meta.regularWin} 🪙</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Champion</div>
+                    <div className="font-display text-lg text-gradient-gold">◎ {formatSol(champ.sol)}</div>
+                    <div className="text-[9px] text-muted-foreground">{champ.pct.toFixed(2)}%</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Champion</div>
-                  <div className="font-display text-lg text-gradient-gold">{meta.championPrize.toLocaleString()} 🪙</div>
+                <div className="mt-2 grid grid-cols-6 gap-1 text-[9px] tabular-nums sm:grid-cols-12">
+                  {Array.from({ length: TEAMS_PER_LEAGUE }, (_, i) => {
+                    const pos = i + 1;
+                    const p = solPrizeFor(t, pos);
+                    const promote = pos <= PROMOTE_COUNT;
+                    const relegate = pos > TEAMS_PER_LEAGUE - RELEGATE_COUNT;
+                    return (
+                      <div key={pos} className={cn(
+                        "rounded border px-1 py-1 text-center",
+                        promote ? "border-emerald-500/40 bg-emerald-500/10"
+                               : relegate ? "border-red-500/40 bg-red-500/10"
+                               : "border-border/50 bg-background/40",
+                      )}>
+                        <div className="text-muted-foreground">#{pos}</div>
+                        <div className="font-semibold text-foreground">◎{formatSol(p.sol)}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-1 flex justify-between text-[9px] text-muted-foreground">
+                  <span>Champion ◎ {formatSol(champ.sol)}</span>
+                  <span>Last ◎ {formatSol(last.sol)}</span>
                 </div>
               </div>
             );
