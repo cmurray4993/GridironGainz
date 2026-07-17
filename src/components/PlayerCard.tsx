@@ -19,6 +19,7 @@ import sigGringo from "@/assets/art/sig-gringo-guth.jpg";
 import sigSleepy from "@/assets/art/sig-sleepy-cringle.jpg";
 import sigMettling from "@/assets/art/sig-josiah-mettling.jpg";
 import sigBall from "@/assets/art/sig-josiah-ball.jpg";
+import sigSammy from "@/assets/art/sig-sammy-wheeler.jpg";
 import sigBreck from "@/assets/art/sig-breck-guthrie.jpg";
 import sigCarter from "@/assets/art/sig-carter-carter.jpg";
 import sigMason from "@/assets/art/sig-mason-baker.jpg";

@@ -263,4 +263,9 @@ export function devGrantCoins(amount: number) {
   set((s) => ({ ...s, coins: s.coins + amount }));
 }
 
+export function setTeamName(name: string) {
+  const clean = name.trim().slice(0, 24);
+  set((s) => ({ ...s, teamName: clean || undefined }));
+}
+
 /* No auto-collect: coins must be manually claimed via claimCoins(). */

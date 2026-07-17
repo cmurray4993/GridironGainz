@@ -50,6 +50,7 @@ export interface GameState {
   losses: number;
   starterPackOpened?: boolean;
   userId?: string | null;
+  teamName?: string;
 }
 
 // How much each position leans on strength / speed / iq (weights sum ~1)
