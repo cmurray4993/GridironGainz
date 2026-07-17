@@ -143,7 +143,7 @@ export function PlayerCard({
               )}
               {player.name === 'Breck "Coach Razor" Guthrie' && (
                 <div className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-12 rounded-sm border border-[oklch(0.85_0.17_25)]/80 bg-black/55 px-1.5 py-0.5 font-display text-[9px] uppercase tracking-[0.25em] text-[oklch(0.9_0.17_25)] shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
-                  Coach Razor
+                  Check Razor
                 </div>
               )}
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_35%,rgba(0,0,0,0.15)_60%,rgba(0,0,0,0.9)_100%)]" />

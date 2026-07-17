@@ -189,6 +189,17 @@ export function generateProPack(): Player[] {
   ];
 }
 
+/** Position pack: single player at a chosen position. 5% gold, 1% elite. */
+export function generatePositionPack(position: Position): Player[] {
+  const r = Math.random();
+  let rarity: Rarity;
+  if (r < 0.01) rarity = "elite";
+  else if (r < 0.06) rarity = "gold";
+  else if (r < 0.40) rarity = "silver";
+  else rarity = "bronze";
+  return [buildPlayerWithRarity(rarity, position)];
+}
+
 function generateSignaturePromo(): Player {
   return buildFromSignature(rand(SIGNATURES));
 }

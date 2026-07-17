@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PlayerCard } from "@/components/PlayerCard";
-import { generateBackyardHeroPack, generatePack, generateProPack } from "@/lib/game/generate";
+import { generateBackyardHeroPack, generatePack, generatePositionPack, generateProPack } from "@/lib/game/generate";
 import { addPlayers, spendCoins, useGame } from "@/lib/game/store";
-import { BACKYARD_HERO_PACK_COST, PACK_COST, PACK_SIZE, PRO_PACK_COST, type Player } from "@/lib/game/types";
+import { BACKYARD_HERO_PACK_COST, PACK_COST, PACK_SIZE, POSITION_PACK_COST, POSITIONS, PRO_PACK_COST, type Player, type Position } from "@/lib/game/types";
 
 export const Route = createFileRoute("/pack")({
   component: PackPage,
@@ -11,7 +11,7 @@ export const Route = createFileRoute("/pack")({
 });
 
 type Phase = "idle" | "opening" | "revealed";
-type PackKind = "standard" | "pro" | "backyard";
+type PackKind = "standard" | "position" | "pro" | "backyard";
 
 const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; gradient: string; emoji: string; tag?: string }> = {
   standard: {
@@ -20,6 +20,14 @@ const PACK_META: Record<PackKind, { name: string; cost: number; blurb: string; g
     blurb: "5 players. Elite pulls are rare.",
     gradient: "var(--gradient-card-elite)",
     emoji: "🎴",
+  },
+  position: {
+    name: "Position Pack",
+    cost: POSITION_PACK_COST,
+    blurb: "Pick a position. 1 player. 5% Gold, 1% Elite.",
+    gradient: "var(--gradient-card-elite)",
+    emoji: "🎯",
+    tag: "Targeted",
   },
   pro: {
     name: "Pro Pack",
@@ -44,18 +52,24 @@ function PackPage() {
   const [pull, setPull] = useState<Player[]>([]);
   const [revealed, setRevealed] = useState(0);
   const [lastKind, setLastKind] = useState<PackKind>("standard");
+  const [lastPosition, setLastPosition] = useState<Position>("QB");
+  const [pickerOpen, setPickerOpen] = useState(false);
 
-  const openPack = (kind: PackKind) => {
+  const openPack = (kind: PackKind, position?: Position) => {
     const cost = PACK_META[kind].cost;
     if (state.coins < cost) return;
+    if (kind === "position" && !position) { setPickerOpen(true); return; }
     if (!spendCoins(cost)) return;
     const players =
       kind === "pro" ? generateProPack() :
       kind === "backyard" ? generateBackyardHeroPack() :
+      kind === "position" ? generatePositionPack(position as Position) :
       generatePack(PACK_SIZE);
     setPull(players);
     setRevealed(0);
     setLastKind(kind);
+    if (position) setLastPosition(position);
+    setPickerOpen(false);
     setPhase("opening");
     players.forEach((_, i) => {
       setTimeout(() => setRevealed((r) => Math.max(r, i + 1)), 400 + i * 500);
@@ -79,7 +93,7 @@ function PackPage() {
 
       {phase === "idle" && (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {(["standard", "pro", "backyard"] as PackKind[]).map((kind) => {
+          {(["standard", "position", "pro", "backyard"] as PackKind[]).map((kind) => {
             const meta = PACK_META[kind];
             const canAfford = state.coins >= meta.cost;
             const isPromo = kind === "backyard";
@@ -153,15 +167,40 @@ function PackPage() {
                 Back to store
               </button>
               <button
-                onClick={() => openPack(lastKind)}
+                onClick={() => openPack(lastKind, lastKind === "position" ? lastPosition : undefined)}
                 disabled={state.coins < PACK_META[lastKind].cost}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
               >
-                Open another {PACK_META[lastKind].name} (🪙 {PACK_META[lastKind].cost.toLocaleString()})
+                Open another {PACK_META[lastKind].name}{lastKind === "position" ? ` (${lastPosition})` : ""} (🪙 {PACK_META[lastKind].cost.toLocaleString()})
               </button>
               <Link to="/roster" className="rounded-lg border border-border bg-background px-4 py-2 text-sm">View roster</Link>
             </div>
           )}
+        </div>
+      )}
+
+      {pickerOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" onClick={() => setPickerOpen(false)}>
+          <div className="w-full max-w-md rounded-2xl border border-primary/40 bg-background p-5 shadow-[var(--shadow-glow)]" onClick={(e) => e.stopPropagation()}>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-primary/80">Position Pack</div>
+            <h2 className="mt-1 font-display text-2xl">Pick a position</h2>
+            <p className="mt-1 text-xs text-muted-foreground">One player at your chosen position. 5% Gold · 1% Elite.</p>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {POSITIONS.map((pos) => (
+                <button
+                  key={pos}
+                  onClick={() => openPack("position", pos)}
+                  className="rounded-lg border border-border bg-secondary py-3 font-display text-lg hover:border-primary hover:bg-primary/10"
+                >
+                  {pos}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-between text-xs text-muted-foreground">
+              <span>Cost: 🪙 {POSITION_PACK_COST.toLocaleString()}</span>
+              <button onClick={() => setPickerOpen(false)} className="underline hover:text-foreground">Cancel</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
