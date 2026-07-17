@@ -93,8 +93,10 @@ function Home() {
 
       <section className="grid gap-4 sm:grid-cols-2">
         <ActionCard to="/pack" title="Open a pack" description="5 cards. Chance of an elite pull." emoji="🎴" cta="Go to store" />
+        <ActionCard to="/wallet" title="Wallet & funds" description={`◎ ${(state.sol ?? 0).toFixed(3)} deposited · connect Phantom or Solflare to add SOL.`} emoji="◎" cta="Manage wallet" />
         <ActionCard to="/roster" title="Your roster" description={`${roster.length} player${roster.length === 1 ? "" : "s"} signed to the franchise.`} emoji="👥" cta="View roster" />
       </section>
+
 
       <section className="rounded-xl border border-dashed border-primary/40 bg-background/40 p-4">
         <div className="flex items-center justify-between gap-3">

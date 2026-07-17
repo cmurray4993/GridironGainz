@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as StandingsRouteImport } from './routes/standings'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RosterRouteImport } from './routes/roster'
@@ -23,6 +24,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StandingsRoute = StandingsRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/roster': typeof RosterRoute
   '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
+  '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/roster': typeof RosterRoute
   '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
+  '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/roster': typeof RosterRoute
   '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
+  '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/roster'
     | '/settings'
     | '/standings'
+    | '/wallet'
     | '/welcome'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/roster'
     | '/settings'
     | '/standings'
+    | '/wallet'
     | '/welcome'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/roster'
     | '/settings'
     | '/standings'
+    | '/wallet'
     | '/welcome'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +169,7 @@ export interface RootRouteChildren {
   RosterRoute: typeof RosterRoute
   SettingsRoute: typeof SettingsRoute
   StandingsRoute: typeof StandingsRoute
+  WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
 }
 
@@ -167,6 +180,13 @@ declare module '@tanstack/react-router' {
       path: '/welcome'
       fullPath: '/welcome'
       preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/standings': {
@@ -245,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   RosterRoute: RosterRoute,
   SettingsRoute: SettingsRoute,
   StandingsRoute: StandingsRoute,
+  WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport
