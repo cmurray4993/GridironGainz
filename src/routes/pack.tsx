@@ -167,11 +167,11 @@ function PackPage() {
                 Back to store
               </button>
               <button
-                onClick={() => openPack(lastKind)}
+                onClick={() => openPack(lastKind, lastKind === "position" ? lastPosition : undefined)}
                 disabled={state.coins < PACK_META[lastKind].cost}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
               >
-                Open another {PACK_META[lastKind].name} (🪙 {PACK_META[lastKind].cost.toLocaleString()})
+                Open another {PACK_META[lastKind].name}{lastKind === "position" ? ` (${lastPosition})` : ""} (🪙 {PACK_META[lastKind].cost.toLocaleString()})
               </button>
               <Link to="/roster" className="rounded-lg border border-border bg-background px-4 py-2 text-sm">View roster</Link>
             </div>
