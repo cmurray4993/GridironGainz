@@ -93,3 +93,4 @@ export const PRO_PACK_COST = 7500;
 export const PRO_PACK_SIZE = 5;
 export const BACKYARD_HERO_PACK_COST = 25000;
 export const BACKYARD_HERO_PACK_SIZE = 5;
+export const POSITION_PACK_COST = 5000;
