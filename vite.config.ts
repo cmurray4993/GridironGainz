@@ -5,11 +5,24 @@
 //     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { resolve } from "node:path";
 
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+  },
+  vite: {
+    resolve: {
+      alias: {
+        // @solana/web3.js imports rpc-websockets from the package root, but that
+        // package does not expose a workerd/worker export condition. Point Vite
+        // at the browser ESM build directly so the Cloudflare worker build can resolve it.
+        "rpc-websockets": resolve(
+          "node_modules/rpc-websockets/dist/index.browser.mjs",
+        ),
+      },
+    },
   },
 });
