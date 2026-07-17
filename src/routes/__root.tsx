@@ -105,8 +105,10 @@ function AuthGate() {
     if (loading) return;
     if (!user && !isPublicRoute) {
       router.navigate({ to: "/auth" });
+    } else if (user && pathname === "/auth") {
+      router.navigate({ to: "/" });
     }
-  }, [loading, user, isPublicRoute, router]);
+  }, [loading, user, isPublicRoute, pathname, router]);
 
   if (loading) {
     return (
