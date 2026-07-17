@@ -65,36 +65,7 @@ export function rollRarity(): Rarity {
 
 export function generatePlayer(forcedPosition?: Position): Player {
   const rarity = rollRarity();
-  const meta = RARITY_META[rarity];
-  const position = forcedPosition ?? rand(POSITIONS);
-  const overall = randInt(meta.overallMin, meta.overallMax);
-
-  // Distribute stats around overall with variance
-  const base = overall;
-  const jitter = () => randInt(-8, 8);
-  const strength = clamp(base + jitter());
-  const speed = clamp(base + jitter());
-  const iq = clamp(base + jitter());
-
-  const popularity = clamp(
-    Math.round(overall * 0.6 + randInt(meta.fanMin, meta.fanMax) * 0.3 + randInt(-8, 12)),
-    30,
-    99,
-  );
-  const fanValue = computeFanValue(overall, popularity);
-
-  return {
-    id: crypto.randomUUID(),
-    name: canonicalName(rarity, position),
-    position,
-    overall,
-    strength,
-    speed,
-    iq,
-    popularity,
-    fanValue,
-    rarity,
-  };
+  return buildPlayerWithRarity(rarity, forcedPosition);
 }
 
 function clamp(v: number, min = 40, max = 99) {
