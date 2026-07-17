@@ -1,4 +1,5 @@
-import type { Player } from "@/lib/game/types";
+import { useState } from "react";
+import { COIN_PER_FAN_PER_HOUR, playerArchetype, type Player } from "@/lib/game/types";
 import { cn } from "@/lib/utils";
 
 const rarityBg: Record<Player["rarity"], string> = {
@@ -17,6 +18,16 @@ const rarityLabel: Record<Player["rarity"], string> = {
   legendary: "Legendary",
 };
 
+// Deterministic portrait/logo emoji per player so cards feel unique without art.
+const PORTRAITS = ["🏈", "💪", "⚡", "🔥", "🎯", "🚀", "🛡️", "👑", "🦁", "🐻", "🐺", "🦅"];
+const LOGOS = ["🛡️", "⚔️", "⚡", "🔱", "🏹", "⭐", "🔥", "🐺", "🦅", "🦁", "👑", "💎"];
+
+function hashCode(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 export function PlayerCard({
   player,
   compact = false,
@@ -30,58 +41,165 @@ export function PlayerCard({
   onClick?: () => void;
   selected?: boolean;
 }) {
+  const [flipped, setFlipped] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      onClick();
+      return;
+    }
+    e.stopPropagation();
+    setFlipped((f) => !f);
+  };
+
+  const h = hashCode(player.id);
+  const portrait = PORTRAITS[h % PORTRAITS.length];
+  const logo = LOGOS[(h >> 3) % LOGOS.length];
+  const archetype = playerArchetype(player);
+  const fansPerHr = +(player.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(2);
+
+  const minHeight = compact ? 170 : 260;
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "group relative w-full text-left overflow-hidden rounded-xl transition-transform",
-        "border border-white/10 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.7)]",
-        rarityBg[player.rarity],
-        onClick && "hover:-translate-y-1 hover:shadow-[0_18px_40px_-12px_rgba(0,0,0,0.8)] cursor-pointer",
-        selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-        className,
-      )}
+    <div
+      className={cn("card-flip-scene w-full", className)}
+      style={{ minHeight }}
     >
-      {/* dark inner */}
-      <div className="m-[2px] rounded-[calc(var(--radius)-2px)] bg-background/70 backdrop-blur-sm p-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              {rarityLabel[player.rarity]}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={handleClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleClick(e as unknown as React.MouseEvent);
+          }
+        }}
+        className={cn(
+          "card-flip-inner group cursor-pointer",
+          flipped && !onClick && "card-flipped",
+          selected && "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl",
+        )}
+        style={{ minHeight }}
+      >
+        {/* FRONT */}
+        <div
+          className={cn(
+            "card-flip-face overflow-hidden rounded-xl border border-white/10 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.7)] transition-transform",
+            rarityBg[player.rarity],
+            !onClick && "hover:-translate-y-0.5",
+          )}
+        >
+          <div className="m-[2px] rounded-[calc(var(--radius)-2px)] bg-background/75 backdrop-blur-sm p-3 h-full flex flex-col">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {rarityLabel[player.rarity]}
+                </div>
+                <div className="mt-0.5 font-display text-lg leading-tight truncate">{player.name}</div>
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{player.position}</div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="font-display text-3xl text-gradient-gold leading-none">{player.overall}</div>
+                <div className="text-[9px] uppercase text-muted-foreground mt-0.5">OVR</div>
+              </div>
             </div>
-            <div className="font-display text-lg leading-tight truncate">{player.name}</div>
+
+            {!compact && (
+              <div className="mt-3 flex-1 grid place-items-center relative">
+                <div
+                  className={cn(
+                    "grid h-20 w-20 place-items-center rounded-full text-4xl border border-white/10",
+                    "bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_60%)]",
+                    rarityBg[player.rarity],
+                  )}
+                >
+                  <span>{portrait}</span>
+                </div>
+                <div className="absolute right-1 bottom-1 grid h-7 w-7 place-items-center rounded-full border border-white/15 bg-background/80 text-sm">
+                  {logo}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-2 flex items-center justify-between text-[11px]">
+              <span className="rounded-full bg-white/5 px-2 py-0.5 text-muted-foreground">
+                ⭐ Pop {player.popularity}
+              </span>
+              <span className="text-[oklch(0.7_0.18_25)] font-semibold">❤️ {player.fanValue}</span>
+            </div>
+
+            {!onClick && (
+              <div className="mt-1 text-center text-[9px] uppercase tracking-widest text-muted-foreground opacity-0 group-hover:opacity-70 transition-opacity hidden sm:block">
+                Tap to flip
+              </div>
+            )}
           </div>
-          <div className="text-right shrink-0">
-            <div className="font-display text-3xl text-gradient-gold leading-none">{player.overall}</div>
-            <div className="text-[10px] uppercase text-muted-foreground mt-0.5">{player.position}</div>
-          </div>
+          <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity shimmer-overlay" />
         </div>
 
-        {!compact && (
-          <>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-              <Stat label="STR" value={player.strength} />
-              <Stat label="SPD" value={player.speed} />
-              <Stat label="IQ"  value={player.iq} />
+        {/* BACK */}
+        <div
+          className={cn(
+            "card-flip-face card-flip-back overflow-hidden rounded-xl border border-white/10 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.7)]",
+            rarityBg[player.rarity],
+          )}
+        >
+          <div className="m-[2px] h-full rounded-[calc(var(--radius)-2px)] bg-background/85 backdrop-blur-sm p-3 flex flex-col gap-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  {rarityLabel[player.rarity]} · {player.position}
+                </div>
+                <div className="font-display text-base leading-tight truncate">{player.name}</div>
+              </div>
+              <div className="font-display text-2xl text-gradient-gold leading-none">{player.overall}</div>
             </div>
-            <div className="mt-3 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Fan value</span>
-              <span className="font-semibold text-[oklch(0.7_0.18_25)]">+{player.fanValue}</span>
+
+            <div className="space-y-1.5">
+              <StatBar label="Overall" value={player.overall} tone="gold" />
+              <StatBar label="Strength" value={player.strength} tone="red" />
+              <StatBar label="Speed" value={player.speed} tone="cyan" />
+              <StatBar label="IQ" value={player.iq} tone="violet" />
+              <StatBar label="Popularity" value={player.popularity} tone="pink" />
             </div>
-          </>
-        )}
+
+            <div className="mt-auto grid grid-cols-2 gap-2 pt-1 text-[10px]">
+              <div className="rounded-md bg-white/5 px-2 py-1">
+                <div className="uppercase tracking-widest text-muted-foreground">Archetype</div>
+                <div className="font-semibold">{archetype}</div>
+              </div>
+              <div className="rounded-md bg-white/5 px-2 py-1 text-right">
+                <div className="uppercase tracking-widest text-muted-foreground">Fans / hr</div>
+                <div className="font-semibold text-[oklch(0.85_0.17_88)]">🪙 {fansPerHr}</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity shimmer-overlay" />
-    </button>
+    </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+const TONE: Record<string, string> = {
+  gold: "bg-[oklch(0.82_0.16_82)]",
+  red: "bg-[oklch(0.68_0.2_25)]",
+  cyan: "bg-[oklch(0.75_0.15_210)]",
+  violet: "bg-[oklch(0.7_0.2_300)]",
+  pink: "bg-[oklch(0.75_0.18_355)]",
+};
+
+function StatBar({ label, value, tone = "gold" }: { label: string; value: number; tone?: string }) {
+  const pct = Math.max(0, Math.min(100, value));
   return (
-    <div className="rounded-md bg-white/5 py-1.5">
-      <div className="text-[10px] tracking-widest text-muted-foreground">{label}</div>
-      <div className="font-semibold text-sm">{value}</div>
+    <div>
+      <div className="flex justify-between text-[10px] text-muted-foreground">
+        <span className="uppercase tracking-widest">{label}</span>
+        <span className="font-semibold text-foreground">{value}</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+        <div className={cn("h-full rounded-full", TONE[tone])} style={{ width: `${pct}%` }} />
+      </div>
     </div>
   );
 }
