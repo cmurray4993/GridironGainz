@@ -91,8 +91,8 @@ export function lineupOverall(lineup: (Player | null)[]): number {
 }
 
 function synthOpponentLineup(overall: number): Player[] {
-  return LINEUP_SLOTS.map((pos) => {
-    const p = generatePlayer(pos);
+  return LINEUP_SLOTS.map((slot) => {
+    const p = generatePlayer(slotPosition(slot));
     // rebalance to target overall
     const delta = overall - p.overall;
     return {
