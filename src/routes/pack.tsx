@@ -178,6 +178,31 @@ function PackPage() {
           )}
         </div>
       )}
+
+      {pickerOpen && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-4" onClick={() => setPickerOpen(false)}>
+          <div className="w-full max-w-md rounded-2xl border border-primary/40 bg-background p-5 shadow-[var(--shadow-glow)]" onClick={(e) => e.stopPropagation()}>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-primary/80">Position Pack</div>
+            <h2 className="mt-1 font-display text-2xl">Pick a position</h2>
+            <p className="mt-1 text-xs text-muted-foreground">One player at your chosen position. 5% Gold · 1% Elite.</p>
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              {POSITIONS.map((pos) => (
+                <button
+                  key={pos}
+                  onClick={() => openPack("position", pos)}
+                  className="rounded-lg border border-border bg-secondary py-3 font-display text-lg hover:border-primary hover:bg-primary/10"
+                >
+                  {pos}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-between text-xs text-muted-foreground">
+              <span>Cost: 🪙 {POSITION_PACK_COST.toLocaleString()}</span>
+              <button onClick={() => setPickerOpen(false)} className="underline hover:text-foreground">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
