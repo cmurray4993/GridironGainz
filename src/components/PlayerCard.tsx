@@ -91,47 +91,54 @@ export function PlayerCard({
             !onClick && "hover:-translate-y-0.5",
           )}
         >
-          <div className="m-[2px] rounded-[calc(var(--radius)-2px)] bg-background/75 backdrop-blur-sm p-3 h-full flex flex-col">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {rarityLabel[player.rarity]}
-                </div>
-                <div className="mt-0.5 font-display text-lg leading-tight truncate">{player.name}</div>
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{player.position}</div>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="font-display text-3xl text-gradient-gold leading-none">{player.overall}</div>
-                <div className="text-[9px] uppercase text-muted-foreground mt-0.5">OVR</div>
-              </div>
+          <div className="m-[2px] rounded-[calc(var(--radius)-2px)] h-full flex flex-col overflow-hidden relative">
+            <div className="absolute inset-0">
+              <img
+                src={art}
+                alt={`${player.position} art`}
+                loading="lazy"
+                className="h-full w-full object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_35%,rgba(0,0,0,0.15)_60%,rgba(0,0,0,0.9)_100%)]" />
             </div>
 
-            {!compact && (
-              <div className="mt-3 flex-1 grid place-items-center">
-                <div
-                  className={cn(
-                    "grid h-20 w-20 place-items-center rounded-full text-4xl border border-white/10",
-                    "bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_60%)]",
-                    rarityBg[player.rarity],
-                  )}
-                >
-                  <span>{portrait}</span>
+            <div className="relative z-10 p-3 flex flex-col h-full">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-widest text-white/80 drop-shadow">
+                    {rarityLabel[player.rarity]}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/70 drop-shadow">{player.position}</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="font-display text-3xl text-gradient-gold leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">{player.overall}</div>
+                  <div className="text-[9px] uppercase text-white/70 mt-0.5">OVR</div>
                 </div>
               </div>
-            )}
 
-            <div className="mt-2 flex items-center justify-end text-[11px]">
-              <span className="text-[oklch(0.7_0.18_25)] font-semibold">❤️ {player.fanValue}</span>
-            </div>
+              <div className="flex-1" />
 
-            {!onClick && (
-              <div className="mt-1 text-center text-[9px] uppercase tracking-widest text-muted-foreground opacity-0 group-hover:opacity-70 transition-opacity hidden sm:block">
-                Tap to flip
+              <div className="mt-2">
+                <div className="font-display text-lg leading-tight truncate text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{player.name}</div>
+                <div className="mt-1 flex items-center justify-between text-[11px]">
+                  <span className="text-white/60 uppercase tracking-widest text-[9px]">{player.position}</span>
+                  <span className="text-[oklch(0.85_0.18_25)] font-semibold drop-shadow">❤️ {player.fanValue}</span>
+                </div>
               </div>
-            )}
+
+              {!onClick && !compact && (
+                <div className="mt-1 text-center text-[9px] uppercase tracking-widest text-white/60 opacity-0 group-hover:opacity-80 transition-opacity hidden sm:block">
+                  Tap to flip
+                </div>
+              )}
+            </div>
           </div>
           <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity shimmer-overlay" />
+          {(player.rarity === "gold" || player.rarity === "elite") && (
+            <div className="pointer-events-none absolute inset-0 gold-shimmer-overlay opacity-40" />
+          )}
         </div>
+
 
         {/* BACK */}
         <div
