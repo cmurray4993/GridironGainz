@@ -42,6 +42,7 @@ const SIGNATURE_ART: Record<string, string> = {
   'Breck "Coach Razor" Guthrie': sigBreck,
   'Carter "Combine" Carter': sigCarter,
   'Mason "Bait Man" Baker': sigMason,
+  'Sammy "Wheely" Wheeler': sigSammy,
 };
 
 const rarityBg: Record<Player["rarity"], string> = {
