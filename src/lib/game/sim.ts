@@ -1,6 +1,27 @@
 import { generatePlayer } from "./generate";
 import { LINEUP_SLOTS, POSITION_WEIGHTS, type Player, type Position } from "./types";
 
+export interface PlayerStat {
+  id: string;
+  name: string;
+  position: Position;
+  touches: number;
+  tds: number;
+  fgs: number;
+  stops: number;
+  ints: number;
+}
+
+export interface TeamStats {
+  tds: number;
+  fgs: number;
+  punts: number;
+  turnovers: number;
+  bigPlays: number;
+  topScorer?: PlayerStat;
+  topDefender?: PlayerStat;
+}
+
 export interface SimResult {
   homeScore: number;
   awayScore: number;
@@ -9,6 +30,10 @@ export interface SimResult {
   opponentOverall: number;
   homeOverall: number;
   opponentName: string;
+  homeStats: TeamStats;
+  awayStats: TeamStats;
+  homePlayers: PlayerStat[];
+  awayPlayers: PlayerStat[];
 }
 
 const OPPONENT_NAMES = [
