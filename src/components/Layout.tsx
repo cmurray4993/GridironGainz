@@ -56,6 +56,7 @@ export function BottomNav() {
     { to: "/market", label: "Market", icon: "💰" },
     { to: "/lineup", label: "Lineup", icon: "📋" },
     { to: "/game", label: "Game", icon: "🏈" },
+    { to: "/standings", label: "League", icon: "🏆" },
   ] as const;
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 backdrop-blur-md">
