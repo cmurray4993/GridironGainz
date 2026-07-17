@@ -208,10 +208,22 @@ function driveResult(offense: Player[], defense: Player[], side: "home" | "away"
   const outcome = gap + noise;
 
   const who = side === "home" ? off.name : `${awayName ?? "Away"}'s ${off.name}`;
+  const teamTag = side === "home" ? "Your squad" : (awayName ?? "Away");
+  const kicker = offense.find((p) => p.position === "K");
 
   if (outcome > 18) return { points: 7, narration: `${who} breaks the ${play} for a TOUCHDOWN.`, offPlayer: off, defPlayer: def, kind: "td" };
-  if (outcome > 8)  return { points: 3, narration: `${who} grinds out the ${play}; drive stalls, field goal is good.`, offPlayer: off, defPlayer: def, kind: "fg" };
+  if (outcome > 8) {
+    if (kicker) {
+      const legRoll = (kicker.signature?.value ?? 60) + (Math.random() - 0.5) * 40;
+      if (legRoll > 55) {
+        return { points: 3, narration: `Drive stalls; ${kicker.name} drills the field goal.`, offPlayer: kicker, defPlayer: def, kind: "fg" };
+      }
+      return { points: 0, narration: `${kicker.name} pushes the field goal wide. No good.`, offPlayer: kicker, defPlayer: def, kind: "punt" };
+    }
+    return { points: 0, narration: `${who} stalls in field-goal range — ${teamTag} has no kicker rostered. Punt.`, offPlayer: off, defPlayer: def, kind: "punt" };
+  }
   if (outcome > -6) return { points: 0, narration: `${who} runs the ${play} but ${def.name} stuffs it. Punt.`, offPlayer: off, defPlayer: def, kind: "punt" };
   if (outcome > -18) return { points: 0, narration: `${def.name} reads the ${play} and forces a three-and-out.`, offPlayer: off, defPlayer: def, kind: "stuff" };
   return { points: 0, narration: `${def.name} jumps the ${play} — INTERCEPTION!`, offPlayer: off, defPlayer: def, kind: "int" };
 }
+
