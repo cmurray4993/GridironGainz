@@ -85,7 +85,7 @@ export function generatePlayer(forcedPosition?: Position): Player {
 
   return {
     id: crypto.randomUUID(),
-    name: `${rand(FIRST)} ${rand(LAST)}`,
+    name: canonicalName(rarity, position),
     position,
     overall,
     strength,
@@ -134,7 +134,7 @@ function buildPlayerWithRarity(rarity: Rarity): Player {
   );
   return {
     id: crypto.randomUUID(),
-    name: `${rand(FIRST)} ${rand(LAST)}`,
+    name: canonicalName(rarity, position),
     position,
     overall,
     strength,
