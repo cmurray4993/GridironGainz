@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { PlayerCard } from "@/components/PlayerCard";
 import { discardPlayer, sellPlayer, sellPrice, setLineup, useGame } from "@/lib/game/store";
-import { LINEUP_SLOTS, POSITIONS, slotPosition, type Player, type Position, type Rarity } from "@/lib/game/types";
+import { LINEUP_SLOTS, POSITIONS, slotAccepts, slotPosition, type Player, type Position, type Rarity } from "@/lib/game/types";
 import { lineupOverall } from "@/lib/game/sim";
 import { cn } from "@/lib/utils";
 
@@ -139,23 +139,20 @@ type Side = "offense" | "defense";
 // the position label shown in the slot header.
 type Cell = { slot: string; col: number; span?: number; row: number; label?: string };
 
-// Offense: 4-col field. WR flanks the ends, OL/TE inside; shotgun backfield below.
-// Row 1 (LOS):  WR1 | OL | TE | WR2
-// Row 2 (back): RB1 | QB | .. | RB2   (QB centered)
+// Offense: 4-col field, Madden-style shotgun.
+// Row 1 (LOS):  WR1 | TE  | OL  | WR2
+// Row 2 (back): RB  | QB (span 2) | FLEX
 const OFFENSE_FORMATION: Cell[] = [
-  { slot: "WR1", col: 1, row: 1 },
-  { slot: "OL",  col: 2, row: 1 },
-  { slot: "TE",  col: 3, row: 1 },
-  { slot: "WR2", col: 4, row: 1 },
-  { slot: "RB1", col: 1, row: 2 },
-  { slot: "QB",  col: 2, span: 2, row: 2 },
-  { slot: "RB2", col: 4, row: 2 },
+  { slot: "WR1",  col: 1, row: 1 },
+  { slot: "TE",   col: 2, row: 1 },
+  { slot: "OL",   col: 3, row: 1 },
+  { slot: "WR2",  col: 4, row: 1 },
+  { slot: "RB",   col: 1, row: 2 },
+  { slot: "QB",   col: 2, span: 2, row: 2 },
+  { slot: "FLEX", col: 4, row: 2, label: "FLEX" },
 ];
 
-// Defense: 3-4 look on a 4-col field.
-// Row 1: DL1 | DL2 (span 2) | DL3
-// Row 2: .. LB1 | LB2 ..
-// Row 3: DB1 | .. | .. | DB2
+// Defense: 3-4 look on a 4-col field + kicker on special teams row.
 const DEFENSE_FORMATION: Cell[] = [
   { slot: "DL1", col: 1, row: 1 },
   { slot: "DL2", col: 2, span: 2, row: 1 },
@@ -164,13 +161,14 @@ const DEFENSE_FORMATION: Cell[] = [
   { slot: "LB2", col: 3, row: 2 },
   { slot: "DB1", col: 1, row: 3 },
   { slot: "DB2", col: 4, row: 3 },
+  { slot: "K",   col: 2, span: 2, row: 4, label: "K" },
 ];
 
 const FIELD_COLS = 4;
 
 function LineupView() {
   const { roster, lineup } = useGame();
-  const [picking, setPicking] = useState<{ slot: string; position: Position } | null>(null);
+  const [picking, setPicking] = useState<{ slot: string; label: string; accepts: Position[] } | null>(null);
   const [side, setSide] = useState<Side>("offense");
 
   const byId = useMemo(() => new Map(roster.map((p) => [p.id, p])), [roster]);
@@ -180,9 +178,9 @@ function LineupView() {
   const autoFill = () => {
     const used = new Set<string>();
     for (const slot of LINEUP_SLOTS) {
-      const pos = slotPosition(slot);
+      const accepts = slotAccepts(slot);
       const best = roster
-        .filter((p) => p.position === pos && !used.has(p.id))
+        .filter((p) => accepts.includes(p.position) && !used.has(p.id))
         .sort((a, b) => b.overall - a.overall)[0];
       if (best) { setLineup(slot, best.id); used.add(best.id); }
       else setLineup(slot, null);
@@ -210,12 +208,13 @@ function LineupView() {
 
       <div className="inline-flex rounded-full border border-border bg-card/60 p-1 text-xs">
         <TabBtn active={side === "offense"} onClick={() => setSide("offense")}>Offense</TabBtn>
-        <TabBtn active={side === "defense"} onClick={() => setSide("defense")}>Defense</TabBtn>
+        <TabBtn active={side === "defense"} onClick={() => setSide("defense")}>Defense · ST</TabBtn>
       </div>
 
       <FormationField rows={rows}>
         {formation.map((cell) => {
-          const pos = slotPosition(cell.slot);
+          const label = cell.label ?? slotPosition(cell.slot);
+          const accepts = slotAccepts(cell.slot);
           const p = lineup[cell.slot] ? byId.get(lineup[cell.slot]!) : null;
           return (
             <div
@@ -227,9 +226,9 @@ function LineupView() {
               className="flex items-start justify-center"
             >
               <SlotCard
-                label={pos}
+                label={label}
                 player={p ?? null}
-                onPick={() => setPicking({ slot: cell.slot, position: pos })}
+                onPick={() => setPicking({ slot: cell.slot, label, accepts })}
                 onRemove={() => setLineup(cell.slot, null)}
               />
             </div>
@@ -239,7 +238,8 @@ function LineupView() {
 
       {picking && (
         <PickerModal
-          position={picking.position}
+          label={picking.label}
+          accepts={picking.accepts}
           roster={roster}
           currentIds={new Set(Object.values(lineup).filter(Boolean) as string[])}
           onPick={(id) => { setLineup(picking.slot, id); setPicking(null); }}
