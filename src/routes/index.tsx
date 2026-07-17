@@ -90,7 +90,7 @@ function Home() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <ActionCard to="/pack" title="Open a pack" description="5 cards. Chance of legendary pull." emoji="🎴" cta="Go to store" />
+        <ActionCard to="/pack" title="Open a pack" description="5 cards. Chance of an elite pull." emoji="🎴" cta="Go to store" />
         <ActionCard to="/roster" title="Your roster" description={`${roster.length} player${roster.length === 1 ? "" : "s"} signed to the franchise.`} emoji="👥" cta="View roster" />
       </section>
     </div>
