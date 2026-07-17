@@ -77,7 +77,7 @@ export interface GameState {
   coins: number;
   fans: number;
   roster: Player[];
-  lineup: Record<Position, string | null>;
+  lineup: Record<string, string | null>;
   lastTick: number;
   packsOpened: number;
   wins: number;
