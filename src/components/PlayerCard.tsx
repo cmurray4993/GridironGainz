@@ -54,12 +54,12 @@ export function PlayerCard({
     setFlipped((f) => !f);
   };
 
-  const h = hashCode(player.id);
-  const portrait = PORTRAITS[h % PORTRAITS.length];
+  const art = POSITION_ART[player.position];
   const archetype = playerArchetype(player);
   const fansPerHr = +(player.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(2);
 
   const minHeight = compact ? 170 : 260;
+
 
   return (
     <div
