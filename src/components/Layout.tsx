@@ -1,6 +1,7 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useGame } from "@/lib/game/store";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 export function TopBar() {
@@ -28,9 +29,26 @@ export function TopBar() {
         <div className="flex items-center gap-2 text-sm">
           <Stat icon="🪙" value={fmt(state.coins)} tone="gold" />
           <Stat icon="🎟️" value={fmt(state.fans)} tone="fan" />
+          <SignOutButton />
         </div>
       </div>
     </header>
+  );
+}
+
+function SignOutButton() {
+  const router = useRouter();
+  return (
+    <button
+      onClick={async () => {
+        await supabase.auth.signOut();
+        router.navigate({ to: "/auth" });
+      }}
+      title="Sign out"
+      className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+    >
+      ⎋
+    </button>
   );
 }
 

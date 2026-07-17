@@ -48,6 +48,8 @@ export interface GameState {
   packsOpened: number;
   wins: number;
   losses: number;
+  starterPackOpened?: boolean;
+  userId?: string | null;
 }
 
 // How much each position leans on strength / speed / iq (weights sum ~1)

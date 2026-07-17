@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -12,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav, TopBar } from "@/components/Layout";
+import { useAuth } from "@/hooks/useAuth";
 
 function NotFoundComponent() {
   return (
@@ -87,13 +89,48 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen pb-20">
-        <TopBar />
-        <main className="mx-auto max-w-5xl px-4 py-6">
-          <Outlet />
-        </main>
-        <BottomNav />
-      </div>
+      <AuthGate />
     </QueryClientProvider>
+  );
+}
+
+function AuthGate() {
+  const { user, loading } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const router = useRouter();
+  const isPublicRoute = pathname === "/auth";
+  const isChrome = pathname !== "/auth" && pathname !== "/welcome";
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user && !isPublicRoute) {
+      router.navigate({ to: "/auth" });
+    }
+  }, [loading, user, isPublicRoute, router]);
+
+  if (loading) {
+    return (
+      <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">
+        Loading…
+      </div>
+    );
+  }
+
+  if (!user && !isPublicRoute) {
+    return null;
+  }
+
+  if (!isChrome) {
+    return <Outlet />;
+  }
+
+  return (
+    <div className="min-h-screen pb-20">
+      <TopBar />
+      <main className="mx-auto max-w-5xl px-4 py-6">
+        <Outlet />
+      </main>
+      <BottomNav />
+    </div>
   );
 }

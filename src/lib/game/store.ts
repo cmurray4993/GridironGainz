@@ -13,7 +13,12 @@ export function sellPrice(p: Player): number {
   return Math.max(5, Math.round(p.overall * RARITY_SELL_MULT[p.rarity]));
 }
 
-const KEY = "faf.state.v1";
+const BASE_KEY = "faf.state.v1";
+let currentUserId: string | null = null;
+
+function storageKey(uid: string | null): string {
+  return uid ? `${BASE_KEY}:${uid}` : `${BASE_KEY}:guest`;
+}
 
 const initialState = (): GameState => ({
   coins: 500,
@@ -24,18 +29,26 @@ const initialState = (): GameState => ({
   packsOpened: 0,
   wins: 0,
   losses: 0,
+  starterPackOpened: false,
+  userId: null,
 });
 
-let state: GameState = load();
+let state: GameState = load(null);
 const listeners = new Set<() => void>();
 
-function load(): GameState {
+function load(uid: string | null): GameState {
   if (typeof window === "undefined") return initialState();
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return initialState();
+    // Migrate legacy save on first load
+    const legacy = localStorage.getItem(BASE_KEY);
+    if (legacy && !localStorage.getItem(storageKey(uid))) {
+      localStorage.setItem(storageKey(uid), legacy);
+      localStorage.removeItem(BASE_KEY);
+    }
+    const raw = localStorage.getItem(storageKey(uid));
+    if (!raw) return { ...initialState(), userId: uid };
     const parsed = JSON.parse(raw) as GameState;
-    const merged = { ...initialState(), ...parsed };
+    const merged = { ...initialState(), ...parsed, userId: uid };
     // Backfill popularity + recompute fanValue for legacy saves,
     // clamp overall to current cap, and remap legacy rarities.
     merged.roster = merged.roster.map((p) => {
@@ -47,6 +60,11 @@ function load(): GameState {
         ? p.popularity
         : Math.max(30, Math.min(99, Math.round(overall * 0.7 + (p.fanValue ?? 0) * 0.1)));
       const rarity = rarityFromOverall(overall);
+      // Preserve custom gold/elite names; only re-canonicalize bronze/silver.
+      const canonical = canonicalName(rarity, p.position);
+      const name = (rarity === "gold" || rarity === "elite") && p.name && !p.name.startsWith("Unsigned")
+        ? p.name
+        : canonical;
       return {
         ...p,
         overall,
@@ -56,20 +74,27 @@ function load(): GameState {
         popularity,
         rarity,
         fanValue: computeFanValue(overall, popularity),
-        name: canonicalName(rarity, p.position),
+        name,
       };
     });
 
     merged.fans = merged.roster.reduce((a, p) => a + p.fanValue, 0);
     return merged;
   } catch {
-    return initialState();
+    return { ...initialState(), userId: uid };
   }
 }
 
 function persist() {
   if (typeof window === "undefined") return;
-  localStorage.setItem(KEY, JSON.stringify(state));
+  localStorage.setItem(storageKey(currentUserId), JSON.stringify(state));
+}
+
+export function setStoreUser(uid: string | null) {
+  if (currentUserId === uid) return;
+  currentUserId = uid;
+  state = load(uid);
+  listeners.forEach((l) => l());
 }
 
 function set(updater: (s: GameState) => GameState) {
@@ -205,9 +230,22 @@ export function recordResult(win: boolean) {
 }
 
 export function resetAll() {
-  state = initialState();
+  state = { ...initialState(), userId: currentUserId };
   persist();
   listeners.forEach((l) => l());
+}
+
+export function openStarterPack(players: Player[]) {
+  set((s) => ({
+    ...s,
+    roster: [...s.roster, ...players],
+    fans: s.fans + players.reduce((a, p) => a + p.fanValue, 0),
+    starterPackOpened: true,
+  }));
+}
+
+export function devGrantCoins(amount: number) {
+  set((s) => ({ ...s, coins: s.coins + amount }));
 }
 
 /* No auto-collect: coins must be manually claimed via claimCoins(). */

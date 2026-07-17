@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   claimCoins,
+  devGrantCoins,
   MAX_CLAIM_BUCKETS,
   pendingClaim,
   useGame,
@@ -92,6 +94,21 @@ function Home() {
       <section className="grid gap-4 sm:grid-cols-2">
         <ActionCard to="/pack" title="Open a pack" description="5 cards. Chance of an elite pull." emoji="🎴" cta="Go to store" />
         <ActionCard to="/roster" title="Your roster" description={`${roster.length} player${roster.length === 1 ? "" : "s"} signed to the franchise.`} emoji="👥" cta="View roster" />
+      </section>
+
+      <section className="rounded-xl border border-dashed border-primary/40 bg-background/40 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-primary/80">Dev tools</div>
+            <div className="text-xs text-muted-foreground">Testing account helpers.</div>
+          </div>
+          <button
+            onClick={() => { devGrantCoins(2_000_000); toast.success("+2,000,000 🪙 granted"); }}
+            className="rounded-lg border border-primary/60 bg-secondary px-3 py-2 text-xs font-semibold hover:bg-secondary/70"
+          >
+            +2M coins
+          </button>
+        </div>
       </section>
     </div>
   );

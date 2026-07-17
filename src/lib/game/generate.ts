@@ -65,36 +65,7 @@ export function rollRarity(): Rarity {
 
 export function generatePlayer(forcedPosition?: Position): Player {
   const rarity = rollRarity();
-  const meta = RARITY_META[rarity];
-  const position = forcedPosition ?? rand(POSITIONS);
-  const overall = randInt(meta.overallMin, meta.overallMax);
-
-  // Distribute stats around overall with variance
-  const base = overall;
-  const jitter = () => randInt(-8, 8);
-  const strength = clamp(base + jitter());
-  const speed = clamp(base + jitter());
-  const iq = clamp(base + jitter());
-
-  const popularity = clamp(
-    Math.round(overall * 0.6 + randInt(meta.fanMin, meta.fanMax) * 0.3 + randInt(-8, 12)),
-    30,
-    99,
-  );
-  const fanValue = computeFanValue(overall, popularity);
-
-  return {
-    id: crypto.randomUUID(),
-    name: canonicalName(rarity, position),
-    position,
-    overall,
-    strength,
-    speed,
-    iq,
-    popularity,
-    fanValue,
-    rarity,
-  };
+  return buildPlayerWithRarity(rarity, forcedPosition);
 }
 
 function clamp(v: number, min = 40, max = 99) {
@@ -119,14 +90,36 @@ export function generatePlayerAtLeast(minRarity: Rarity): Player {
   return buildPlayerWithRarity(minRarity);
 }
 
-function buildPlayerWithRarity(rarity: Rarity): Player {
+function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Player {
   const meta = RARITY_META[rarity];
-  const position = rand(POSITIONS);
+  const position = forcedPosition ?? rand(POSITIONS);
   const overall = randInt(meta.overallMin, meta.overallMax);
   const jitter = () => randInt(-8, 8);
-  const strength = clamp(overall + jitter());
-  const speed = clamp(overall + jitter());
-  const iq = clamp(overall + jitter());
+  let strength = clamp(overall + jitter());
+  let speed = clamp(overall + jitter());
+  let iq = clamp(overall + jitter());
+  let name = canonicalName(rarity, position);
+
+  // Signature gold prospects with tuned stats
+  if (rarity === "gold") {
+    if (position === "WR") {
+      name = 'Busta "Fly" Jones';
+      speed = clamp(overall + randInt(8, 13));   // blazing
+      iq = clamp(overall - randInt(10, 16));      // not smart
+      strength = clamp(overall + randInt(-4, 4));
+    } else if (position === "RB") {
+      name = 'Gringo Guth';
+      strength = clamp(overall + randInt(4, 9));
+      speed = clamp(overall + randInt(2, 7));
+      iq = clamp(overall + randInt(-6, 2));
+    } else if (position === "DL") {
+      name = 'Sleepy Cringle';
+      strength = clamp(overall + randInt(6, 11));
+      iq = clamp(overall + randInt(-2, 4));
+      speed = clamp(overall + randInt(-6, 2));
+    }
+  }
+
   const popularity = clamp(
     Math.round(overall * 0.6 + randInt(meta.fanMin, meta.fanMax) * 0.3 + randInt(-8, 12)),
     30,
@@ -134,7 +127,7 @@ function buildPlayerWithRarity(rarity: Rarity): Player {
   );
   return {
     id: crypto.randomUUID(),
-    name: canonicalName(rarity, position),
+    name,
     position,
     overall,
     strength,

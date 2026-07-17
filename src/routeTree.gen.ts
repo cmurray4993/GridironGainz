@@ -9,14 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as StandingsRouteImport } from './routes/standings'
 import { Route as RosterRouteImport } from './routes/roster'
 import { Route as PackRouteImport } from './routes/pack'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as LineupRouteImport } from './routes/lineup'
 import { Route as GameRouteImport } from './routes/game'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StandingsRoute = StandingsRouteImport.update({
   id: '/standings',
   path: '/standings',
@@ -47,6 +54,11 @@ const GameRoute = GameRouteImport.update({
   path: '/game',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -55,67 +67,95 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
   '/market': typeof MarketRoute
   '/pack': typeof PackRoute
   '/roster': typeof RosterRoute
   '/standings': typeof StandingsRoute
+  '/welcome': typeof WelcomeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
   '/market': typeof MarketRoute
   '/pack': typeof PackRoute
   '/roster': typeof RosterRoute
   '/standings': typeof StandingsRoute
+  '/welcome': typeof WelcomeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
   '/market': typeof MarketRoute
   '/pack': typeof PackRoute
   '/roster': typeof RosterRoute
   '/standings': typeof StandingsRoute
+  '/welcome': typeof WelcomeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/game'
     | '/lineup'
     | '/market'
     | '/pack'
     | '/roster'
     | '/standings'
+    | '/welcome'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/game' | '/lineup' | '/market' | '/pack' | '/roster' | '/standings'
+  to:
+    | '/'
+    | '/auth'
+    | '/game'
+    | '/lineup'
+    | '/market'
+    | '/pack'
+    | '/roster'
+    | '/standings'
+    | '/welcome'
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/game'
     | '/lineup'
     | '/market'
     | '/pack'
     | '/roster'
     | '/standings'
+    | '/welcome'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   GameRoute: typeof GameRoute
   LineupRoute: typeof LineupRoute
   MarketRoute: typeof MarketRoute
   PackRoute: typeof PackRoute
   RosterRoute: typeof RosterRoute
   StandingsRoute: typeof StandingsRoute
+  WelcomeRoute: typeof WelcomeRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/standings': {
       id: '/standings'
       path: '/standings'
@@ -158,6 +198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -170,12 +217,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   GameRoute: GameRoute,
   LineupRoute: LineupRoute,
   MarketRoute: MarketRoute,
   PackRoute: PackRoute,
   RosterRoute: RosterRoute,
   StandingsRoute: StandingsRoute,
+  WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
