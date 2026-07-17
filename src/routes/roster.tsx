@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { PlayerCard } from "@/components/PlayerCard";
 import { discardPlayer, sellPlayer, sellPrice, setLineup, useGame } from "@/lib/game/store";
-import { LINEUP_SLOTS, POSITIONS, type Player, type Position, type Rarity } from "@/lib/game/types";
+import { LINEUP_SLOTS, POSITIONS, slotPosition, type Player, type Position, type Rarity } from "@/lib/game/types";
 import { lineupOverall } from "@/lib/game/sim";
 import { cn } from "@/lib/utils";
 
