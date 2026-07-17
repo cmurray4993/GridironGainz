@@ -190,7 +190,7 @@ export function generateBackyardHeroPack(): Player[] {
   // Each slot has a chance to upgrade into a signature promo pull, as long
   // as the signature's rarity meets that slot's floor. ~25% per slot ≈ 1
   // signature per pack on average, with a real chance at multiples.
-  const floors: Rarity[] = ["bronze", "silver", "silver", "silver", "gold"];
+  const floors: Rarity[] = ["bronze", "silver", "silver", "gold"];
   const SIG_CHANCE = 0.25;
   const players: Player[] = floors.map((floor) => {
     if (Math.random() < SIG_CHANCE) {
