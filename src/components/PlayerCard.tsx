@@ -211,8 +211,12 @@ export function PlayerCard({
               <StatBar label="Strength" value={player.strength} tone="red" />
               <StatBar label="Speed" value={player.speed} tone="cyan" />
               <StatBar label="IQ" value={player.iq} tone="violet" />
+              {player.signature && (
+                <StatBar label={player.signature.label} value={player.signature.value} tone="emerald" />
+              )}
               <StatBar label="Popularity" value={player.popularity} tone="pink" />
             </div>
+
 
             <div className="mt-auto grid grid-cols-2 gap-2 pt-1 text-[10px]">
               <div className="rounded-md bg-white/5 px-2 py-1">
@@ -237,7 +241,9 @@ const TONE: Record<string, string> = {
   cyan: "bg-[oklch(0.75_0.15_210)]",
   violet: "bg-[oklch(0.7_0.2_300)]",
   pink: "bg-[oklch(0.75_0.18_355)]",
+  emerald: "bg-[oklch(0.75_0.17_160)]",
 };
+
 
 function StatBar({ label, value, tone = "gold" }: { label: string; value: number; tone?: string }) {
   const pct = Math.max(0, Math.min(100, value));
