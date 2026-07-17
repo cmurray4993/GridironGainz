@@ -78,10 +78,11 @@ function PackPage() {
       </header>
 
       {phase === "idle" && (
-        <div className="grid gap-5 sm:grid-cols-2">
-          {(["standard", "pro"] as PackKind[]).map((kind) => {
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {(["standard", "pro", "backyard"] as PackKind[]).map((kind) => {
             const meta = PACK_META[kind];
             const canAfford = state.coins >= meta.cost;
+            const isPromo = kind === "backyard";
             return (
               <button
                 key={kind}
@@ -89,13 +90,18 @@ function PackPage() {
                 disabled={!canAfford}
                 className="group relative text-left"
               >
-                <div className={`relative h-72 w-full overflow-hidden rounded-2xl border ${kind === "pro" ? "border-primary/60" : "border-primary/40"} bg-[image:var(--gradient-card-elite)] shadow-[var(--shadow-card)] transition-transform ${canAfford ? "group-hover:-translate-y-1 animate-pulse-glow" : "opacity-60"}`}>
+                <div className={`relative h-72 w-full overflow-hidden rounded-2xl border ${isPromo ? "border-primary" : kind === "pro" ? "border-primary/60" : "border-primary/40"} bg-[image:var(--gradient-card-elite)] shadow-[var(--shadow-card)] transition-transform ${canAfford ? "group-hover:-translate-y-1 animate-pulse-glow" : "opacity-60"}`}>
                   <div className="absolute inset-0 shimmer-overlay opacity-60" />
+                  {isPromo && (
+                    <div className="absolute left-2 top-2 z-10 rounded-full bg-primary px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary-foreground">
+                      Limited
+                    </div>
+                  )}
                   <div className="absolute inset-2 rounded-xl bg-background/70 p-4 flex flex-col items-center justify-center text-center">
                     <div className="text-[10px] uppercase tracking-[0.4em] text-primary/80">
-                      {kind === "pro" ? "Premium" : "Fourth & Fortune"}
+                      {meta.tag ?? (kind === "pro" ? "Premium" : "Fourth & Fortune")}
                     </div>
-                    <div className="mt-2 font-display text-4xl text-gradient-gold">{meta.name}</div>
+                    <div className="mt-2 font-display text-3xl text-gradient-gold">{meta.name}</div>
                     <div className="mt-3 text-5xl">{meta.emoji}</div>
                     <div className="mt-3 text-xs text-muted-foreground px-3">{meta.blurb}</div>
                   </div>
@@ -108,6 +114,7 @@ function PackPage() {
           })}
         </div>
       )}
+
 
       {(phase === "opening" || phase === "revealed") && (
         <div className="space-y-4">
