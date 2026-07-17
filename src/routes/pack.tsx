@@ -52,18 +52,24 @@ function PackPage() {
   const [pull, setPull] = useState<Player[]>([]);
   const [revealed, setRevealed] = useState(0);
   const [lastKind, setLastKind] = useState<PackKind>("standard");
+  const [lastPosition, setLastPosition] = useState<Position>("QB");
+  const [pickerOpen, setPickerOpen] = useState(false);
 
-  const openPack = (kind: PackKind) => {
+  const openPack = (kind: PackKind, position?: Position) => {
     const cost = PACK_META[kind].cost;
     if (state.coins < cost) return;
+    if (kind === "position" && !position) { setPickerOpen(true); return; }
     if (!spendCoins(cost)) return;
     const players =
       kind === "pro" ? generateProPack() :
       kind === "backyard" ? generateBackyardHeroPack() :
+      kind === "position" ? generatePositionPack(position as Position) :
       generatePack(PACK_SIZE);
     setPull(players);
     setRevealed(0);
     setLastKind(kind);
+    if (position) setLastPosition(position);
+    setPickerOpen(false);
     setPhase("opening");
     players.forEach((_, i) => {
       setTimeout(() => setRevealed((r) => Math.max(r, i + 1)), 400 + i * 500);
