@@ -177,7 +177,7 @@ export function PlayerCard({
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                   {rarityLabel[player.rarity]} · {player.position}
                 </div>
-                <div className="font-display text-base leading-tight truncate">{player.name}</div>
+                <div className="font-display text-sm sm:text-base leading-tight break-words">{player.name}</div>
               </div>
               <div className="font-display text-2xl text-gradient-gold leading-none">{player.overall}</div>
             </div>
