@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, type GameState, type Player, type Position, type Rarity } from "./types";
+import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, computeFanValue, type GameState, type Player, type Position, type Rarity } from "./types";
 
 const RARITY_SELL_MULT: Record<Rarity, number> = {
   common: 0.8,
@@ -35,7 +35,16 @@ function load(): GameState {
     const raw = localStorage.getItem(KEY);
     if (!raw) return initialState();
     const parsed = JSON.parse(raw) as GameState;
-    return { ...initialState(), ...parsed };
+    const merged = { ...initialState(), ...parsed };
+    // Backfill popularity + recompute fanValue for legacy saves.
+    merged.roster = merged.roster.map((p) => {
+      const popularity = typeof p.popularity === "number"
+        ? p.popularity
+        : Math.max(30, Math.min(99, Math.round(p.overall * 0.7 + (p.fanValue ?? 0) * 0.1)));
+      return { ...p, popularity, fanValue: computeFanValue(p.overall, popularity) };
+    });
+    merged.fans = merged.roster.reduce((a, p) => a + p.fanValue, 0);
+    return merged;
   } catch {
     return initialState();
   }
