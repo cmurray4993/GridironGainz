@@ -6,6 +6,24 @@ export const POSITIONS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", 
 
 export const LINEUP_SLOTS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB"];
 
+export interface PlayerSignatureAttr {
+  key: string;
+  label: string;
+  value: number;
+}
+
+export const POSITION_SIGNATURE: Record<Position, { key: string; label: string }> = {
+  QB: { key: "accuracy", label: "Accuracy" },
+  RB: { key: "vision", label: "Vision" },
+  WR: { key: "routeRunning", label: "Route Running" },
+  TE: { key: "blocking", label: "Blocking" },
+  OL: { key: "passPro", label: "Pass Protection" },
+  DL: { key: "passRush", label: "Pass Rush" },
+  LB: { key: "tackling", label: "Tackling" },
+  DB: { key: "coverage", label: "Coverage" },
+  K:  { key: "legPower", label: "Leg Power" },
+};
+
 export interface Player {
   id: string;
   name: string;
@@ -17,7 +35,9 @@ export interface Player {
   popularity: number;
   fanValue: number;
   rarity: Rarity;
+  signature: PlayerSignatureAttr;
 }
+
 
 export function computeFanValue(overall: number, popularity: number): number {
   return Math.round(overall * 0.75 + popularity * 0.25);
