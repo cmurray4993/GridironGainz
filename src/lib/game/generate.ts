@@ -93,7 +93,7 @@ export function generatePlayerAtLeast(minRarity: Rarity): Player {
 function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Player {
   const meta = RARITY_META[rarity];
   const position = forcedPosition ?? rand(POSITIONS);
-  const overall = randInt(meta.overallMin, meta.overallMax);
+  let overall = randInt(meta.overallMin, meta.overallMax);
   const jitter = () => randInt(-8, 8);
   let strength = clamp(overall + jitter());
   let speed = clamp(overall + jitter());
@@ -103,10 +103,18 @@ function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Playe
   // Signature gold prospects with tuned stats
   if (rarity === "gold") {
     if (position === "WR") {
-      name = 'Busta "Fly" Jones';
-      speed = clamp(overall + randInt(8, 13));   // blazing
-      iq = clamp(overall - randInt(10, 16));      // not smart
-      strength = clamp(overall + randInt(-4, 4));
+      // WR gold pool: Busta or Creighton (TE-flavored WR)
+      if (Math.random() < 0.5) {
+        name = 'Busta "Fly" Jones';
+        speed = clamp(overall + randInt(8, 13));
+        iq = clamp(overall - randInt(10, 16));
+        strength = clamp(overall + randInt(-4, 4));
+      } else {
+        name = 'Creighton Murray';
+        strength = clamp(overall + randInt(4, 9));
+        iq = clamp(overall + randInt(2, 7));
+        speed = clamp(overall + randInt(-3, 3));
+      }
     } else if (position === "RB") {
       name = 'Gringo Guth';
       strength = clamp(overall + randInt(4, 9));
@@ -117,7 +125,26 @@ function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Playe
       strength = clamp(overall + randInt(6, 11));
       iq = clamp(overall + randInt(-2, 4));
       speed = clamp(overall + randInt(-6, 2));
+    } else if (position === "DB") {
+      name = 'Talon "7 Iron" Reynolds';
+      speed = clamp(overall + randInt(6, 11));
+      iq = clamp(overall + randInt(2, 6));
+      strength = clamp(overall + randInt(-6, 0));
+    } else if (position === "LB") {
+      name = 'Ty "Teethman" Smith';
+      strength = clamp(overall + randInt(5, 10));
+      speed = clamp(overall + randInt(-2, 4));
+      iq = clamp(overall + randInt(0, 5));
     }
+  }
+
+  // Elite signature: Gary Gainz, the 86 OVR OL
+  if (rarity === "elite" && position === "OL") {
+    name = 'Gary Gainz';
+    overall = 86;
+    strength = clamp(86 + randInt(4, 8));
+    iq = clamp(86 + randInt(-2, 4));
+    speed = clamp(86 - randInt(8, 14));
   }
 
   const popularity = clamp(

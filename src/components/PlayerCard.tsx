@@ -9,10 +9,21 @@ import dlArt from "@/assets/art/dl.jpg";
 import lbArt from "@/assets/art/lb.jpg";
 import dbArt from "@/assets/art/db.jpg";
 import kArt from "@/assets/art/k.jpg";
+import sigCreighton from "@/assets/art/sig-creighton-murray.jpg";
+import sigTalon from "@/assets/art/sig-talon-reynolds.jpg";
+import sigTy from "@/assets/art/sig-ty-smith.jpg";
+import sigGary from "@/assets/art/sig-gary-gainz.jpg";
 
 const POSITION_ART: Record<Position, string> = {
   QB: qbArt, RB: rbArt, WR: wrArt, OL: olArt,
   DL: dlArt, LB: lbArt, DB: dbArt, K: kArt,
+};
+
+const SIGNATURE_ART: Record<string, string> = {
+  'Creighton Murray': sigCreighton,
+  'Talon "7 Iron" Reynolds': sigTalon,
+  'Ty "Teethman" Smith': sigTy,
+  'Gary Gainz': sigGary,
 };
 
 const rarityBg: Record<Player["rarity"], string> = {
@@ -54,7 +65,9 @@ export function PlayerCard({
     setFlipped((f) => !f);
   };
 
-  const art = POSITION_ART[player.position];
+  const sigArt = SIGNATURE_ART[player.name];
+  const art = sigArt ?? POSITION_ART[player.position];
+  const hasSignatureArt = Boolean(sigArt);
   const archetype = playerArchetype(player);
   const fansPerHr = +(player.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(2);
 
@@ -93,7 +106,14 @@ export function PlayerCard({
         >
           <div className="m-[2px] rounded-[calc(var(--radius)-2px)] h-full flex flex-col overflow-hidden relative">
             <div className="absolute inset-0">
-              {player.rarity === "gold" || player.rarity === "elite" ? (
+              {hasSignatureArt || (player.rarity !== "gold" && player.rarity !== "elite") ? (
+                <img
+                  src={art}
+                  alt={`${player.name} art`}
+                  loading="lazy"
+                  className="h-full w-full object-cover object-center"
+                />
+              ) : (
                 <div className="h-full w-full bg-[radial-gradient(ellipse_at_center,oklch(0.28_0.06_80)_0%,oklch(0.14_0.02_260)_70%,oklch(0.08_0.01_260)_100%)] flex items-center justify-center">
                   <div className="text-center px-4">
                     <div className="font-display text-5xl text-gradient-gold opacity-90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{player.position}</div>
@@ -101,13 +121,6 @@ export function PlayerCard({
                     <div className="text-[9px] uppercase tracking-widest text-white/40">Coming soon</div>
                   </div>
                 </div>
-              ) : (
-                <img
-                  src={art}
-                  alt={`${player.position} art`}
-                  loading="lazy"
-                  className="h-full w-full object-cover object-center"
-                />
               )}
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_35%,rgba(0,0,0,0.15)_60%,rgba(0,0,0,0.9)_100%)]" />
             </div>
@@ -130,7 +143,7 @@ export function PlayerCard({
               <div className="flex-1" />
 
               <div className="mt-2">
-                <div className="font-display text-lg leading-tight truncate text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{player.name}</div>
+                <div className="font-display text-base sm:text-lg leading-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] break-words">{player.name}</div>
                 <div className="mt-1 flex items-center justify-between text-[11px]">
                   <span className="text-white/60 uppercase tracking-widest text-[9px]">{player.position}</span>
                   <span className="text-[oklch(0.85_0.18_25)] font-semibold drop-shadow">❤️ {player.fanValue}</span>
@@ -164,7 +177,7 @@ export function PlayerCard({
                 <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                   {rarityLabel[player.rarity]} · {player.position}
                 </div>
-                <div className="font-display text-base leading-tight truncate">{player.name}</div>
+                <div className="font-display text-sm sm:text-base leading-tight break-words">{player.name}</div>
               </div>
               <div className="font-display text-2xl text-gradient-gold leading-none">{player.overall}</div>
             </div>
