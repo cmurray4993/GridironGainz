@@ -66,8 +66,10 @@ function load(uid: string | null): GameState {
           iq: sig.iq,
           popularity: sig.popularity,
           fanValue: computeFanValue(sig.overall, sig.popularity),
+          signature: makeSignatureAttr(sig.position, sig.overall, sig.overall),
         };
       }
+
       const overall = Math.min(86, Math.max(60, p.overall));
       const strength = Math.min(99, p.strength);
       const speed = Math.min(99, p.speed);
