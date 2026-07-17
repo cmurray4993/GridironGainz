@@ -139,34 +139,34 @@ type Side = "offense" | "defense";
 // the position label shown in the slot header.
 type Cell = { slot: string; col: number; span?: number; row: number; label?: string };
 
-// Offense: 5-wide spread on the LOS, 3-back shotgun behind.
-// Row 1 (line): WR1 | OL | TE | WR2   (WR1 far left, WR2 far right)
-// Row 2 (backfield): RB1 | QB | RB2
+// Offense: 4-col field. WR flanks the ends, OL/TE inside; shotgun backfield below.
+// Row 1 (LOS):  WR1 | OL | TE | WR2
+// Row 2 (back): RB1 | QB | .. | RB2   (QB centered)
 const OFFENSE_FORMATION: Cell[] = [
   { slot: "WR1", col: 1, row: 1 },
   { slot: "OL",  col: 2, row: 1 },
   { slot: "TE",  col: 3, row: 1 },
-  { slot: "WR2", col: 5, row: 1 },
+  { slot: "WR2", col: 4, row: 1 },
   { slot: "RB1", col: 1, row: 2 },
-  { slot: "QB",  col: 3, row: 2 },
-  { slot: "RB2", col: 5, row: 2 },
+  { slot: "QB",  col: 2, span: 2, row: 2 },
+  { slot: "RB2", col: 4, row: 2 },
 ];
 
-// Defense: 3-4 look
-// Row 1: DL1 DL2 DL3 across the front
-// Row 2: LB1 LB2
-// Row 3: DB1 DB2
+// Defense: 3-4 look on a 4-col field.
+// Row 1: DL1 | DL2 (span 2) | DL3
+// Row 2: .. LB1 | LB2 ..
+// Row 3: DB1 | .. | .. | DB2
 const DEFENSE_FORMATION: Cell[] = [
   { slot: "DL1", col: 1, row: 1 },
-  { slot: "DL2", col: 3, row: 1 },
-  { slot: "DL3", col: 5, row: 1 },
+  { slot: "DL2", col: 2, span: 2, row: 1 },
+  { slot: "DL3", col: 4, row: 1 },
   { slot: "LB1", col: 2, row: 2 },
-  { slot: "LB2", col: 4, row: 2 },
+  { slot: "LB2", col: 3, row: 2 },
   { slot: "DB1", col: 1, row: 3 },
-  { slot: "DB2", col: 5, row: 3 },
+  { slot: "DB2", col: 4, row: 3 },
 ];
 
-const FIELD_COLS = 5;
+const FIELD_COLS = 4;
 
 function LineupView() {
   const { roster, lineup } = useGame();
