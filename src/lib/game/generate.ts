@@ -202,7 +202,7 @@ export function generateBackyardHeroPack(): Player[] {
   const players: Player[] = floors.map((floor) => {
     if (Math.random() < SIG_CHANCE) {
       const minIdx = RARITY_ORDER.indexOf(floor);
-      const eligible = SIGNATURES.filter((s) => RARITY_ORDER.indexOf(s.rarity) >= minIdx);
+      const eligible = SIGNATURES.filter((s) => s.backyard && RARITY_ORDER.indexOf(s.rarity) >= minIdx);
       if (eligible.length) return buildFromSignature(rand(eligible));
     }
     return generatePlayerAtLeast(floor);
