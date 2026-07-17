@@ -26,19 +26,53 @@ export interface LeagueMeta {
   short: string;
   emoji: string;
   color: string; // token-friendly hex tint
-  championPrize: number;
-  playoffPrize: number;
   regularWin: number;
   fanBonus: number;
 }
 
 export const LEAGUES: Record<LeagueTier, LeagueMeta> = {
-  backyard:   { tier: "backyard",   name: "Backyard Football",  short: "BYF", emoji: "🥏", color: "#7dd3a0", championPrize: 1500,  playoffPrize: 400,  regularWin: 60,  fanBonus: 10 },
-  highschool: { tier: "highschool", name: "High School Gridiron", short: "HSG", emoji: "🏟️", color: "#60a5fa", championPrize: 4000,  playoffPrize: 900,  regularWin: 120, fanBonus: 25 },
-  college:    { tier: "college",    name: "College Football",   short: "CFB", emoji: "🎓", color: "#f59e0b", championPrize: 9000,  playoffPrize: 2000, regularWin: 220, fanBonus: 60 },
-  nfl:        { tier: "nfl",        name: "NFL",                short: "NFL", emoji: "🏈", color: "#ef4444", championPrize: 22000, playoffPrize: 5000, regularWin: 450, fanBonus: 140 },
-  halloffame: { tier: "halloffame", name: "Hall of Fame",       short: "HOF", emoji: "👑", color: "#facc15", championPrize: 60000, playoffPrize: 12000,regularWin: 900, fanBonus: 320 },
+  backyard:   { tier: "backyard",   name: "Backyard Football",  short: "BYF", emoji: "🥏", color: "#7dd3a0", regularWin: 60,  fanBonus: 10 },
+  highschool: { tier: "highschool", name: "High School Gridiron", short: "HSG", emoji: "🏟️", color: "#60a5fa", regularWin: 120, fanBonus: 25 },
+  college:    { tier: "college",    name: "College Football",   short: "CFB", emoji: "🎓", color: "#f59e0b", regularWin: 220, fanBonus: 60 },
+  nfl:        { tier: "nfl",        name: "NFL",                short: "NFL", emoji: "🏈", color: "#ef4444", regularWin: 450, fanBonus: 140 },
+  halloffame: { tier: "halloffame", name: "Hall of Fame",       short: "HOF", emoji: "👑", color: "#facc15", regularWin: 900, fanBonus: 320 },
 };
+
+// Promotion / relegation — top 4 up, bottom 4 down.
+export const TEAMS_PER_LEAGUE = 12;
+export const PROMOTE_COUNT = 4;
+export const RELEGATE_COUNT = 4;
+
+// End-of-season SOL prize pool distributed across every seat in every league.
+// Higher tier + higher finish = larger share. Champion of HOF gets the top slice,
+// last place of Backyard gets the smallest. Percentages sum to 100 across all 60 seats.
+export const TOTAL_SEASON_POT_SOL = 250;
+
+const LEAGUE_WEIGHT: Record<LeagueTier, number> = {
+  backyard: 1, highschool: 2, college: 4, nfl: 8, halloffame: 16,
+};
+function positionWeight(pos: number): number {
+  // pos 1..12 → weight 12..1
+  return TEAMS_PER_LEAGUE + 1 - pos;
+}
+const TOTAL_WEIGHT = (() => {
+  let s = 0;
+  for (const t of LEAGUE_ORDER) for (let p = 1; p <= TEAMS_PER_LEAGUE; p++) s += LEAGUE_WEIGHT[t] * positionWeight(p);
+  return s;
+})();
+
+export function solPrizeFor(tier: LeagueTier, position: number): { pct: number; sol: number } {
+  const w = LEAGUE_WEIGHT[tier] * positionWeight(position);
+  const pct = (w / TOTAL_WEIGHT) * 100;
+  const sol = (w / TOTAL_WEIGHT) * TOTAL_SEASON_POT_SOL;
+  return { pct, sol };
+}
+
+export function formatSol(sol: number): string {
+  if (sol >= 10) return sol.toFixed(2);
+  if (sol >= 1) return sol.toFixed(3);
+  return sol.toFixed(4);
+}
 
 // Anchor: use a stable UTC date so day numbers are deterministic across clients.
 // Season 1 Day 1 begins on 2026-07-13 (Monday). Adjust freely — mock only.
