@@ -79,8 +79,10 @@ function topStat(p: Player): "strength" | "speed" | "iq" {
 
 function playerRating(p: Player): number {
   const w = POSITION_WEIGHTS[p.position];
-  return p.strength * w.str + p.speed * w.spd + p.iq * w.iq;
+  const base = p.strength * w.str + p.speed * w.spd + p.iq * w.iq;
+  return base + (p.signature?.value ?? 0) * 0.15;
 }
+
 
 export function lineupOverall(lineup: (Player | null)[]): number {
   const active = lineup.filter(Boolean) as Player[];
