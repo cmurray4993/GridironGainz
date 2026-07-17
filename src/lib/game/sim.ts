@@ -185,9 +185,18 @@ function applyStats(d: DriveOutcome, off: PlayerStat, def: PlayerStat, team: Tea
   else if (d.kind === "int") { team.turnovers++; def.ints++; }
 }
 
+const OFFENSE_POS: Position[] = ["QB", "RB", "WR", "TE", "OL"];
+const DEFENSE_POS: Position[] = ["DL", "LB", "DB"];
+
+function pickFrom(pool: Player[], positions: Position[], fallback: Player[]): Player {
+  const filtered = pool.filter((p) => positions.includes(p.position));
+  const src = filtered.length ? filtered : fallback;
+  return src[Math.floor(Math.random() * src.length)];
+}
+
 function driveResult(offense: Player[], defense: Player[], side: "home" | "away", awayName?: string): DriveOutcome {
-  const off = offense[Math.floor(Math.random() * offense.length)];
-  const def = defense[Math.floor(Math.random() * defense.length)];
+  const off = pickFrom(offense, OFFENSE_POS, offense);
+  const def = pickFrom(defense, DEFENSE_POS, defense);
   const play = PLAY_TYPES[Math.floor(Math.random() * PLAY_TYPES.length)];
 
   const offRating = playerRating(off) * rpsBonus(off, def);
