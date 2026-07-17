@@ -1,5 +1,5 @@
 import { generatePlayer } from "./generate";
-import { LINEUP_SLOTS, POSITION_WEIGHTS, type Player, type Position } from "./types";
+import { LINEUP_SLOTS, POSITION_WEIGHTS, slotPosition, type Player, type Position } from "./types";
 
 export interface PlayerStat {
   id: string;
