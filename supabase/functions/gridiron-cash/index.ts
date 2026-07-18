@@ -87,6 +87,12 @@ Deno.serve(async (request) => {
       if (!looksLikeSolanaAddress(walletAddress)) {
         return json({ error: "Invalid connected wallet address" }, 400);
       }
+      if (walletAddress === treasuryWallet) {
+        return json(
+          { error: "The treasury wallet cannot purchase Gridiron Cash. Connect a different player wallet." },
+          400,
+        );
+      }
 
       const expectedLamports = Math.round(amountSol * LAMPORTS_PER_SOL);
       const gcAmount = Math.round(amountSol * GC_PER_SOL);
@@ -126,6 +132,9 @@ Deno.serve(async (request) => {
         .eq("user_id", authData.user.id)
         .single();
       if (purchaseError || !purchase) return json({ error: "Purchase not found" }, 404);
+      if (purchase.wallet_address === treasuryWallet) {
+        return json({ error: "Treasury self-payments cannot be credited" }, 400);
+      }
 
       if (purchase.status === "confirmed") {
         if (purchase.signature !== signature)

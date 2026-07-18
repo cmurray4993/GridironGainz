@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Buffer } from "buffer/";
+import { Buffer } from "buffer";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
   LAMPORTS_PER_SOL,
@@ -86,6 +86,10 @@ function WalletPanel() {
 
   async function deposit() {
     if (!publicKey) return;
+    if (publicKey.toBase58() === TREASURY_WALLET) {
+      toast.error("The treasury wallet cannot purchase Gridiron Cash. Connect a different player wallet.");
+      return;
+    }
     const amt = Number(amount);
     if (!amt || amt <= 0) {
       toast.error("Enter an amount");
@@ -103,6 +107,9 @@ function WalletPanel() {
         throw new Error("Treasury configuration mismatch. Please refresh and try again.");
       }
       const treasury = new PublicKey(intent.treasuryWallet);
+      if (publicKey.equals(treasury)) {
+        throw new Error("The treasury wallet cannot purchase Gridiron Cash. Connect a different player wallet.");
+      }
       const memoProgram = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
       const tx = new Transaction().add(
         SystemProgram.transfer({
@@ -152,6 +159,7 @@ function WalletPanel() {
   const usdPreview = (amt * solUsd).toFixed(2);
   const inGameSol = state.sol ?? 0;
   const cashPreview = Math.round(amt * GRIDIRON_CASH_PER_SOL);
+  const isTreasuryWallet = publicKey?.toBase58() === TREASURY_WALLET;
 
   return (
     <div className="animate-float-up space-y-6">
@@ -307,6 +315,12 @@ function WalletPanel() {
             <code>VITE_TREASURY_WALLET</code> before deposits can go through.
           </div>
         )}
+        {isTreasuryWallet && (
+          <div className="mt-3 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-200">
+            This is the treasury wallet. Disconnect it and connect a different player wallet to
+            purchase Gridiron Cash.
+          </div>
+        )}
 
         <div className="mt-4 flex flex-wrap gap-2">
           {QUICK.map((q) => (
@@ -344,7 +358,7 @@ function WalletPanel() {
           </div>
           <button
             onClick={deposit}
-            disabled={!connected || busy || !TREASURY_WALLET}
+            disabled={!connected || busy || !TREASURY_WALLET || isTreasuryWallet}
             className="rounded-lg bg-[image:var(--gradient-gold)] px-5 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy ? "Processing…" : connected ? "Buy Gridiron Cash" : "Connect wallet"}
