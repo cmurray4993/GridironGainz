@@ -21,13 +21,13 @@ import prospectLbArt from "@/assets/art/prospects/prospect-lb.png";
 import prospectDbArt from "@/assets/art/prospects/prospect-db.png";
 import prospectKArt from "@/assets/art/prospects/prospect-k.png";
 import sigCreighton from "@/assets/art/clean/sig-creighton-murray.png";
-import sigTalon from "@/assets/art/clean/sig-talon-reynolds.png";
+import sigTalon from "@/assets/art/sig-talon-reynolds-v2.png";
 import sigTy from "@/assets/art/clean/sig-ty-smith.png";
 import sigGary from "@/assets/art/clean/sig-gary-gainz.png";
 import sigBusta from "@/assets/art/clean/sig-busta-jones.png";
 import sigGringo from "@/assets/art/clean/sig-gringo-guth.png";
 import sigSleepy from "@/assets/art/sig-sleepy-cringle.jpg";
-import sigMettling from "@/assets/art/sig-josiah-mettling.jpg";
+import sigMettling from "@/assets/art/sig-josiah-mettling-v2.png";
 import sigBall from "@/assets/art/sig-josiah-ball.jpg";
 import sigSammy from "@/assets/art/clean/sig-sammy-wheeler.png";
 import sigBreck from "@/assets/art/sig-breck-guthrie.jpg";
@@ -245,7 +245,7 @@ export function PlayerCard({
                 </div>
               )}
               {player.name === 'Breck "Coach Razor" Guthrie' && (
-                <div className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-12 rounded-sm border border-[oklch(0.85_0.17_25)]/80 bg-black/55 px-1.5 py-0.5 font-display text-[9px] uppercase tracking-[0.25em] text-[oklch(0.9_0.17_25)] shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+                <div className="absolute right-1 top-[38%] translate-y-[-50%] rotate-6 rounded-sm border border-[oklch(0.85_0.17_25)]/80 bg-black/60 px-1.5 py-0.5 font-display text-[9px] uppercase tracking-[0.2em] text-[oklch(0.9_0.17_25)] shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
                   Check Razor
                 </div>
               )}

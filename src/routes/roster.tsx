@@ -69,7 +69,7 @@ function RosterView() {
   }, [roster, filter, sort]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-8 sm:pb-0">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-sm text-muted-foreground">{roster.length} player{roster.length === 1 ? "" : "s"} signed.</p>
         <select value={sort} onChange={(e) => setSort(e.target.value as typeof sort)} className="rounded-md border border-border bg-card px-2 py-1.5 text-xs">
