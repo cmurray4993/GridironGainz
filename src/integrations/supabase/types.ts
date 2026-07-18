@@ -14,13 +14,157 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      gridiron_cash_accounts: {
+        Row: {
+          balance: number
+          total_purchased: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          total_purchased?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          total_purchased?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gridiron_cash_ledger: {
+        Row: {
+          balance_after: number
+          created_at: string
+          delta: number
+          id: string
+          purchase_id: string | null
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          balance_after: number
+          created_at?: string
+          delta: number
+          id?: string
+          purchase_id?: string | null
+          reason: string
+          user_id: string
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string
+          delta?: number
+          id?: string
+          purchase_id?: string | null
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gridiron_cash_ledger_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: true
+            referencedRelation: "gridiron_cash_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gridiron_cash_purchases: {
+        Row: {
+          created_at: string
+          current_pool_lamports: number
+          development_lamports: number
+          expected_lamports: number
+          expires_at: string
+          failure_reason: string | null
+          finalized_at: string | null
+          gc_amount: number
+          id: string
+          next_pool_lamports: number
+          signature: string | null
+          status: string
+          user_id: string
+          wallet_address: string
+        }
+        Insert: {
+          created_at?: string
+          current_pool_lamports?: number
+          development_lamports?: number
+          expected_lamports: number
+          expires_at?: string
+          failure_reason?: string | null
+          finalized_at?: string | null
+          gc_amount: number
+          id?: string
+          next_pool_lamports?: number
+          signature?: string | null
+          status?: string
+          user_id: string
+          wallet_address: string
+        }
+        Update: {
+          created_at?: string
+          current_pool_lamports?: number
+          development_lamports?: number
+          expected_lamports?: number
+          expires_at?: string
+          failure_reason?: string | null
+          finalized_at?: string | null
+          gc_amount?: number
+          id?: string
+          next_pool_lamports?: number
+          signature?: string | null
+          status?: string
+          user_id?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      treasury_allocation: {
+        Row: {
+          current_pool_lamports: number
+          development_lamports: number
+          next_pool_lamports: number
+          singleton: boolean
+          updated_at: string
+        }
+        Insert: {
+          current_pool_lamports?: number
+          development_lamports?: number
+          next_pool_lamports?: number
+          singleton?: boolean
+          updated_at?: string
+        }
+        Update: {
+          current_pool_lamports?: number
+          development_lamports?: number
+          next_pool_lamports?: number
+          singleton?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      finalize_gridiron_cash_purchase: {
+        Args: { p_purchase_id: string; p_signature: string; p_user_id: string }
+        Returns: {
+          balance: number
+          current_pool_lamports: number
+          development_lamports: number
+          expected_lamports: number
+          finalized_at: string
+          gc_amount: number
+          next_pool_lamports: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
