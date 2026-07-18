@@ -1,1 +1,4 @@
 project_id = "oqvlshzkzppvzmzxdsyc"
+
+[functions.gridiron-cash]
+verify_jwt = false

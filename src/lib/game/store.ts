@@ -265,6 +265,7 @@ export function spendGridironCash(amount: number): boolean {
 
 export function creditGridironCashPurchase(sol: number, signature?: string): number {
   if (!Number.isFinite(sol) || sol <= 0) return 0;
+  if (signature && (state.cashPurchases ?? []).some((purchase) => purchase.signature === signature)) return 0;
   const cash = Math.round(sol * GRIDIRON_CASH_PER_SOL);
   const currentPoolSol = sol * 0.6;
   const nextPoolSol = sol * 0.2;
