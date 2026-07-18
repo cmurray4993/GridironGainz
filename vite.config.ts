@@ -14,10 +14,22 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    plugins: [
+      {
+        name: "browser-buffer-polyfill",
+        enforce: "pre",
+        resolveId(source) {
+          if (["buffer", "buffer/", "node:buffer", "node:buffer/"].includes(source)) {
+            return resolve("node_modules/buffer/index.js");
+          }
+        },
+      },
+    ],
     resolve: {
       alias: {
         // Wallet libraries expect the Node Buffer API in the browser. Bundle the
         // browser polyfill instead of letting Vite externalize the builtin.
+        "node:buffer": resolve("node_modules/buffer/index.js"),
         buffer: resolve("node_modules/buffer/index.js"),
         // @solana/web3.js imports rpc-websockets from the package root, but that
         // package does not expose a workerd/worker export condition. Point Vite
