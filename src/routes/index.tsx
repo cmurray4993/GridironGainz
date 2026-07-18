@@ -26,77 +26,130 @@ function Home() {
 
   const roster = state.roster;
   const lineupPlayers = useMemo(
-    () => Object.values(state.lineup).map((id) => (id ? roster.find((p) => p.id === id) ?? null : null)),
+    () =>
+      Object.values(state.lineup).map((id) =>
+        id ? (roster.find((p) => p.id === id) ?? null) : null,
+      ),
     [state.lineup, roster],
   );
-  const teamOverall = lineupOverall(lineupPlayers) || (roster.length ? Math.round(roster.reduce((s, p) => s + p.overall, 0) / roster.length) : 60);
+  const teamOverall =
+    lineupOverall(lineupPlayers) ||
+    (roster.length ? Math.round(roster.reduce((s, p) => s + p.overall, 0) / roster.length) : 60);
   const opponent = useMemo(() => pickTodaysOpponent(teamOverall), [teamOverall]);
   const coinsPerHour = state.fans * COIN_PER_FAN_PER_HOUR;
 
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const pend = pendingClaim();
   const canClaim = mounted && pend.buckets > 0;
 
   return (
-    <div className="animate-float-up space-y-6">
-      <section className="relative overflow-hidden rounded-2xl border border-border/70 field-bg p-6 shadow-[var(--shadow-card)]">
+    <div className="animate-float-up space-y-4 sm:space-y-6">
+      <section className="relative overflow-hidden rounded-2xl border border-border/70 field-bg p-4 shadow-[var(--shadow-card)] sm:p-6">
         <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary/80">Franchise HQ</div>
-        <h1 className="mt-1 font-display text-4xl sm:text-5xl">Gridiron Gainz</h1>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">Build a squad. Grow your franchise. Chase championship glory.</p>
+        <h1 className="mt-1 font-display text-4xl leading-none sm:text-5xl">Gridiron Gainz</h1>
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">
+          Build a squad. Grow your franchise. Chase championship glory.
+        </p>
 
-        <div className="mt-5 grid grid-cols-3 gap-3">
-          <BigStat label="Franchise Fans" value={fmt(state.fans)} accent="fan" sub={`+${coinsPerHour.toFixed(2)} 🪙/hr`} />
-          <BigStat label="Coins" value={state.coins.toFixed(2)} accent="gold" sub={`${COIN_PER_FAN_PER_HOUR} 🪙 per fan / hr`} />
-          <BigStat label="Record" value={`${state.wins}–${state.losses}`} sub={`${state.packsOpened} packs opened`} />
+        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3">
+          <BigStat
+            label="Franchise Fans"
+            value={fmt(state.fans)}
+            accent="fan"
+            sub={`+${coinsPerHour.toFixed(2)} 🪙/hr`}
+          />
+          <BigStat
+            label="Coins"
+            value={state.coins.toFixed(2)}
+            accent="gold"
+            sub={`${COIN_PER_FAN_PER_HOUR} 🪙 per fan / hr`}
+          />
+          <BigStat
+            label="Record"
+            value={`${state.wins}–${state.losses}`}
+            sub={`${state.packsOpened} packs opened`}
+          />
         </div>
 
-        <ClaimTile
-          pend={pend}
-          canClaim={canClaim}
-          fans={state.fans}
-          onClaim={() => claimCoins()}
-        />
+        <ClaimTile pend={pend} canClaim={canClaim} fans={state.fans} onClaim={() => claimCoins()} />
       </section>
 
-
-      <section className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-[var(--shadow-card)]">
+      <section className="rounded-2xl border border-border/70 bg-card/80 p-4 shadow-[var(--shadow-card)] sm:p-5">
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Tonight's matchup</div>
-            <h2 className="mt-1 font-display text-2xl">{state.teamName ?? "Your Squad"} <span className="text-muted-foreground">vs</span> {opponent.name}</h2>
-            <div className="mt-1 text-[11px] text-muted-foreground">Managed by a real player · matched at kickoff</div>
+            <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
+              Tonight's matchup
+            </div>
+            <h2 className="mt-1 font-display text-2xl leading-tight">
+              {state.teamName ?? "Your Squad"} <span className="text-muted-foreground">vs</span>{" "}
+              {opponent.name}
+            </h2>
+            <div className="mt-1 text-[11px] text-muted-foreground">
+              Managed by a real player · matched at kickoff
+            </div>
           </div>
         </div>
 
-        <div className="mt-4"><KickoffCountdown /></div>
+        <div className="mt-4">
+          <KickoffCountdown />
+        </div>
 
-        <div className="mt-4 grid grid-cols-3 items-center gap-4">
+        <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
           <TeamCard label="Your OVR" value={teamOverall} tone="gold" />
           <div className="text-center">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-border/70 bg-background/60 font-display text-lg">VS</div>
-            <div className="mt-2 text-xs text-muted-foreground">Difficulty {rank(opponent.overall - teamOverall)}</div>
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-border/70 bg-background/60 font-display text-lg">
+              VS
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              Difficulty {rank(opponent.overall - teamOverall)}
+            </div>
           </div>
           <TeamCard label="Opponent OVR" value={opponent.overall} tone="ember" />
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
-          <Link to="/game" className="flex-1 min-w-[140px] rounded-lg bg-[image:var(--gradient-gold)] px-4 py-3 text-center font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95">
+          <Link
+            to="/game"
+            className="flex-1 min-w-[140px] rounded-lg bg-[image:var(--gradient-gold)] px-4 py-3 text-center font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:opacity-95"
+          >
             Go to matchup
           </Link>
-          <Link to="/lineup" className="rounded-lg border border-border bg-secondary px-4 py-3 text-center text-sm hover:bg-secondary/70">
+          <Link
+            to="/lineup"
+            className="flex-1 rounded-lg border border-border bg-secondary px-4 py-3 text-center text-sm hover:bg-secondary/70 sm:flex-none"
+          >
             Set lineup
           </Link>
         </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        <ActionCard to="/pack" title="Open a pack" description="5 cards. Chance of an elite pull." emoji="🎴" cta="Go to store" />
-        <ActionCard to="/wallet" title="Wallet & funds" description={`◎ ${(state.sol ?? 0).toFixed(3)} deposited · connect Phantom or Solflare to add SOL.`} emoji="◎" cta="Manage wallet" />
-        <ActionCard to="/roster" title="Your roster" description={`${roster.length} player${roster.length === 1 ? "" : "s"} signed to the franchise.`} emoji="👥" cta="View roster" />
+        <ActionCard
+          to="/pack"
+          title="Open a pack"
+          description="5 cards. Chance of an elite pull."
+          emoji="🎴"
+          cta="Go to store"
+        />
+        <ActionCard
+          to="/wallet"
+          title="Wallet & funds"
+          description={`◎ ${(state.sol ?? 0).toFixed(3)} deposited · connect Phantom or Solflare to add SOL.`}
+          emoji="◎"
+          cta="Manage wallet"
+        />
+        <ActionCard
+          to="/roster"
+          title="Your roster"
+          description={`${roster.length} player${roster.length === 1 ? "" : "s"} signed to the franchise.`}
+          emoji="👥"
+          cta="View roster"
+        />
       </section>
-
 
       <section className="rounded-xl border border-dashed border-primary/40 bg-background/40 p-4">
         <div className="flex items-center justify-between gap-3">
@@ -105,7 +158,10 @@ function Home() {
             <div className="text-xs text-muted-foreground">Testing account helpers.</div>
           </div>
           <button
-            onClick={() => { devGrantCoins(2_000_000); toast.success("+2,000,000 🪙 granted"); }}
+            onClick={() => {
+              devGrantCoins(2_000_000);
+              toast.success("+2,000,000 🪙 granted");
+            }}
             className="rounded-lg border border-primary/60 bg-secondary px-3 py-2 text-xs font-semibold hover:bg-secondary/70"
           >
             +2M coins
@@ -116,21 +172,49 @@ function Home() {
   );
 }
 
-function BigStat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: "gold" | "fan" }) {
+function BigStat({
+  label,
+  value,
+  sub,
+  accent,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  accent?: "gold" | "fan";
+}) {
   return (
-    <div className="rounded-xl border border-border/70 bg-background/50 p-3">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`mt-1 font-display text-2xl ${accent === "gold" ? "text-gradient-gold" : accent === "fan" ? "text-[oklch(0.75_0.18_25)]" : ""}`}>{value}</div>
-      {sub && <div className="mt-0.5 text-[10px] text-muted-foreground">{sub}</div>}
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-border/70 bg-background/50 p-3 sm:block">
+      <div>
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+        {sub && <div className="mt-0.5 text-[10px] text-muted-foreground">{sub}</div>}
+      </div>
+      <div
+        className={`shrink-0 font-display text-2xl sm:mt-1 ${accent === "gold" ? "text-gradient-gold" : accent === "fan" ? "text-[oklch(0.75_0.18_25)]" : ""}`}
+      >
+        {value}
+      </div>
     </div>
   );
 }
 
-function TeamCard({ label, value, tone }: { label: string; value: number; tone: "gold" | "ember" }) {
+function TeamCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "gold" | "ember";
+}) {
   return (
-    <div className="rounded-xl border border-border/70 bg-background/60 p-4 text-center">
+    <div className="rounded-xl border border-border/70 bg-background/60 p-2.5 text-center sm:p-4">
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
-      <div className={`mt-1 font-display text-4xl ${tone === "gold" ? "text-gradient-gold" : "text-[oklch(0.72_0.2_28)]"}`}>{value}</div>
+      <div
+        className={`mt-1 font-display text-3xl sm:text-4xl ${tone === "gold" ? "text-gradient-gold" : "text-[oklch(0.72_0.2_28)]"}`}
+      >
+        {value}
+      </div>
     </div>
   );
 }
@@ -142,10 +226,15 @@ function rank(delta: number) {
   if (delta < 10) return "Underdog";
   return "Long shot";
 }
-function fmt(n: number) { return n.toLocaleString(); }
+function fmt(n: number) {
+  return n.toLocaleString();
+}
 
 function ClaimTile({
-  pend, canClaim, fans, onClaim,
+  pend,
+  canClaim,
+  fans,
+  onClaim,
 }: {
   pend: ReturnType<typeof pendingClaim>;
   canClaim: boolean;
@@ -160,9 +249,11 @@ function ClaimTile({
 
   return (
     <div className="mt-5 rounded-xl border border-primary/40 bg-background/60 p-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col items-stretch gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Unclaimed coins</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Unclaimed coins
+          </div>
           <div className="mt-0.5 font-display text-3xl text-gradient-gold leading-none">
             🪙 {pend.coins.toFixed(2)}
           </div>
@@ -179,7 +270,7 @@ function ClaimTile({
         <button
           onClick={onClaim}
           disabled={!canClaim}
-          className="rounded-lg bg-[image:var(--gradient-gold)] px-4 py-2 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded-lg bg-[image:var(--gradient-gold)] px-4 py-2 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-40 min-[420px]:w-auto"
         >
           Claim
         </button>
@@ -192,21 +283,42 @@ function ClaimTile({
       </div>
       <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
         <span>15-min ticks</span>
-        <span>{pend.buckets}/{MAX_CLAIM_BUCKETS} · caps at 8h</span>
+        <span>
+          {pend.buckets}/{MAX_CLAIM_BUCKETS} · caps at 8h
+        </span>
       </div>
     </div>
   );
 }
 
-function ActionCard({ to, title, description, emoji, cta }: { to: string; title: string; description: string; emoji: string; cta: string }) {
+function ActionCard({
+  to,
+  title,
+  description,
+  emoji,
+  cta,
+}: {
+  to: string;
+  title: string;
+  description: string;
+  emoji: string;
+  cta: string;
+}) {
   return (
-    <Link to={to} className="group rounded-xl border border-border/70 bg-card/80 p-4 hover:border-primary/60 transition-colors">
+    <Link
+      to={to}
+      className="group rounded-xl border border-border/70 bg-card/80 p-4 hover:border-primary/60 transition-colors"
+    >
       <div className="flex items-start gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-lg bg-secondary text-xl">{emoji}</div>
+        <div className="grid h-10 w-10 place-items-center rounded-lg bg-secondary text-xl">
+          {emoji}
+        </div>
         <div className="flex-1">
           <div className="font-display text-lg">{title}</div>
           <div className="text-sm text-muted-foreground">{description}</div>
-          <div className="mt-2 text-xs font-semibold uppercase tracking-widest text-primary group-hover:underline">{cta} →</div>
+          <div className="mt-2 text-xs font-semibold uppercase tracking-widest text-primary group-hover:underline">
+            {cta} →
+          </div>
         </div>
       </div>
     </Link>
