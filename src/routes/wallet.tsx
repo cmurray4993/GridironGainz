@@ -13,7 +13,7 @@ export const Route = createFileRoute("/wallet")({
 });
 
 const WalletRuntime = lazy(async () => {
-  const { Buffer } = await import("buffer/");
+  const { Buffer } = await import("buffer");
   if (typeof globalThis !== "undefined") {
     const g = globalThis as unknown as { Buffer?: unknown };
     g.Buffer ??= Buffer;
