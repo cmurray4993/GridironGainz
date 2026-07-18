@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Buffer } from "buffer/";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
   LAMPORTS_PER_SOL,
@@ -112,7 +113,7 @@ function WalletPanel() {
         new TransactionInstruction({
           keys: [],
           programId: memoProgram,
-          data: new TextEncoder().encode(`gridiron-gainz:${intent.purchaseId}`),
+          data: Buffer.from(`gridiron-gainz:${intent.purchaseId}`, "utf8") as never,
         }),
       );
       const latest = await connection.getLatestBlockhash("confirmed");
