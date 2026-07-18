@@ -15,7 +15,8 @@ export const Route = createFileRoute("/wallet")({
 const WalletRuntime = lazy(async () => {
   const { Buffer } = await import("buffer/");
   if (typeof globalThis !== "undefined") {
-    (globalThis as typeof globalThis & { Buffer?: typeof Buffer }).Buffer ??= Buffer;
+    const g = globalThis as unknown as { Buffer?: unknown };
+    g.Buffer ??= Buffer;
   }
   return import("@/components/WalletRuntime");
 });
