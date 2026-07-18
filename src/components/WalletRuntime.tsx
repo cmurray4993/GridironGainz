@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Buffer } from "buffer/";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
   LAMPORTS_PER_SOL,
