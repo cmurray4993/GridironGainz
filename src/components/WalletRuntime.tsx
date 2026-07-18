@@ -112,7 +112,7 @@ function WalletPanel() {
         new TransactionInstruction({
           keys: [],
           programId: memoProgram,
-          data: new TextEncoder().encode(`gridiron-gainz:${intent.purchaseId}`),
+          data: Buffer.from(new TextEncoder().encode(`gridiron-gainz:${intent.purchaseId}`)),
         }),
       );
       const latest = await connection.getLatestBlockhash("confirmed");
