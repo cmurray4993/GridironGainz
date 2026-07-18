@@ -6,8 +6,8 @@ export const Route = createFileRoute("/wallet")({
   component: WalletPage,
   head: () => ({
     meta: [
-      { title: "Wallet — Fourth & Fortune" },
-      { name: "description", content: "Connect Phantom or Solflare and fund your Fourth & Fortune franchise with SOL." },
+      { title: "Wallet — Gridiron Gainz" },
+      { name: "description", content: "Connect Phantom or Solflare and fund your Gridiron Gainz franchise with SOL." },
     ],
   }),
 });

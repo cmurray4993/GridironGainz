@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/roster")({
   component: TeamPage,
-  head: () => ({ meta: [{ title: "Team — Fourth & Fortune" }] }),
+  head: () => ({ meta: [{ title: "Team — Gridiron Gainz" }] }),
 });
 
 type Tab = "roster" | "lineup";
@@ -133,38 +133,43 @@ function RosterView() {
   );
 }
 
-type Side = "offense" | "defense";
+type Side = "offense" | "defense" | "special";
 
 // Formation cell references a lineup slot ID (e.g. "WR1"). label overrides
 // the position label shown in the slot header.
 type Cell = { slot: string; col: number; span?: number; row: number; label?: string };
 
-// Offense: 4-col field, Madden-style shotgun.
+// Offense: compact fictional shotgun formation.
 // Row 1 (LOS):  WR1 | TE  | OL  | WR2
 // Row 2 (back): RB  | QB (span 2) | FLEX
 const OFFENSE_FORMATION: Cell[] = [
   { slot: "WR1",  col: 1, row: 1 },
-  { slot: "TE",   col: 2, row: 1 },
   { slot: "OL",   col: 3, row: 1 },
-  { slot: "WR2",  col: 4, row: 1 },
-  { slot: "RB",   col: 1, row: 2 },
-  { slot: "QB",   col: 2, span: 2, row: 2 },
-  { slot: "FLEX", col: 4, row: 2, label: "FLEX" },
+  { slot: "TE",   col: 4, row: 1 },
+  { slot: "WR2",  col: 5, row: 1 },
+  { slot: "QB",   col: 3, row: 3 },
+  { slot: "RB",   col: 2, row: 5 },
+  { slot: "FLEX", col: 4, row: 5, label: "FLEX" },
 ];
 
-// Defense: 3-4 look on a 4-col field + kicker on special teams row.
+// Defense: a compact front, two linebackers, and three defensive backs.
 const DEFENSE_FORMATION: Cell[] = [
-  { slot: "DL1", col: 1, row: 1 },
-  { slot: "DL2", col: 2, span: 2, row: 1 },
-  { slot: "DL3", col: 4, row: 1 },
-  { slot: "LB1", col: 2, row: 2 },
-  { slot: "LB2", col: 3, row: 2 },
-  { slot: "DB1", col: 1, row: 3 },
-  { slot: "DB2", col: 4, row: 3 },
-  { slot: "K",   col: 2, span: 2, row: 4, label: "K" },
+  { slot: "DFLEX", col: 1, row: 1, label: "FLEX" },
+  { slot: "DB3", col: 5, row: 1, label: "DB" },
+  { slot: "LB1", col: 2, row: 3 },
+  { slot: "LB2", col: 4, row: 3 },
+  { slot: "DB1", col: 1, row: 5 },
+  { slot: "DL", col: 3, row: 5 },
+  { slot: "DB2", col: 5, row: 5 },
 ];
 
-const FIELD_COLS = 4;
+const SPECIAL_TEAMS_FORMATION: Cell[] = [
+  { slot: "K", col: 2, row: 3, label: "KICKER" },
+  { slot: "P", col: 4, row: 3, label: "PUNTER" },
+];
+
+const FIELD_COLS = 5;
+const FIELD_ROWS = 5;
 
 function LineupView() {
   const { roster, lineup } = useGame();
@@ -189,8 +194,13 @@ function LineupView() {
 
   const clear = () => LINEUP_SLOTS.forEach((s) => setLineup(s, null));
 
-  const formation = side === "offense" ? OFFENSE_FORMATION : DEFENSE_FORMATION;
-  const rows = Math.max(...formation.map((c) => c.row));
+  const baseFormation = side === "offense"
+    ? OFFENSE_FORMATION
+    : side === "defense"
+      ? DEFENSE_FORMATION
+      : SPECIAL_TEAMS_FORMATION;
+  const formation = baseFormation;
+  const rows = FIELD_ROWS;
 
   return (
     <div className="space-y-4">
@@ -208,7 +218,8 @@ function LineupView() {
 
       <div className="inline-flex rounded-full border border-border bg-card/60 p-1 text-xs">
         <TabBtn active={side === "offense"} onClick={() => setSide("offense")}>Offense</TabBtn>
-        <TabBtn active={side === "defense"} onClick={() => setSide("defense")}>Defense · ST</TabBtn>
+        <TabBtn active={side === "defense"} onClick={() => setSide("defense")}>Defense</TabBtn>
+        <TabBtn active={side === "special"} onClick={() => setSide("special")}>Special Teams</TabBtn>
       </div>
 
       <FormationField rows={rows}>
@@ -220,7 +231,7 @@ function LineupView() {
             <div
               key={cell.slot}
               style={{
-                gridColumn: `${cell.col} / span ${cell.span ?? 1}`,
+                gridColumn: cell.col,
                 gridRow: cell.row,
               }}
               className="flex items-start justify-center"
@@ -228,8 +239,13 @@ function LineupView() {
               <SlotCard
                 label={label}
                 player={p ?? null}
+                selected={picking?.slot === cell.slot}
                 onPick={() => setPicking({ slot: cell.slot, label, accepts })}
                 onRemove={() => setLineup(cell.slot, null)}
+                onDrop={(id) => {
+                  const dropped = byId.get(id);
+                  if (dropped && accepts.includes(dropped.position)) setLineup(cell.slot, id);
+                }}
               />
             </div>
           );
@@ -237,10 +253,12 @@ function LineupView() {
       </FormationField>
 
       {picking && (
-        <PickerModal
+        <LineupTray
+          slot={picking.slot}
           label={picking.label}
           accepts={picking.accepts}
           roster={roster}
+          current={lineup[picking.slot] ? byId.get(lineup[picking.slot]!) ?? null : null}
           currentIds={new Set(Object.values(lineup).filter(Boolean) as string[])}
           onPick={(id) => { setLineup(picking.slot, id); setPicking(null); }}
           onClose={() => setPicking(null)}
@@ -261,11 +279,12 @@ function FormationField({ rows, children }: { rows: number; children: React.Reac
     >
       <div className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-white/25" />
       <div
-        className="relative grid gap-2 sm:gap-3"
+        className="relative grid gap-x-1"
         style={{
           gridTemplateColumns: `repeat(${FIELD_COLS}, minmax(0, 1fr))`,
-          gridAutoRows: "min-content",
-          rowGap: rows > 2 ? "0.5rem" : "1rem",
+          gridTemplateRows: `repeat(${FIELD_ROWS}, 90px)`,
+          minHeight: `${FIELD_ROWS * 90 + 170}px`,
+          rowGap: 0,
         }}
       >
         {children}
@@ -275,12 +294,24 @@ function FormationField({ rows, children }: { rows: number; children: React.Reac
 }
 
 function SlotCard({
-  label, player, onPick, onRemove,
-}: { label: string; player: Player | null; onPick: () => void; onRemove: () => void }) {
+  label, player, selected, onPick, onRemove, onDrop,
+}: {
+  label: string; player: Player | null; selected?: boolean; onPick: () => void;
+  onRemove: () => void; onDrop: (id: string) => void;
+}) {
   return (
     <button
       onClick={onPick}
-      className="group mx-auto w-full max-w-[110px] text-left rounded-lg border border-border/70 bg-card/85 p-1 backdrop-blur hover:border-primary/60 transition-colors"
+      onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+      onDrop={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDrop(e.dataTransfer.getData("text/player-id"));
+      }}
+      className={cn(
+        "group mx-auto w-full max-w-[110px] text-left rounded-lg border bg-card/85 p-1 backdrop-blur transition-colors",
+        selected ? "border-primary ring-2 ring-primary/40" : "border-border/70 hover:border-primary/60",
+      )}
     >
       <div className="mb-1 flex items-center justify-between px-0.5">
         <div className="font-display text-[11px] leading-none">{label}</div>
@@ -294,7 +325,7 @@ function SlotCard({
         )}
       </div>
       {player ? (
-        <PlayerCard player={player} compact />
+        <PlayerCard player={player} compact onClick={onPick} />
       ) : (
         <div className="grid h-[150px] w-full place-items-center rounded-md border border-dashed border-border/60 text-[10px] text-muted-foreground">
           + {label}
@@ -304,38 +335,159 @@ function SlotCard({
   );
 }
 
-function PickerModal({
-  label, accepts, roster, currentIds, onPick, onClose,
+function LineupTray({
+  slot, label, accepts, roster, current, currentIds, onPick, onClose,
 }: {
-  label: string; accepts: Position[]; roster: Player[]; currentIds: Set<string>;
+  slot: string; label: string; accepts: Position[]; roster: Player[]; current: Player | null; currentIds: Set<string>;
   onPick: (id: string) => void; onClose: () => void;
 }) {
-  const options = roster.filter((p) => accepts.includes(p.position)).sort((a, b) => b.overall - a.overall);
+  const [comparing, setComparing] = useState<Player | null>(null);
+  const options = roster.filter((p) => accepts.includes(p.position) && p.id !== current?.id).sort((a, b) => b.overall - a.overall);
   const subtitle = accepts.length > 1 ? accepts.join(" / ") : "";
   return (
-    <div className="fixed inset-0 z-40 grid place-items-end sm:place-items-center bg-black/70 backdrop-blur-sm p-3" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-border bg-background shadow-[var(--shadow-card)] flex flex-col animate-float-up">
-        <header className="flex items-center justify-between p-4 border-b border-border">
-          <div>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Assign slot</div>
-            <div className="font-display text-2xl">{label}{subtitle && <span className="ml-2 text-xs text-muted-foreground uppercase tracking-widest">{subtitle}</span>}</div>
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[radial-gradient(circle_at_50%_30%,oklch(0.22_0.025_240),oklch(0.09_0.015_245)_62%)]" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="min-h-full animate-float-up">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-black/55 px-4 py-3 backdrop-blur-xl sm:px-7">
+          <button onClick={onClose} className="flex items-center gap-2 font-display text-xl sm:text-3xl">
+            <span className="text-3xl text-primary">‹</span> {label} POSITION
+          </button>
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Eligible</div>
+            <div className="font-display text-xl">{subtitle || label}</div>
           </div>
-          <button onClick={onClose} className="rounded-md px-2 py-1 text-sm text-muted-foreground hover:text-foreground">Close</button>
         </header>
-        <div className="p-4 overflow-y-auto">
-          {options.length === 0 ? (
-            <div className="text-center py-10 text-sm text-muted-foreground">
-              No eligible {subtitle || label} on your roster. Open packs to find one.
+
+        <div className="overflow-x-auto">
+        <main className="mx-auto grid min-w-[760px] max-w-6xl grid-cols-[220px_minmax(280px,1fr)_220px] items-center gap-4 px-4 py-6 sm:min-w-[900px] sm:grid-cols-[250px_minmax(300px,1fr)_250px] sm:gap-6 sm:py-10">
+          <section>
+            <div className="mb-2 text-center text-[10px] uppercase tracking-[0.25em] text-primary">Current starter</div>
+            {current ? (
+              <div className="mx-auto w-[210px] sm:w-[240px]">
+                <PlayerCard player={current} onClick={() => {}} />
+              </div>
+            ) : (
+              <div className="mx-auto grid h-[330px] w-[220px] place-items-center rounded-xl border border-dashed border-white/20 text-sm text-muted-foreground">Empty {label} slot</div>
+            )}
+          </section>
+
+          <section>
+            <div className="mb-4 text-center font-display text-4xl text-gradient-gold">{current?.overall ?? "--"} <span className="text-xl text-foreground">OVR</span></div>
+            <div className="space-y-1.5">
+              <PositionAttribute icon="◆" label="Strength" value={current?.strength} compareValue={comparing?.strength} />
+              <PositionAttribute icon="➤" label="Speed" value={current?.speed} compareValue={comparing?.speed} />
+              <PositionAttribute icon="●" label="IQ" value={current?.iq} compareValue={comparing?.iq} />
+              <PositionAttribute icon="★" label="Popularity" value={current?.popularity} compareValue={comparing?.popularity} />
+              <PositionAttribute icon="♥" label="Fan Value" value={current?.fanValue} compareValue={comparing?.fanValue} />
+              {current?.signature && <PositionAttribute icon="✦" label={current.signature.label} value={current.signature.value} compareValue={comparing?.signature?.value} />}
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {options.map((p) => (
-                <PlayerCard key={p.id} player={p} onClick={() => onPick(p.id)} selected={currentIds.has(p.id)} />
-              ))}
-            </div>
-          )}
+          </section>
+
+          <section
+            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
+            onDrop={(e) => {
+              e.preventDefault();
+              const id = e.dataTransfer.getData("text/player-id");
+              const player = roster.find((p) => p.id === id);
+              if (player) setComparing(player);
+            }}
+            className="grid min-h-[300px] place-items-center rounded-xl border-2 border-dashed border-white/20 bg-black/20 p-5 text-center transition-colors hover:border-primary/60"
+          >
+            {comparing ? (
+              <div className="w-full">
+                <div className="mx-auto w-[150px]">
+                  <PlayerCard player={comparing} compact onClick={() => {}} />
+                </div>
+                <div className="mt-3 text-xs uppercase tracking-widest text-muted-foreground">Comparison player</div>
+                <div className="mt-3 grid gap-2">
+                  <button onClick={() => onPick(comparing.id)} className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">Confirm replacement</button>
+                  <button onClick={() => setComparing(null)} className="rounded-lg border border-border bg-secondary px-3 py-2 text-sm">Cancel comparison</button>
+                </div>
+              </div>
+            ) : <div>
+              <div className="text-4xl text-primary/70">⇧</div>
+              <div className="mt-2 font-display text-xl">DRAG A PLAYER HERE</div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">to compare before replacing</div>
+            </div>}
+          </section>
+        </main>
         </div>
+
+        <section className="border-t border-white/10 bg-[oklch(0.075_0.025_245)] px-4 py-5 sm:px-7">
+          <div className="mx-auto max-w-6xl">
+            <div className="mb-3 text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Replacement players on your bench</div>
+            {options.length === 0 ? (
+              <div className="py-10 text-center font-display text-xl text-muted-foreground">You have no replacement players for this position</div>
+            ) : (
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {options.map((p) => (
+                  <div
+                    key={p.id}
+                    draggable
+                    onDragStart={(e) => { e.dataTransfer.setData("text/player-id", p.id); e.dataTransfer.effectAllowed = "move"; }}
+                    className="w-[260px] shrink-0 cursor-grab active:cursor-grabbing"
+                  >
+                    <PlayerComparison player={p} baseline={current} inLineup={currentIds.has(p.id)} onReplace={() => setComparing(p)} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </div>
+    </div>
+  );
+}
+
+function PositionAttribute({ icon, label, value, compareValue }: { icon: string; label: string; value?: number; compareValue?: number }) {
+  const delta = value != null && compareValue != null ? compareValue - value : null;
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[0.06] px-4 py-3">
+      <span className="w-5 text-center text-primary">{icon}</span>
+      <span className="flex-1 font-semibold">{label}</span>
+      <span className="font-display text-xl">{value ?? "--"}</span>
+      {compareValue != null ? (
+        <span className={cn("min-w-16 text-right font-display text-xl", delta && delta > 0 ? "text-emerald-400" : delta && delta < 0 ? "text-red-400" : "text-muted-foreground")}>
+          → {compareValue}{delta ? <small className="ml-1 text-[10px]">({delta > 0 ? "+" : ""}{delta})</small> : null}
+        </span>
+      ) : <span className="text-xl text-primary">+</span>}
+    </div>
+  );
+}
+
+function PlayerComparison({
+  player, baseline, current, inLineup, onReplace,
+}: { player: Player; baseline: Player | null; current?: boolean; inLineup?: boolean; onReplace?: () => void }) {
+  const delta = (value: number, base?: number) => base == null ? null : value - base;
+  return (
+    <div className={cn("rounded-lg border p-3", current ? "border-primary/50 bg-primary/5" : "border-border bg-card/70")}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="font-display text-lg leading-tight truncate">{player.name}</div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{player.position} · {player.rarity}{inLineup ? " · In lineup" : ""}</div>
+        </div>
+        <div className="font-display text-3xl text-gradient-gold">{player.overall}</div>
+      </div>
+      <div className="mt-3 grid grid-cols-4 gap-1.5">
+        <CompareStat label="STR" value={player.strength} delta={delta(player.strength, baseline?.strength)} />
+        <CompareStat label="SPD" value={player.speed} delta={delta(player.speed, baseline?.speed)} />
+        <CompareStat label="IQ" value={player.iq} delta={delta(player.iq, baseline?.iq)} />
+        <CompareStat label="POP" value={player.popularity} delta={delta(player.popularity, baseline?.popularity)} />
+      </div>
+      {onReplace && (
+        <button onClick={onReplace} className="mt-3 w-full rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+          Compare player
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CompareStat({ label, value, delta }: { label: string; value: number; delta: number | null }) {
+  return (
+    <div className="rounded-md bg-background/70 p-1.5 text-center">
+      <div className="text-[9px] tracking-widest text-muted-foreground">{label}</div>
+      <div className="font-display text-lg leading-none">{value}</div>
+      {delta !== null && delta !== 0 && <div className={cn("text-[9px]", delta > 0 ? "text-emerald-400" : "text-red-400")}>{delta > 0 ? "+" : ""}{delta}</div>}
     </div>
   );
 }

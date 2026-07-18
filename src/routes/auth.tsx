@@ -2,14 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
   head: () => ({
     meta: [
-      { title: "Sign in — Fourth & Fortune" },
-      { name: "description", content: "Create your Fourth & Fortune franchise and open your first pack." },
+      { title: "Sign in — Gridiron Gainz" },
+      { name: "description", content: "Create your Gridiron Gainz franchise and open your first pack." },
     ],
   }),
 });
@@ -49,27 +48,11 @@ function AuthPage() {
     }
   }
 
-  async function google() {
-    setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/welcome`,
-    });
-    if (result.error) {
-      toast.error(result.error.message);
-      setBusy(false);
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/welcome" });
-  }
-
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
       <div className="mb-8 text-center">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-xl bg-[image:var(--gradient-gold)] font-display text-2xl text-primary-foreground shadow-[var(--shadow-glow)]">
-          4F
-        </div>
-        <h1 className="mt-4 font-display text-4xl text-gradient-gold">Fourth &amp; Fortune</h1>
+        <img src="/gridiron-gainz-logo.png" alt="Gridiron Gainz" className="mx-auto h-20 w-20 object-contain drop-shadow-[0_0_12px_rgba(245,183,43,0.4)]" />
+        <h1 className="mt-4 font-display text-4xl text-gradient-gold">Gridiron Gainz</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {mode === "signup" ? "Claim your franchise. Open your first pack." : "Sign back into your franchise."}
         </p>
@@ -117,14 +100,13 @@ function AuthPage() {
           </button>
         </form>
 
-        <div className="my-4 flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+        <div className="hidden">
           <div className="h-px flex-1 bg-border/60" /> or <div className="h-px flex-1 bg-border/60" />
         </div>
 
         <button
-          onClick={google}
-          disabled={busy}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-secondary/70 disabled:opacity-50"
+          type="button"
+          className="hidden"
         >
           <span>🔐</span> Continue with Google
         </button>

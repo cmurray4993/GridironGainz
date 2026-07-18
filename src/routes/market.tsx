@@ -6,7 +6,7 @@ import { POSITIONS, type Player, type Position, type Rarity } from "@/lib/game/t
 
 export const Route = createFileRoute("/market")({
   component: MarketPage,
-  head: () => ({ meta: [{ title: "Marketplace — Fourth & Fortune" }] }),
+  head: () => ({ meta: [{ title: "Marketplace — Gridiron Gainz" }] }),
 });
 
 const rarityRank: Record<Rarity, number> = { elite: 4, gold: 3, silver: 2, bronze: 1 };

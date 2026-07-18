@@ -1,5 +1,6 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { useGame } from "@/lib/game/store";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -18,15 +19,14 @@ export function TopBar() {
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link to="/" className="flex items-center gap-2">
-          <div className="grid h-8 w-8 place-items-center rounded-md bg-[image:var(--gradient-gold)] font-display text-primary-foreground text-sm shadow-[var(--shadow-glow)]">
-            4F
-          </div>
+          <img src="/gridiron-gainz-logo.png" alt="Gridiron Gainz" className="h-9 w-9 object-contain drop-shadow-[0_0_8px_rgba(245,183,43,0.35)]" />
           <div className="hidden sm:block">
-            <div className="font-display text-lg leading-none">Fourth &amp; Fortune</div>
+            <div className="font-display text-lg leading-none">Gridiron Gainz</div>
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Season 1</div>
           </div>
         </Link>
         <div className="flex items-center gap-2 text-sm">
+          <Stat icon={<img src="/gc-icon.png" alt="Gridiron Cash" className="h-5 w-5 object-contain" />} value={fmt(state.gridironCash ?? 0)} tone="fan" />
           <Stat icon="🪙" value={fmt(state.coins)} tone="gold" />
           <Stat icon="🎟️" value={fmt(state.fans)} tone="fan" />
           <Link
@@ -67,7 +67,7 @@ function SignOutButton() {
   );
 }
 
-function Stat({ icon, value, tone }: { icon: string; value: string; tone: "gold" | "fan" }) {
+function Stat({ icon, value, tone }: { icon: ReactNode; value: string; tone: "gold" | "fan" }) {
   return (
     <div className={cn(
       "flex items-center gap-1.5 rounded-full border border-border/70 bg-card/70 px-3 py-1.5",

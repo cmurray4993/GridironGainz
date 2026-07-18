@@ -7,7 +7,7 @@ import type { Player } from "@/lib/game/types";
 
 export const Route = createFileRoute("/welcome")({
   component: Welcome,
-  head: () => ({ meta: [{ title: "Welcome — Fourth & Fortune" }] }),
+  head: () => ({ meta: [{ title: "Welcome — Gridiron Gainz" }] }),
 });
 
 function Welcome() {

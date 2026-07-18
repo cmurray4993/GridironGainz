@@ -1,31 +1,35 @@
 export type Rarity = "bronze" | "silver" | "gold" | "elite";
 
-export type Position = "QB" | "RB" | "WR" | "TE" | "OL" | "DL" | "LB" | "DB" | "K";
+export type Position = "QB" | "RB" | "WR" | "TE" | "OL" | "DL" | "LB" | "DB" | "K" | "P";
 
-export const POSITIONS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K"];
+export const POSITIONS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", "DB", "K", "P"];
 
 // Starting-lineup slot IDs. Positions with multiple starters get numeric
-// suffixes (WR1/WR2, DL1/DL2/DL3, LB1/LB2, DB1/DB2). FLEX accepts RB/WR/TE.
+// suffixes (WR1/WR2, LB1/LB2, DB1/DB2/DB3). FLEX accepts RB/WR/TE;
+// DFLEX accepts LB/DB.
 // Use slotPosition() to recover the base Position used for opponent synth
 // and stat weights; use slotAccepts() for the picker allow-list.
 export const LINEUP_SLOTS: string[] = [
   // Offense (7)
   "QB", "RB", "FLEX", "WR1", "WR2", "TE", "OL",
   // Special teams
-  "K",
+  "K", "P",
   // Defense (7)
-  "DL1", "DL2", "DL3", "LB1", "LB2", "DB1", "DB2",
+  "DL", "LB1", "LB2", "DB1", "DB2", "DB3", "DFLEX",
 ];
 
 export const FLEX_POSITIONS: Position[] = ["RB", "WR", "TE"];
+export const DEFENSIVE_FLEX_POSITIONS: Position[] = ["LB", "DB"];
 
 export function slotPosition(slot: string): Position {
   if (slot === "FLEX") return "RB";
+  if (slot === "DFLEX") return "LB";
   return slot.replace(/\d+$/, "") as Position;
 }
 
 export function slotAccepts(slot: string): Position[] {
   if (slot === "FLEX") return FLEX_POSITIONS;
+  if (slot === "DFLEX") return DEFENSIVE_FLEX_POSITIONS;
   return [slotPosition(slot)];
 }
 
@@ -45,6 +49,7 @@ export const POSITION_SIGNATURE: Record<Position, { key: string; label: string }
   LB: { key: "tackling", label: "Tackling" },
   DB: { key: "coverage", label: "Coverage" },
   K:  { key: "legPower", label: "Leg Power" },
+  P:  { key: "hangTime", label: "Hang Time" },
 };
 
 export interface Player {
@@ -62,8 +67,17 @@ export interface Player {
 }
 
 
-export function computeFanValue(overall: number, popularity: number): number {
-  return Math.round(overall * 0.75 + popularity * 0.25);
+const FAN_RARITY_MULTIPLIER: Record<Rarity, number> = {
+  bronze: 1,
+  silver: 1.5,
+  gold: 3,
+  elite: 6,
+};
+
+export function computeFanValue(overall: number, popularity: number, rarity: Rarity): number {
+  const talent = Math.max(0, overall - 50) ** 2;
+  const appeal = 0.5 + popularity / 200;
+  return Math.round(talent * appeal * FAN_RARITY_MULTIPLIER[rarity]);
 }
 
 export type Archetype = "Speedster" | "Bruiser" | "Genius" | "Balanced";
@@ -84,6 +98,11 @@ export function fansPerHour(p: Player): number {
 
 export interface GameState {
   coins: number;
+  gridironCash?: number;
+  currentPrizePoolSol?: number;
+  nextSeasonPoolSol?: number;
+  devTreasurySol?: number;
+  cashPurchases?: CashPurchase[];
   fans: number;
   roster: Player[];
   lineup: Record<string, string | null>;
@@ -91,11 +110,36 @@ export interface GameState {
   packsOpened: number;
   wins: number;
   losses: number;
+  pointsFor?: number;
+  pointsAgainst?: number;
+  officialGameKeys?: string[];
+  officialResults?: OfficialGameResult[];
   starterPackOpened?: boolean;
   userId?: string | null;
   teamName?: string;
   sol?: number;
   walletAddress?: string;
+}
+
+export interface CashPurchase {
+  id: string;
+  createdAt: number;
+  sol: number;
+  cash: number;
+  currentPoolSol: number;
+  nextPoolSol: number;
+  devSol: number;
+  signature?: string;
+}
+
+export interface OfficialGameResult {
+  key: string;
+  seasonNumber: number;
+  dayOfSeason: number;
+  win: boolean;
+  pointsFor: number;
+  pointsAgainst: number;
+  opponentName: string;
 }
 
 
@@ -110,6 +154,7 @@ export const POSITION_WEIGHTS: Record<Position, { str: number; spd: number; iq: 
   LB: { str: 0.40, spd: 0.30, iq: 0.30 },
   DB: { str: 0.15, spd: 0.55, iq: 0.30 },
   K:  { str: 0.20, spd: 0.20, iq: 0.60 },
+  P:  { str: 0.25, spd: 0.15, iq: 0.60 },
 };
 
 export const RARITY_META: Record<Rarity, { label: string; weight: number; overallMin: number; overallMax: number; fanMin: number; fanMax: number }> = {
@@ -129,11 +174,13 @@ export function rarityFromOverall(overall: number): Rarity {
   return "bronze";
 }
 
-export const COIN_PER_FAN_PER_HOUR = 0.1;
-export const PACK_COST = 250;
+export const COIN_PER_FAN_PER_HOUR = 0.01;
+export const PACK_COST = 5_000;
 export const PACK_SIZE = 5;
-export const PRO_PACK_COST = 7500;
+export const PRO_PACK_COST = 25_000;
 export const PRO_PACK_SIZE = 5;
-export const BACKYARD_HERO_PACK_COST = 25000;
+export const BACKYARD_HERO_PACK_COST = 75_000;
 export const BACKYARD_HERO_PACK_SIZE = 5;
-export const POSITION_PACK_COST = 5000;
+export const POSITION_PACK_COST = 15_000;
+export const GRIDIRON_CASH_PER_SOL = 10_000;
+export const PREMIUM_PACK_CASH_COST = 1_000;

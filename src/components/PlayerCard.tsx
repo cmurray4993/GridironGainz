@@ -1,32 +1,50 @@
 import { useState } from "react";
 import { COIN_PER_FAN_PER_HOUR, playerArchetype, type Player, type Position } from "@/lib/game/types";
+import { BASE_PROSPECT_NAMES } from "@/lib/game/generate";
 import { cn } from "@/lib/utils";
-import qbArt from "@/assets/art/qb.jpg";
-import rbArt from "@/assets/art/rb.jpg";
-import wrArt from "@/assets/art/wr.jpg";
-import teArt from "@/assets/art/te.jpg";
-import olArt from "@/assets/art/ol.jpg";
-import dlArt from "@/assets/art/dl.jpg";
-import lbArt from "@/assets/art/lb.jpg";
-import dbArt from "@/assets/art/db.jpg";
-import kArt from "@/assets/art/k.jpg";
-import sigCreighton from "@/assets/art/sig-creighton-murray.jpg";
-import sigTalon from "@/assets/art/sig-talon-reynolds.jpg";
-import sigTy from "@/assets/art/sig-ty-smith.jpg";
-import sigGary from "@/assets/art/sig-gary-gainz.jpg";
-import sigBusta from "@/assets/art/sig-busta-jones.jpg";
-import sigGringo from "@/assets/art/sig-gringo-guth.jpg";
+import qbArt from "@/assets/art/clean/qb.png";
+import rbArt from "@/assets/art/clean/rb.png";
+import wrArt from "@/assets/art/clean/wr.png";
+import teArt from "@/assets/art/clean/te.png";
+import olArt from "@/assets/art/clean/ol.png";
+import dlArt from "@/assets/art/clean/dl.png";
+import lbArt from "@/assets/art/clean/lb.png";
+import dbArt from "@/assets/art/clean/db.png";
+import kArt from "@/assets/art/clean/k.png";
+import prospectQbArt from "@/assets/art/prospects/prospect-qb.png";
+import prospectRbArt from "@/assets/art/prospects/prospect-rb.png";
+import prospectWrArt from "@/assets/art/prospects/prospect-wr.png";
+import prospectTeArt from "@/assets/art/prospects/prospect-te.png";
+import prospectOlArt from "@/assets/art/prospects/prospect-ol.png";
+import prospectDlArt from "@/assets/art/prospects/prospect-dl.png";
+import prospectLbArt from "@/assets/art/prospects/prospect-lb.png";
+import prospectDbArt from "@/assets/art/prospects/prospect-db.png";
+import prospectKArt from "@/assets/art/prospects/prospect-k.png";
+import sigCreighton from "@/assets/art/clean/sig-creighton-murray.png";
+import sigTalon from "@/assets/art/clean/sig-talon-reynolds.png";
+import sigTy from "@/assets/art/clean/sig-ty-smith.png";
+import sigGary from "@/assets/art/clean/sig-gary-gainz.png";
+import sigBusta from "@/assets/art/clean/sig-busta-jones.png";
+import sigGringo from "@/assets/art/clean/sig-gringo-guth.png";
 import sigSleepy from "@/assets/art/sig-sleepy-cringle.jpg";
 import sigMettling from "@/assets/art/sig-josiah-mettling.jpg";
 import sigBall from "@/assets/art/sig-josiah-ball.jpg";
-import sigSammy from "@/assets/art/sig-sammy-wheeler.jpg";
+import sigSammy from "@/assets/art/clean/sig-sammy-wheeler.png";
 import sigBreck from "@/assets/art/sig-breck-guthrie.jpg";
-import sigCarter from "@/assets/art/sig-carter-carter.jpg";
-import sigMason from "@/assets/art/sig-mason-baker.jpg";
+import sigCarter from "@/assets/art/clean/sig-carter-carter.png";
+import sigMason from "@/assets/art/clean/sig-mason-baker.png";
+import baseProgramLogo from "@/assets/brand/gridiron-gainz-logo.png";
+import hometownHeroesLogo from "@/assets/promos/hometown-heroes.png";
 
 const POSITION_ART: Record<Position, string> = {
   QB: qbArt, RB: rbArt, WR: wrArt, TE: teArt, OL: olArt,
-  DL: dlArt, LB: lbArt, DB: dbArt, K: kArt,
+  DL: dlArt, LB: lbArt, DB: dbArt, K: kArt, P: kArt,
+};
+
+const PROSPECT_ART: Record<Position, string> = {
+  QB: prospectQbArt, RB: prospectRbArt, WR: prospectWrArt, TE: prospectTeArt,
+  OL: prospectOlArt, DL: prospectDlArt, LB: prospectLbArt, DB: prospectDbArt,
+  K: prospectKArt, P: prospectKArt,
 };
 
 const SIGNATURE_ART: Record<string, string> = {
@@ -59,6 +77,27 @@ const rarityLabel: Record<Player["rarity"], string> = {
   elite: "Elite",
 };
 
+const compactNameplate: Record<Player["rarity"], string> = {
+  bronze: "border-[oklch(0.58_0.11_55)] bg-[linear-gradient(135deg,oklch(0.38_0.08_48),oklch(0.24_0.045_40))]",
+  silver: "border-[oklch(0.78_0.025_245)] bg-[linear-gradient(135deg,oklch(0.58_0.03_245),oklch(0.30_0.025_250))]",
+  gold: "border-[oklch(0.88_0.17_85)] bg-[linear-gradient(135deg,oklch(0.68_0.17_75),oklch(0.34_0.09_65))]",
+  elite: "border-[oklch(0.67_0.22_27)] bg-[linear-gradient(135deg,oklch(0.58_0.23_27),oklch(0.28_0.13_25))]",
+};
+
+const compactFrame: Record<Player["rarity"], string> = {
+  bronze: "border-[oklch(0.48_0.10_55)]",
+  silver: "border-[oklch(0.72_0.03_245)]",
+  gold: "border-[oklch(0.78_0.16_80)]",
+  elite: "border-[oklch(0.60_0.24_27)] shadow-[0_0_14px_oklch(0.50_0.22_27/0.38)]",
+};
+
+const BACKYARD_HEROES = new Set([
+  'Busta "Fly" Jones', 'Josiah "The Messiah" Ball', 'Creighton Murray',
+  'Gringo Guth', 'Sleepy Cringle', 'Talon "7 Iron" Reynolds',
+  'Ty "Teethman" Smith', 'Josiah "8 Man" Mettling',
+  'Breck "Coach Razor" Guthrie', 'Gary Gainz',
+]);
+
 
 export function PlayerCard({
   player,
@@ -84,11 +123,70 @@ export function PlayerCard({
     setFlipped((f) => !f);
   };
 
+  const isBaseProspect = player.name.startsWith("Unsigned") || player.name === BASE_PROSPECT_NAMES[player.position];
   const sigArt = SIGNATURE_ART[player.name];
-  const art = sigArt ?? POSITION_ART[player.position];
+  const art = isBaseProspect ? PROSPECT_ART[player.position] : sigArt ?? POSITION_ART[player.position];
   const hasSignatureArt = Boolean(sigArt);
   const archetype = playerArchetype(player);
   const fansPerHr = +(player.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(2);
+  const promo = isBaseProspect
+    ? { short: "GG", name: "Base Program", logo: baseProgramLogo }
+    : BACKYARD_HEROES.has(player.name)
+    ? { short: "HH", name: "Hometown Heroes", logo: hometownHeroesLogo }
+    : SIGNATURE_ART[player.name]
+      ? { short: "SIG", name: "Signature Series", logo: null }
+      : { short: "GG", name: "Base Program", logo: baseProgramLogo };
+
+  if (compact) {
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={(e) => {
+          if ((e.key === "Enter" || e.key === " ") && onClick) {
+            e.preventDefault();
+            onClick();
+          }
+        }}
+        aria-label={`${player.name}, ${player.overall} overall ${player.position}`}
+        className={cn(
+          "group relative h-[150px] w-full cursor-pointer overflow-hidden rounded-sm border-2 bg-black shadow-[0_8px_18px_rgba(0,0,0,0.55)] transition-transform hover:-translate-y-0.5",
+          rarityBg[player.rarity],
+          compactFrame[player.rarity],
+          selected && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+          className,
+        )}
+      >
+        {hasSignatureArt || isBaseProspect || (player.rarity !== "gold" && player.rarity !== "elite") ? (
+          <img src={art} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
+        ) : (
+          <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle,oklch(0.30_0.08_80),oklch(0.10_0.02_260))] font-display text-4xl text-white/60">{player.position}</div>
+        )}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.50),transparent_38%,rgba(0,0,0,0.08)_58%,rgba(0,0,0,0.68)_100%)]" />
+
+        <div
+          title={promo.name}
+          className="absolute left-1 top-1 grid h-6 w-6 place-items-center p-0.5 font-display text-[6px] tracking-wide text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.9)]"
+        >
+          {promo.logo ? <img src={promo.logo} alt="" className="h-full w-full object-contain" /> : promo.short}
+        </div>
+
+        <div className="absolute -right-0.5 top-1 flex w-7 flex-col items-center text-center drop-shadow-[0_2px_3px_rgba(0,0,0,0.95)]">
+          <div className="font-display text-[15px] leading-[0.85] text-white">{player.overall}</div>
+          <div className="mt-0.5 w-full font-display text-[8px] uppercase leading-none tracking-normal text-white/90">{player.position}</div>
+        </div>
+
+        <div className={cn("absolute inset-x-0 bottom-0 border-t px-2 py-1.5 text-left shadow-[0_-3px_12px_rgba(0,0,0,0.45)]", compactNameplate[player.rarity])}>
+          <div className="text-balance break-words font-display text-[8px] uppercase leading-[0.9] tracking-[0.04em] text-white drop-shadow sm:text-[9px]" title={player.name}>{player.name}</div>
+          <div className="mt-1 flex items-center justify-between font-display text-[7px] uppercase tracking-[0.12em] text-white/75">
+            <span>{rarityLabel[player.rarity]}</span>
+            <span>♥ {player.fanValue}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const minHeight = compact ? 170 : 260;
 
@@ -125,7 +223,7 @@ export function PlayerCard({
         >
           <div className="m-[2px] rounded-[calc(var(--radius)-2px)] h-full flex flex-col overflow-hidden relative">
             <div className="absolute inset-0">
-              {hasSignatureArt || (player.rarity !== "gold" && player.rarity !== "elite") ? (
+              {hasSignatureArt || isBaseProspect || (player.rarity !== "gold" && player.rarity !== "elite") ? (
                 <img
                   src={art}
                   alt={`${player.name} art`}
@@ -152,15 +250,12 @@ export function PlayerCard({
 
             <div className="relative z-10 p-3 flex flex-col h-full">
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="text-[10px] uppercase tracking-widest text-white/80 drop-shadow">
-                    {rarityLabel[player.rarity]}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-widest text-white/70 drop-shadow">{player.position}</div>
+                <div title={promo.name} className="grid h-10 w-10 shrink-0 place-items-center p-1 drop-shadow-[0_3px_5px_rgba(0,0,0,0.9)]">
+                  {promo.logo ? <img src={promo.logo} alt={`${promo.name} logo`} className="h-full w-full object-contain" /> : <span className="font-display text-[10px] tracking-wide text-white">{promo.short}</span>}
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="font-display text-3xl text-gradient-gold leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">{player.overall}</div>
-                  <div className="text-[9px] uppercase text-white/70 mt-0.5">OVR</div>
+                <div className="-mr-3 mt-0 flex w-12 shrink-0 flex-col items-center text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">
+                  <div className="font-display text-3xl leading-none text-white">{player.overall}</div>
+                  <div className="mt-0.5 w-full font-display text-xs uppercase leading-none tracking-normal text-white/90">{player.position}</div>
                 </div>
               </div>
 

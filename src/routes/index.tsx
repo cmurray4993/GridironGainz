@@ -43,8 +43,8 @@ function Home() {
       <section className="relative overflow-hidden rounded-2xl border border-border/70 field-bg p-6 shadow-[var(--shadow-card)]">
         <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary/80">Franchise HQ</div>
-        <h1 className="mt-1 font-display text-4xl sm:text-5xl">Fourth &amp; Fortune</h1>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">Build a squad. Court the crowd. Chase the fourth-down miracle.</p>
+        <h1 className="mt-1 font-display text-4xl sm:text-5xl">Gridiron Gainz</h1>
+        <p className="mt-2 max-w-md text-sm text-muted-foreground">Build a squad. Grow your franchise. Chase championship glory.</p>
 
         <div className="mt-5 grid grid-cols-3 gap-3">
           <BigStat label="Franchise Fans" value={fmt(state.fans)} accent="fan" sub={`+${coinsPerHour.toFixed(2)} 🪙/hr`} />

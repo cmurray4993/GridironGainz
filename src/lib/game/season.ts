@@ -1,22 +1,23 @@
-// Season model: 16-day regular season + 4-day playoffs (Wildcard, Quarterfinal,
-// Semifinal, Super Bowl) = 20 days per season. One "week" = one real day.
+// Season model: 7-day regular season + Opening Round, Semifinals,
+// and Championship = 10 days per season.
+import type { OfficialGameResult } from "./types";
 
-export const REG_DAYS = 16;
-export const PLAYOFF_DAYS = 4;
-export const SEASON_DAYS = REG_DAYS + PLAYOFF_DAYS; // 20
+export const REG_DAYS = 7;
+export const PLAYOFF_DAYS = 3;
+export const SEASON_DAYS = REG_DAYS + PLAYOFF_DAYS; // 10
 
 export type LeagueTier =
   | "backyard"
   | "highschool"
   | "college"
-  | "nfl"
+  | "pro"
   | "halloffame";
 
 export const LEAGUE_ORDER: LeagueTier[] = [
   "backyard",
   "highschool",
   "college",
-  "nfl",
+  "pro",
   "halloffame",
 ];
 
@@ -34,12 +35,13 @@ export const LEAGUES: Record<LeagueTier, LeagueMeta> = {
   backyard:   { tier: "backyard",   name: "Backyard Football",  short: "BYF", emoji: "🥏", color: "#7dd3a0", regularWin: 60,  fanBonus: 10 },
   highschool: { tier: "highschool", name: "High School Gridiron", short: "HSG", emoji: "🏟️", color: "#60a5fa", regularWin: 120, fanBonus: 25 },
   college:    { tier: "college",    name: "College Football",   short: "CFB", emoji: "🎓", color: "#f59e0b", regularWin: 220, fanBonus: 60 },
-  nfl:        { tier: "nfl",        name: "NFL",                short: "NFL", emoji: "🏈", color: "#ef4444", regularWin: 450, fanBonus: 140 },
+  pro:        { tier: "pro",        name: "Pro League",         short: "PRO", emoji: "🏈", color: "#ef4444", regularWin: 450, fanBonus: 140 },
   halloffame: { tier: "halloffame", name: "Hall of Fame",       short: "HOF", emoji: "👑", color: "#facc15", regularWin: 900, fanBonus: 320 },
 };
 
 // Promotion / relegation — top 4 up, bottom 4 down.
 export const TEAMS_PER_LEAGUE = 12;
+export const PLAYOFF_TEAMS = 8;
 export const PROMOTE_COUNT = 4;
 export const RELEGATE_COUNT = 4;
 
@@ -49,7 +51,7 @@ export const RELEGATE_COUNT = 4;
 export const TOTAL_SEASON_POT_SOL = 250;
 
 const LEAGUE_WEIGHT: Record<LeagueTier, number> = {
-  backyard: 1, highschool: 2, college: 4, nfl: 8, halloffame: 16,
+  backyard: 1, highschool: 2, college: 4, pro: 8, halloffame: 16,
 };
 function positionWeight(pos: number): number {
   // pos 1..12 → weight 12..1
@@ -61,10 +63,10 @@ const TOTAL_WEIGHT = (() => {
   return s;
 })();
 
-export function solPrizeFor(tier: LeagueTier, position: number): { pct: number; sol: number } {
+export function solPrizeFor(tier: LeagueTier, position: number, totalPool = TOTAL_SEASON_POT_SOL): { pct: number; sol: number } {
   const w = LEAGUE_WEIGHT[tier] * positionWeight(position);
   const pct = (w / TOTAL_WEIGHT) * 100;
-  const sol = (w / TOTAL_WEIGHT) * TOTAL_SEASON_POT_SOL;
+  const sol = (w / TOTAL_WEIGHT) * totalPool;
   return { pct, sol };
 }
 
@@ -84,7 +86,7 @@ export function seasonInfo(now: Date = new Date()) {
   const seasonNumber = Math.floor(daysSince / SEASON_DAYS) + 1;
   const dayOfSeason = (daysSince % SEASON_DAYS) + 1; // 1..20
   const isPlayoffs = dayOfSeason > REG_DAYS;
-  const playoffRound = isPlayoffs ? dayOfSeason - REG_DAYS : 0; // 1..4
+  const playoffRound = isPlayoffs ? dayOfSeason - REG_DAYS : 0; // 1..3
   const regularDay = isPlayoffs ? REG_DAYS : dayOfSeason;
   const daysUntilPlayoffs = Math.max(0, REG_DAYS + 1 - dayOfSeason);
   const nextSeasonAt = SEASON_ANCHOR_UTC + seasonNumber * SEASON_DAYS * DAY_MS;
@@ -97,12 +99,12 @@ export function seasonInfo(now: Date = new Date()) {
     playoffRound,
     daysUntilPlayoffs,
     playoffsStartAt: SEASON_ANCHOR_UTC + ((seasonNumber - 1) * SEASON_DAYS + REG_DAYS) * DAY_MS,
-    superBowlAt:    SEASON_ANCHOR_UTC + ((seasonNumber - 1) * SEASON_DAYS + SEASON_DAYS - 1) * DAY_MS,
+    championshipAt: SEASON_ANCHOR_UTC + ((seasonNumber - 1) * SEASON_DAYS + SEASON_DAYS - 1) * DAY_MS,
     nextSeasonAt,
   };
 }
 
-export const PLAYOFF_ROUND_NAMES = ["Wild Card", "Quarterfinal", "Semifinal", "Super Bowl"] as const;
+export const PLAYOFF_ROUND_NAMES = ["Opening Round", "Semifinals", "Championship"] as const;
 
 // ---------- Deterministic mock standings ----------
 // Seeded RNG so every viewer sees the same league across the same day.
@@ -141,17 +143,88 @@ export interface StandingRow {
   isYou?: boolean;
 }
 
+export interface BracketMatch {
+  id: string;
+  round: 1 | 2 | 3;
+  home: StandingRow;
+  away: StandingRow;
+  winner?: StandingRow;
+  score?: string;
+}
+
+export interface PlayoffBracket {
+  seeds: StandingRow[];
+  rounds: [BracketMatch[], BracketMatch[], BracketMatch[]];
+  userQualified: boolean;
+  userEliminated: boolean;
+  champion?: StandingRow;
+}
+
+function cpuWinner(a: StandingRow, b: StandingRow, seasonNumber: number, round: number, game: number): StandingRow {
+  const rng = mulberry(hashStr(`bracket:${seasonNumber}:${round}:${game}:${a.id}:${b.id}`));
+  const aStrength = 0.5 + (a.wins - b.wins) * 0.045 + ((a.pointsFor - a.pointsAgainst) - (b.pointsFor - b.pointsAgainst)) * 0.0015;
+  return rng() < Math.max(0.25, Math.min(0.75, aStrength)) ? a : b;
+}
+
+export function generatePlayoffBracket(
+  standings: StandingRow[],
+  officialResults: OfficialGameResult[],
+  seasonNumber: number,
+  currentDay: number,
+): PlayoffBracket {
+  const seeds = standings.slice(0, PLAYOFF_TEAMS);
+  const seasonResults = officialResults.filter((r) => r.seasonNumber === seasonNumber);
+  const pairs: Array<[number, number]> = [[0, 7], [1, 6], [2, 5], [3, 4]];
+
+  const resolve = (home: StandingRow, away: StandingRow, round: 1 | 2 | 3, game: number): BracketMatch => {
+    const targetDay = REG_DAYS + round;
+    const includesYou = Boolean(home.isYou || away.isYou);
+    const userResult = includesYou ? seasonResults.find((r) => r.dayOfSeason === targetDay) : undefined;
+    let winner: StandingRow | undefined;
+    let score: string | undefined;
+    if (userResult) {
+      const you = home.isYou ? home : away;
+      const opponent = home.isYou ? away : home;
+      winner = userResult.win ? you : opponent;
+      score = home.isYou
+        ? `${userResult.pointsFor}–${userResult.pointsAgainst}`
+        : `${userResult.pointsAgainst}–${userResult.pointsFor}`;
+    } else if (!includesYou && currentDay >= targetDay) {
+      winner = cpuWinner(home, away, seasonNumber, round, game);
+      const loser = winner.id === home.id ? away : home;
+      const base = 17 + (hashStr(`${seasonNumber}:${round}:${game}`) % 18);
+      const loserScore = Math.max(3, base - 7 - (Math.abs(winner.wins - loser.wins) * 2));
+      score = winner.id === home.id ? `${base}–${loserScore}` : `${loserScore}–${base}`;
+    }
+    return { id: `r${round}g${game}`, round, home, away, winner, score };
+  };
+
+  const opening = pairs.map(([a, b], i) => resolve(seeds[a], seeds[b], 1, i));
+  const openingWinners = opening.map((m) => m.winner).filter(Boolean) as StandingRow[];
+  const semifinals: BracketMatch[] = openingWinners.length === 4
+    ? [resolve(openingWinners[0], openingWinners[3], 2, 0), resolve(openingWinners[1], openingWinners[2], 2, 1)]
+    : [];
+  const semifinalWinners = semifinals.map((m) => m.winner).filter(Boolean) as StandingRow[];
+  const championship: BracketMatch[] = semifinalWinners.length === 2
+    ? [resolve(semifinalWinners[0], semifinalWinners[1], 3, 0)]
+    : [];
+  const allResolved = [...opening, ...semifinals, ...championship].filter((m) => m.winner);
+  const userQualified = seeds.some((s) => s.isYou);
+  const userEliminated = userQualified && allResolved.some((m) => (m.home.isYou || m.away.isYou) && !m.winner?.isYou);
+  return { seeds, rounds: [opening, semifinals, championship], userQualified, userEliminated, champion: championship[0]?.winner };
+}
+
 export function generateStandings(opts: {
   tier: LeagueTier;
   seasonNumber: number;
-  regularDay: number; // 1..16 games played so far in reg season
-  you?: { wins: number; losses: number; name?: string };
+  regularDay: number; // 1..7 games played so far in reg season
+  you?: { wins: number; losses: number; pointsFor?: number; pointsAgainst?: number; name?: string };
 }): StandingRow[] {
   const { tier, seasonNumber, regularDay, you } = opts;
   const rng = mulberry(hashStr(`${tier}:${seasonNumber}`));
   const games = Math.min(REG_DAYS, regularDay);
 
-  const pool = [...OPPONENT_NAMES].sort(() => rng() - 0.5).slice(0, 11);
+  const pool = [...OPPONENT_NAMES].sort(() => rng() - 0.5).slice(0, TEAMS_PER_LEAGUE - 1);
   const rows: StandingRow[] = pool.map((name, i) => {
     // Each team gets a "strength" that biases win rate.
     const strength = 0.35 + rng() * 0.5;
@@ -171,8 +244,8 @@ export function generateStandings(opts: {
       name: you.name ?? "Your Squad",
       wins: yWins,
       losses: yLoss,
-      pointsFor: yWins * 24 + yLoss * 14,
-      pointsAgainst: yLoss * 24 + yWins * 14,
+      pointsFor: you.pointsFor ?? (yWins * 24 + yLoss * 14),
+      pointsAgainst: you.pointsAgainst ?? (yLoss * 24 + yWins * 14),
       isYou: true,
     });
   }

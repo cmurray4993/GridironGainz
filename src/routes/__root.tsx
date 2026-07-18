@@ -14,6 +14,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav, TopBar } from "@/components/Layout";
 import { useAuth } from "@/hooks/useAuth";
+import { Toaster } from "@/components/ui/sonner";
 
 
 function NotFoundComponent() {
@@ -55,17 +56,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Fourth & Fortune — Build your dynasty" },
-      { name: "description", content: "Open packs, build a roster, and simulate matchdays in Fourth & Fortune, a dark-themed football card game." },
-      { name: "author", content: "Fourth & Fortune" },
-      { property: "og:title", content: "Fourth & Fortune — Build your dynasty" },
-      { property: "og:description", content: "Open packs, build a roster, and simulate matchdays in Fourth & Fortune, a dark-themed football card game." },
+      { title: "Gridiron Gainz — Build your dynasty" },
+      { name: "description", content: "Open packs, build a roster, and simulate matchdays in Gridiron Gainz, a dark-themed football card game." },
+      { name: "author", content: "Gridiron Gainz" },
+      { property: "og:title", content: "Gridiron Gainz — Build your dynasty" },
+      { property: "og:description", content: "Open packs, build a roster, and simulate matchdays in Gridiron Gainz, a dark-themed football card game." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Fourth & Fortune — Build your dynasty" },
-      { name: "twitter:description", content: "Open packs, build a roster, and simulate matchdays in Fourth & Fortune, a dark-themed football card game." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f746519e-ab2b-4009-9f3a-53b2b9db3cbe/id-preview-fc9df144--80d86f65-d54b-4c30-9357-d20fd55c868f.lovable.app-1784298365714.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/f746519e-ab2b-4009-9f3a-53b2b9db3cbe/id-preview-fc9df144--80d86f65-d54b-4c30-9357-d20fd55c868f.lovable.app-1784298365714.png" },
+      { name: "twitter:title", content: "Gridiron Gainz — Build your dynasty" },
+      { name: "twitter:description", content: "Open packs, build a roster, and simulate matchdays in Gridiron Gainz, a dark-themed football card game." },
+      { property: "og:image", content: "/gridiron-gainz-logo.png" },
+      { name: "twitter:image", content: "/gridiron-gainz-logo.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -95,6 +96,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthGate />
+      <Toaster richColors position="top-center" />
     </QueryClientProvider>
   );
 }

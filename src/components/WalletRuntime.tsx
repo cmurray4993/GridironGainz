@@ -3,7 +3,8 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import { toast } from "sonner";
 
-import { addSol, setWalletAddress, useGame } from "@/lib/game/store";
+import { creditGridironCashPurchase, setWalletAddress, useGame } from "@/lib/game/store";
+import { GRIDIRON_CASH_PER_SOL } from "@/lib/game/types";
 import { SolanaWalletProvider, TREASURY_WALLET } from "@/lib/solana/WalletProvider";
 import { getSolUsd } from "@/lib/solana/price";
 
@@ -73,8 +74,8 @@ function WalletPanel() {
       toast.loading("Confirming deposit…", { id: sig });
       const latest = await connection.getLatestBlockhash();
       await connection.confirmTransaction({ signature: sig, ...latest }, "confirmed");
-      addSol(amt);
-      toast.success(`Deposited ◎${amt} — credited to your franchise`, {
+      const cash = creditGridironCashPurchase(amt, sig);
+      toast.success(`Purchased ${cash.toLocaleString()} Gridiron Cash`, {
         id: sig,
         description: `tx ${sig.slice(0, 8)}…`,
         action: { label: "View", onClick: () => window.open(`https://solscan.io/tx/${sig}`, "_blank") },
@@ -91,15 +92,16 @@ function WalletPanel() {
   const amt = Number(amount) || 0;
   const usdPreview = (amt * solUsd).toFixed(2);
   const inGameSol = state.sol ?? 0;
+  const cashPreview = Math.round(amt * GRIDIRON_CASH_PER_SOL);
 
   return (
     <div className="animate-float-up space-y-6">
       <section className="rounded-2xl border border-border/70 bg-card/80 p-6 shadow-[var(--shadow-card)]">
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary/80">Franchise Wallet</div>
         <h1 className="mt-1 font-display text-3xl">Fund your dynasty</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Connect Phantom or Solflare to deposit SOL into your franchise treasury.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Connect Phantom or Solflare to purchase Gridiron Cash with SOL.</p>
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-xl border border-border/70 bg-background/50 p-3">
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">In-game SOL</div>
             <div className="mt-1 font-display text-2xl text-gradient-gold">◎ {inGameSol.toFixed(4)}</div>
@@ -109,6 +111,16 @@ function WalletPanel() {
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Coins</div>
             <div className="mt-1 font-display text-2xl">🪙 {state.coins.toFixed(2)}</div>
             <div className="mt-0.5 text-[10px] text-muted-foreground">Earned from fans</div>
+          </div>
+          <div className="rounded-xl border border-fuchsia-500/30 bg-fuchsia-500/10 p-3">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Gridiron Cash</div>
+            <div className="mt-1 flex items-center gap-2 font-display text-2xl text-fuchsia-300"><img src="/gc-icon.png" alt="" className="h-8 w-8 object-contain" />{(state.gridironCash ?? 0).toLocaleString()}</div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">Premium packs and offers</div>
+          </div>
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Season pool</div>
+            <div className="mt-1 font-display text-2xl text-emerald-300">◎ {(state.currentPrizePoolSol ?? 250).toFixed(2)}</div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">60% of eligible purchases</div>
           </div>
         </div>
       </section>
@@ -174,10 +186,10 @@ function WalletPanel() {
       </section>
 
       <section className="rounded-2xl border border-border/70 bg-card/80 p-6 shadow-[var(--shadow-card)]">
-        <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Deposit</div>
-        <h2 className="mt-1 font-display text-xl">Add funds</h2>
+        <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Gridiron Cash</div>
+        <h2 className="mt-1 font-display text-xl">Purchase premium currency</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          SOL is transferred from your wallet to the franchise treasury on Solana {(import.meta.env.VITE_SOLANA_NETWORK as string) || "mainnet-beta"}.
+          1 SOL purchases {GRIDIRON_CASH_PER_SOL.toLocaleString()} GC. SOL is transferred to the franchise treasury on {(import.meta.env.VITE_SOLANA_NETWORK as string) || "mainnet-beta"}.
         </p>
 
         {!TREASURY_WALLET && (
@@ -212,14 +224,41 @@ function WalletPanel() {
               className="mt-0.5 w-full bg-transparent font-display text-2xl outline-none"
             />
             <div className="text-[10px] text-muted-foreground">≈ ${usdPreview} USD</div>
+            <div className="mt-1 font-semibold text-fuchsia-300">You receive GC {cashPreview.toLocaleString()}</div>
           </div>
           <button
             onClick={deposit}
             disabled={!connected || busy || !TREASURY_WALLET}
             className="rounded-lg bg-[image:var(--gradient-gold)] px-5 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {busy ? "Sending…" : connected ? "Deposit" : "Connect wallet"}
+            {busy ? "Confirming…" : connected ? "Buy Gridiron Cash" : "Connect wallet"}
           </button>
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2"><strong className="block text-emerald-300">60%</strong>Current pool<br />◎ {(amt * 0.6).toFixed(3)}</div>
+          <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 p-2"><strong className="block text-sky-300">20%</strong>Next season<br />◎ {(amt * 0.2).toFixed(3)}</div>
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2"><strong className="block text-amber-300">20%</strong>Development<br />◎ {(amt * 0.2).toFixed(3)}</div>
+        </div>
+        <p className="mt-3 text-[10px] text-muted-foreground">Prototype accounting: the split is recorded after confirmation. Separate on-chain treasury accounts will be added before real-money launch.</p>
+      </section>
+
+      <section className="rounded-2xl border border-border/70 bg-card/80 p-6 shadow-[var(--shadow-card)]">
+        <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">Treasury allocation</div>
+        <h2 className="mt-1 font-display text-xl">60 / 20 / 20 ledger</h2>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-lg bg-emerald-500/10 p-3"><div className="text-[10px] text-muted-foreground">CURRENT POOL</div><div className="font-display text-lg text-emerald-300">◎ {(state.currentPrizePoolSol ?? 250).toFixed(3)}</div></div>
+          <div className="rounded-lg bg-sky-500/10 p-3"><div className="text-[10px] text-muted-foreground">NEXT SEASON</div><div className="font-display text-lg text-sky-300">◎ {(state.nextSeasonPoolSol ?? 0).toFixed(3)}</div></div>
+          <div className="rounded-lg bg-amber-500/10 p-3"><div className="text-[10px] text-muted-foreground">DEVELOPMENT</div><div className="font-display text-lg text-amber-300">◎ {(state.devTreasurySol ?? 0).toFixed(3)}</div></div>
+        </div>
+        <div className="mt-4 space-y-2">
+          {(state.cashPurchases ?? []).length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">No Gridiron Cash purchases yet.</div>
+          ) : (state.cashPurchases ?? []).slice(0, 5).map((purchase) => (
+            <div key={purchase.id} className="flex items-center justify-between rounded-lg border border-border/60 bg-background/40 px-3 py-2 text-xs">
+              <div><strong>GC {purchase.cash.toLocaleString()}</strong><div className="text-[10px] text-muted-foreground">{new Date(purchase.createdAt).toLocaleString()}</div></div>
+              <div className="text-right tabular-nums">◎ {purchase.sol.toFixed(3)}<div className="text-[10px] text-muted-foreground">60% / 20% / 20%</div></div>
+            </div>
+          ))}
         </div>
       </section>
     </div>

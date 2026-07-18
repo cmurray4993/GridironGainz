@@ -5,7 +5,7 @@ import { setTeamName, useGame } from "@/lib/game/store";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
-  head: () => ({ meta: [{ title: "Settings — Fourth & Fortune" }] }),
+  head: () => ({ meta: [{ title: "Settings — Gridiron Gainz" }] }),
 });
 
 function SettingsPage() {

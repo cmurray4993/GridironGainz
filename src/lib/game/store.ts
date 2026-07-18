@@ -1,16 +1,17 @@
 import { useSyncExternalStore } from "react";
-import { COIN_PER_FAN_PER_HOUR, LINEUP_SLOTS, computeFanValue, rarityFromOverall, type GameState, type Player, type Position, type Rarity } from "./types";
+import { COIN_PER_FAN_PER_HOUR, GRIDIRON_CASH_PER_SOL, LINEUP_SLOTS, computeFanValue, rarityFromOverall, type GameState, type Player, type Position, type Rarity } from "./types";
 import { canonicalName, makeSignatureAttr, SIGNATURES } from "./generate";
+import { seasonInfo } from "./season";
 
-const RARITY_SELL_MULT: Record<Rarity, number> = {
-  bronze: 0.8,
-  silver: 1.6,
-  gold: 3.0,
-  elite: 5.5,
+const RARITY_SELL_PRICE: Record<Rarity, number> = {
+  bronze: 100,
+  silver: 200,
+  gold: 500,
+  elite: 1_000,
 };
 
 export function sellPrice(p: Player): number {
-  return Math.max(5, Math.round(p.overall * RARITY_SELL_MULT[p.rarity]));
+  return RARITY_SELL_PRICE[p.rarity];
 }
 
 const BASE_KEY = "faf.state.v3";
@@ -20,8 +21,18 @@ function storageKey(uid: string | null): string {
   return uid ? `${BASE_KEY}:${uid}` : `${BASE_KEY}:guest`;
 }
 
+function activeStarterFans(roster: Player[], lineup: GameState["lineup"]): number {
+  const starterIds = new Set(Object.values(lineup).filter((id): id is string => Boolean(id)));
+  return roster.reduce((total, player) => total + (starterIds.has(player.id) ? player.fanValue : 0), 0);
+}
+
 const initialState = (): GameState => ({
   coins: 500,
+  gridironCash: 0,
+  currentPrizePoolSol: 250,
+  nextSeasonPoolSol: 0,
+  devTreasurySol: 0,
+  cashPurchases: [],
   fans: 0,
   roster: [],
   lineup: Object.fromEntries(LINEUP_SLOTS.map((p) => [p, null])) as GameState["lineup"],
@@ -29,6 +40,10 @@ const initialState = (): GameState => ({
   packsOpened: 0,
   wins: 0,
   losses: 0,
+  pointsFor: 0,
+  pointsAgainst: 0,
+  officialGameKeys: [],
+  officialResults: [],
   starterPackOpened: false,
   userId: null,
 });
@@ -65,7 +80,7 @@ function load(uid: string | null): GameState {
           speed: sig.speed,
           iq: sig.iq,
           popularity: sig.popularity,
-          fanValue: computeFanValue(sig.overall, sig.popularity),
+          fanValue: computeFanValue(sig.overall, sig.popularity, sig.rarity),
           signature: makeSignatureAttr(sig.position, sig.overall, sig.overall),
         };
       }
@@ -90,30 +105,30 @@ function load(uid: string | null): GameState {
         iq,
         popularity,
         rarity,
-        fanValue: computeFanValue(overall, popularity),
+        fanValue: computeFanValue(overall, popularity, rarity),
         name,
         signature: p.signature ?? makeSignatureAttr(p.position, overall, overall),
 
       };
     });
 
-    merged.fans = merged.roster.reduce((a, p) => a + p.fanValue, 0);
-
     // Migrate legacy position-keyed lineups to slot-id keys and reshape
     // for the new offense (QB / RB / FLEX / WR1 / WR2 / TE / OL, no K on offense).
     const freshLineup = Object.fromEntries(LINEUP_SLOTS.map((s) => [s, null])) as GameState["lineup"];
     const legacyMap: Record<string, string> = {
-      WR: "WR1", DL: "DL1", LB: "LB1", DB: "DB1",
+      WR: "WR1", DL: "DL", LB: "LB1", DB: "DB1",
       RB1: "RB", RB2: "FLEX", // v2 -> v3 offense reshape
     };
     for (const [k, v] of Object.entries(merged.lineup ?? {})) {
       if (!v) continue;
-      const target = LINEUP_SLOTS.includes(k) ? k : (legacyMap[k] ?? k);
+      const defenseMap: Record<string, string> = { DL1: "DL", DB3: "DB3", DFLEX: "DFLEX" };
+      const target = LINEUP_SLOTS.includes(k) ? k : (defenseMap[k] ?? legacyMap[k] ?? k);
       if (LINEUP_SLOTS.includes(target) && freshLineup[target] == null) {
         freshLineup[target] = v;
       }
     }
     merged.lineup = freshLineup;
+    merged.fans = activeStarterFans(merged.roster, merged.lineup);
 
     return merged;
   } catch {
@@ -202,20 +217,19 @@ export function addPlayers(players: Player[]) {
   set((s) => ({
     ...s,
     roster: [...s.roster, ...players],
-    fans: s.fans + players.reduce((a, p) => a + p.fanValue, 0),
     packsOpened: s.packsOpened + 1,
   }));
 }
 
 function removePlayerInternal(s: GameState, id: string): GameState {
-  const p = s.roster.find((r) => r.id === id);
-  if (!p) return s;
+  if (!s.roster.some((r) => r.id === id)) return s;
   const nextLineup = { ...s.lineup };
   for (const pos of LINEUP_SLOTS) if (nextLineup[pos] === id) nextLineup[pos] = null;
+  const nextRoster = s.roster.filter((r) => r.id !== id);
   return {
     ...s,
-    roster: s.roster.filter((r) => r.id !== id),
-    fans: Math.max(0, s.fans - p.fanValue),
+    roster: nextRoster,
+    fans: activeStarterFans(nextRoster, nextLineup),
     lineup: nextLineup,
   };
 }
@@ -243,6 +257,39 @@ export function spendCoins(amount: number): boolean {
   return true;
 }
 
+export function spendGridironCash(amount: number): boolean {
+  if ((state.gridironCash ?? 0) < amount) return false;
+  set((s) => ({ ...s, gridironCash: (s.gridironCash ?? 0) - amount }));
+  return true;
+}
+
+export function creditGridironCashPurchase(sol: number, signature?: string): number {
+  if (!Number.isFinite(sol) || sol <= 0) return 0;
+  const cash = Math.round(sol * GRIDIRON_CASH_PER_SOL);
+  const currentPoolSol = sol * 0.6;
+  const nextPoolSol = sol * 0.2;
+  const devSol = sol * 0.2;
+  set((s) => ({
+    ...s,
+    sol: (s.sol ?? 0) + sol,
+    gridironCash: (s.gridironCash ?? 0) + cash,
+    currentPrizePoolSol: (s.currentPrizePoolSol ?? 250) + currentPoolSol,
+    nextSeasonPoolSol: (s.nextSeasonPoolSol ?? 0) + nextPoolSol,
+    devTreasurySol: (s.devTreasurySol ?? 0) + devSol,
+    cashPurchases: [{
+      id: signature ?? `mock-${Date.now()}`,
+      createdAt: Date.now(),
+      sol,
+      cash,
+      currentPoolSol,
+      nextPoolSol,
+      devSol,
+      signature,
+    }, ...(s.cashPurchases ?? [])].slice(0, 50),
+  }));
+  return cash;
+}
+
 export function setLineup(slot: string, playerId: string | null) {
   set((s) => {
     const next = { ...s.lineup };
@@ -251,18 +298,33 @@ export function setLineup(slot: string, playerId: string | null) {
       for (const p of LINEUP_SLOTS) if (next[p] === playerId) next[p] = null;
     }
     next[slot] = playerId;
-    return { ...s, lineup: next };
+    return { ...s, lineup: next, fans: activeStarterFans(s.roster, next) };
   });
 }
 
-export function recordResult(win: boolean) {
+export function recordResult(win: boolean, pointsFor = 0, pointsAgainst = 0, opponentName = "Opponent"): boolean {
+  const info = seasonInfo();
+  const gameKey = `${info.seasonNumber}:${info.dayOfSeason}`;
+  if ((state.officialGameKeys ?? []).includes(gameKey)) return false;
   set((s) => ({
     ...s,
-    wins: s.wins + (win ? 1 : 0),
-    losses: s.losses + (win ? 0 : 1),
+    wins: s.wins + (!info.isPlayoffs && win ? 1 : 0),
+    losses: s.losses + (!info.isPlayoffs && !win ? 1 : 0),
+    pointsFor: (s.pointsFor ?? 0) + (!info.isPlayoffs ? pointsFor : 0),
+    pointsAgainst: (s.pointsAgainst ?? 0) + (!info.isPlayoffs ? pointsAgainst : 0),
+    officialGameKeys: [...(s.officialGameKeys ?? []), gameKey],
+    officialResults: [...(s.officialResults ?? []), {
+      key: gameKey,
+      seasonNumber: info.seasonNumber,
+      dayOfSeason: info.dayOfSeason,
+      win,
+      pointsFor,
+      pointsAgainst,
+      opponentName,
+    }],
     coins: s.coins + (win ? 150 : 40),
-    fans: s.fans + (win ? 25 : 5),
   }));
+  return true;
 }
 
 export function resetAll() {
@@ -275,7 +337,6 @@ export function openStarterPack(players: Player[]) {
   set((s) => ({
     ...s,
     roster: [...s.roster, ...players],
-    fans: s.fans + players.reduce((a, p) => a + p.fanValue, 0),
     starterPackOpened: true,
   }));
 }
@@ -298,4 +359,3 @@ export function setWalletAddress(addr: string | null) {
 }
 
 /* No auto-collect: coins must be manually claimed via claimCoins(). */
-

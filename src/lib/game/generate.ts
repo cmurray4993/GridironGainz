@@ -8,6 +8,19 @@ export function makeSignatureAttr(position: Position, overall: number, fixed?: n
 }
 
 
+export const BASE_PROSPECT_NAMES: Record<Position, string> = {
+  QB: 'Jace "Field General" Mercer',
+  RB: 'Malik "Northbound" Knox',
+  WR: 'Devon "Afterburner" Price',
+  TE: 'Cole "Red Zone" Barrett',
+  OL: 'Andre "Iron Gate" Bishop',
+  DL: 'Marcus "Groundquake" Voss',
+  LB: 'Darius "Heat Check" Cole',
+  DB: 'Zion "No Fly" Brooks',
+  K:  'Eli "Golden Leg" Ward',
+  P:  'Nolan "Hangtime" Hale',
+};
+
 const CANONICAL_NAMES: Record<Rarity, Record<Position, string>> = {
   bronze: {
     QB: 'Buck "Strong Arm" McGee',
@@ -19,6 +32,7 @@ const CANONICAL_NAMES: Record<Rarity, Record<Position, string>> = {
     LB: 'Chip "Middle Man" Doyle',
     DB: 'Ace "Sticky" Fontaine',
     K:  'Boots "Doink" Sanderson',
+    P:  'Boomer "Sky Ball" Hayes',
   },
   silver: {
     QB: 'Rex "Gunslinger" Callahan',
@@ -30,29 +44,10 @@ const CANONICAL_NAMES: Record<Rarity, Record<Position, string>> = {
     LB: 'Ryder "Sideline" Kingsley',
     DB: 'Neo "Ball Hawk" Vega',
     K:  'Splits "Ice Water" Barrett',
+    P:  'Coffin "Corner" Murphy',
   },
-  gold: {
-    QB: 'Unsigned "Prospect" QB',
-    RB: 'Unsigned "Prospect" RB',
-    WR: 'Unsigned "Prospect" WR',
-    TE: 'Unsigned "Prospect" TE',
-    OL: 'Unsigned "Prospect" OL',
-    DL: 'Unsigned "Prospect" DL',
-    LB: 'Unsigned "Prospect" LB',
-    DB: 'Unsigned "Prospect" DB',
-    K:  'Unsigned "Prospect" K',
-  },
-  elite: {
-    QB: 'Unsigned "Prospect" QB',
-    RB: 'Unsigned "Prospect" RB',
-    WR: 'Unsigned "Prospect" WR',
-    TE: 'Unsigned "Prospect" TE',
-    OL: 'Unsigned "Prospect" OL',
-    DL: 'Unsigned "Prospect" DL',
-    LB: 'Unsigned "Prospect" LB',
-    DB: 'Unsigned "Prospect" DB',
-    K:  'Unsigned "Prospect" K',
-  },
+  gold: BASE_PROSPECT_NAMES,
+  elite: BASE_PROSPECT_NAMES,
 };
 
 export function canonicalName(rarity: Rarity, position: Position): string {
@@ -145,7 +140,7 @@ function buildFromSignature(sig: SignatureSpec): Player {
     speed: sig.speed,
     iq: sig.iq,
     popularity: sig.popularity,
-    fanValue: computeFanValue(sig.overall, sig.popularity),
+    fanValue: computeFanValue(sig.overall, sig.popularity, sig.rarity),
     rarity: sig.rarity,
     signature: makeSignatureAttr(sig.position, sig.overall, sig.overall),
   };
@@ -183,7 +178,7 @@ function buildPlayerWithRarity(rarity: Rarity, forcedPosition?: Position): Playe
     speed,
     iq,
     popularity,
-    fanValue: computeFanValue(overall, popularity),
+    fanValue: computeFanValue(overall, popularity, rarity),
     rarity,
     signature: makeSignatureAttr(position, overall),
 
@@ -237,4 +232,3 @@ export function generateBackyardHeroPack(): Player[] {
   }
   return players;
 }
-
