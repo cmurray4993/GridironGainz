@@ -102,12 +102,14 @@ const BACKYARD_HEROES = new Set([
 export function PlayerCard({
   player,
   compact = false,
+  mobileDense = false,
   className,
   onClick,
   selected,
 }: {
   player: Player;
   compact?: boolean;
+  mobileDense?: boolean;
   className?: string;
   onClick?: () => void;
   selected?: boolean;
@@ -188,13 +190,16 @@ export function PlayerCard({
     );
   }
 
-  const minHeight = compact ? 170 : 260;
+  const minHeight = 260;
 
 
   return (
     <div
-      className={cn("card-flip-scene w-full", className)}
-      style={{ minHeight }}
+      className={cn(
+        "card-flip-scene w-full",
+        mobileDense ? "h-[132px] min-[390px]:h-[148px] sm:h-[260px]" : "h-[260px]",
+        className,
+      )}
     >
       <div
         role="button"
@@ -211,7 +216,7 @@ export function PlayerCard({
           flipped && !onClick && "card-flipped",
           selected && "ring-2 ring-primary ring-offset-2 ring-offset-background rounded-xl",
         )}
-        style={{ minHeight }}
+        style={{ minHeight: mobileDense ? undefined : minHeight }}
       >
         {/* FRONT */}
         <div
@@ -248,21 +253,21 @@ export function PlayerCard({
             </div>
 
 
-            <div className="relative z-10 p-3 flex flex-col h-full">
+            <div className={cn("relative z-10 flex h-full flex-col", mobileDense ? "p-1.5 sm:p-3" : "p-3")}>
               <div className="flex items-start justify-between gap-2">
-                <div title={promo.name} className="grid h-10 w-10 shrink-0 place-items-center p-1 drop-shadow-[0_3px_5px_rgba(0,0,0,0.9)]">
+                <div title={promo.name} className={cn("grid shrink-0 place-items-center drop-shadow-[0_3px_5px_rgba(0,0,0,0.9)]", mobileDense ? "h-6 w-6 p-0.5 sm:h-10 sm:w-10 sm:p-1" : "h-10 w-10 p-1")}>
                   {promo.logo ? <img src={promo.logo} alt={`${promo.name} logo`} className="h-full w-full object-contain" /> : <span className="font-display text-[10px] tracking-wide text-white">{promo.short}</span>}
                 </div>
-                <div className="-mr-3 mt-0 flex w-12 shrink-0 flex-col items-center text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]">
-                  <div className="font-display text-3xl leading-none text-white">{player.overall}</div>
-                  <div className="mt-0.5 w-full font-display text-xs uppercase leading-none tracking-normal text-white/90">{player.position}</div>
+                <div className={cn("mt-0 flex shrink-0 flex-col items-center text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]", mobileDense ? "-mr-1 w-7 sm:-mr-3 sm:w-12" : "-mr-3 w-12")}>
+                  <div className={cn("font-display leading-none text-white", mobileDense ? "text-lg sm:text-3xl" : "text-3xl")}>{player.overall}</div>
+                  <div className={cn("mt-0.5 w-full font-display uppercase leading-none tracking-normal text-white/90", mobileDense ? "text-[7px] sm:text-xs" : "text-xs")}>{player.position}</div>
                 </div>
               </div>
 
               <div className="flex-1" />
 
               <div className="mt-2">
-                <div className="font-display text-base sm:text-lg leading-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] break-words">{player.name}</div>
+                <div className={cn("break-words font-display leading-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]", mobileDense ? "line-clamp-2 text-[8px] sm:text-lg" : "text-base sm:text-lg")}>{player.name}</div>
                 <div className="mt-1 flex items-center justify-between text-[11px]">
                   <span className="text-white/60 uppercase tracking-widest text-[9px]">{player.position}</span>
                   <span className="text-[oklch(0.85_0.18_25)] font-semibold drop-shadow">❤️ {player.fanValue}</span>
@@ -290,18 +295,21 @@ export function PlayerCard({
             rarityBg[player.rarity],
           )}
         >
-          <div className="m-[2px] h-full rounded-[calc(var(--radius)-2px)] bg-background/85 backdrop-blur-sm p-3 flex flex-col gap-2">
+          <div className={cn(
+            "m-[2px] flex h-full flex-col rounded-[calc(var(--radius)-2px)] bg-background/90 backdrop-blur-sm",
+            mobileDense ? "gap-1 p-1.5 sm:gap-2 sm:p-3" : "gap-2 p-3",
+          )}>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className={cn("uppercase tracking-widest text-muted-foreground", mobileDense ? "text-[6px] sm:text-[10px]" : "text-[10px]")}>
                   {rarityLabel[player.rarity]} · {player.position}
                 </div>
-                <div className="font-display text-sm sm:text-base leading-tight break-words">{player.name}</div>
+                <div className={cn("break-words font-display leading-tight", mobileDense ? "line-clamp-2 text-[8px] sm:text-base" : "text-sm sm:text-base")}>{player.name}</div>
               </div>
-              <div className="font-display text-2xl text-gradient-gold leading-none">{player.overall}</div>
+              <div className={cn("font-display text-gradient-gold leading-none", mobileDense ? "text-base sm:text-2xl" : "text-2xl")}>{player.overall}</div>
             </div>
 
-            <div className="space-y-1.5">
+            <div className={cn("space-y-1.5", mobileDense && "hidden sm:block")}>
               <StatBar label="Overall" value={player.overall} tone="gold" />
               <StatBar label="Strength" value={player.strength} tone="red" />
               <StatBar label="Speed" value={player.speed} tone="cyan" />
@@ -312,8 +320,19 @@ export function PlayerCard({
               <StatBar label="Popularity" value={player.popularity} tone="pink" />
             </div>
 
+            {mobileDense && (
+              <div className="grid grid-cols-2 gap-0.5 sm:hidden">
+                <MiniStat label="STR" value={player.strength} />
+                <MiniStat label="SPD" value={player.speed} />
+                <MiniStat label="IQ" value={player.iq} />
+                <MiniStat label="POP" value={player.popularity} />
+                <MiniStat label="FAN" value={player.fanValue} />
+                <MiniStat label={player.signature?.label.slice(0, 4).toUpperCase() ?? "SIG"} value={player.signature?.value ?? player.overall} />
+              </div>
+            )}
 
-            <div className="mt-auto grid grid-cols-2 gap-2 pt-1 text-[10px]">
+
+            <div className={cn("mt-auto grid grid-cols-2 gap-2 pt-1", mobileDense ? "text-[6px] sm:text-[10px]" : "text-[10px]")}>
               <div className="rounded-md bg-white/5 px-2 py-1">
                 <div className="uppercase tracking-widest text-muted-foreground">Archetype</div>
                 <div className="font-semibold">{archetype}</div>
@@ -326,6 +345,15 @@ export function PlayerCard({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-sm bg-white/[0.07] px-1 py-0.5 leading-none">
+      <span className="truncate text-[5px] tracking-wide text-muted-foreground">{label}</span>
+      <span className="font-display text-[8px]">{value}</span>
     </div>
   );
 }

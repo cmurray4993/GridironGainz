@@ -94,24 +94,24 @@ function RosterView() {
           <Link to="/pack" className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground">Open a pack</Link>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4">
           {shown.map((p) => {
             const locked = inLineup.has(p.id);
             return (
               <div key={p.id} className="relative">
-                <PlayerCard player={p} />
+                <PlayerCard player={p} mobileDense />
                 {!locked && (
                   <button
                     onClick={() => setConfirming(p)}
                     aria-label={`Remove ${p.name}`}
                     title="Remove or sell this card"
-                    className="absolute -right-1.5 -top-1.5 grid h-7 w-7 place-items-center rounded-full border border-border bg-background/95 text-sm text-muted-foreground shadow-md hover:border-destructive hover:text-destructive"
+                    className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full border border-border bg-background/95 text-xs text-muted-foreground shadow-md hover:border-destructive hover:text-destructive sm:-right-1.5 sm:-top-1.5 sm:h-7 sm:w-7 sm:text-sm"
                   >
                     ×
                   </button>
                 )}
                 {locked && (
-                  <div className="absolute -right-1.5 -top-1.5 rounded-full border border-primary/60 bg-background/95 px-2 py-0.5 text-[9px] uppercase tracking-widest text-primary">
+                  <div className="absolute -right-1 -top-1 rounded-full border border-primary/60 bg-background/95 px-1 py-0.5 text-[6px] uppercase tracking-wide text-primary sm:-right-1.5 sm:-top-1.5 sm:px-2 sm:text-[9px] sm:tracking-widest">
                     Starter
                   </div>
                 )}
@@ -357,16 +357,15 @@ function LineupTray({
           </div>
         </header>
 
-        <div className="overflow-x-auto">
-        <main className="mx-auto grid min-w-[760px] max-w-6xl grid-cols-[220px_minmax(280px,1fr)_220px] items-center gap-4 px-4 py-6 sm:min-w-[900px] sm:grid-cols-[250px_minmax(300px,1fr)_250px] sm:gap-6 sm:py-10">
+        <main className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-5 px-4 py-5 sm:min-w-[900px] sm:grid-cols-[250px_minmax(300px,1fr)_250px] sm:items-center sm:gap-6 sm:py-10">
           <section>
             <div className="mb-2 text-center text-[10px] uppercase tracking-[0.25em] text-primary">Current starter</div>
             {current ? (
-              <div className="mx-auto w-[210px] sm:w-[240px]">
+              <div className="mx-auto w-[180px] sm:w-[240px]">
                 <PlayerCard player={current} onClick={() => {}} />
               </div>
             ) : (
-              <div className="mx-auto grid h-[330px] w-[220px] place-items-center rounded-xl border border-dashed border-white/20 text-sm text-muted-foreground">Empty {label} slot</div>
+              <div className="mx-auto grid h-[220px] w-[180px] place-items-center rounded-xl border border-dashed border-white/20 text-sm text-muted-foreground sm:h-[330px] sm:w-[220px]">Empty {label} slot</div>
             )}
           </section>
 
@@ -390,7 +389,7 @@ function LineupTray({
               const player = roster.find((p) => p.id === id);
               if (player) setComparing(player);
             }}
-            className="grid min-h-[300px] place-items-center rounded-xl border-2 border-dashed border-white/20 bg-black/20 p-5 text-center transition-colors hover:border-primary/60"
+            className="grid min-h-[220px] place-items-center rounded-xl border-2 border-dashed border-white/20 bg-black/20 p-4 text-center transition-colors hover:border-primary/60 sm:min-h-[300px] sm:p-5"
           >
             {comparing ? (
               <div className="w-full">
@@ -410,7 +409,6 @@ function LineupTray({
             </div>}
           </section>
         </main>
-        </div>
 
         <section className="border-t border-white/10 bg-[oklch(0.075_0.025_245)] px-4 py-5 sm:px-7">
           <div className="mx-auto max-w-6xl">
@@ -418,13 +416,13 @@ function LineupTray({
             {options.length === 0 ? (
               <div className="py-10 text-center font-display text-xl text-muted-foreground">You have no replacement players for this position</div>
             ) : (
-              <div className="flex gap-3 overflow-x-auto pb-2">
+              <div className="grid grid-cols-1 gap-2 pb-2 min-[420px]:grid-cols-2 sm:flex sm:gap-3 sm:overflow-x-auto">
                 {options.map((p) => (
                   <div
                     key={p.id}
                     draggable
                     onDragStart={(e) => { e.dataTransfer.setData("text/player-id", p.id); e.dataTransfer.effectAllowed = "move"; }}
-                    className="w-[260px] shrink-0 cursor-grab active:cursor-grabbing"
+                    className="min-w-0 cursor-grab active:cursor-grabbing sm:w-[260px] sm:shrink-0"
                   >
                     <PlayerComparison player={p} baseline={current} inLineup={currentIds.has(p.id)} onReplace={() => setComparing(p)} />
                   </div>

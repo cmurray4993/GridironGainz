@@ -15,6 +15,7 @@ export const Route = createFileRoute("/game")({
 });
 
 type Phase = "ready" | "playing" | "final";
+const SIM_DURATION_MS = 2 * 60 * 1000;
 
 function scoutingAdvice(players: Player[]): string {
   const positions = new Set(players.map((p) => p.position));
@@ -92,6 +93,7 @@ function GamePage() {
     timers.current.forEach(clearTimeout);
     timers.current = [];
     let h = 0, a = 0;
+    const playInterval = r.log.length > 1 ? SIM_DURATION_MS / (r.log.length - 1) : 0;
     r.log.forEach((line, i) => {
       const t = window.setTimeout(() => {
         setShown((s) => [...s, line]);
@@ -102,7 +104,7 @@ function GamePage() {
           setPhase("final");
           if (!recorded.current) { recorded.current = true; if (!testMode) recordResult(r.win, r.homeScore, r.awayScore, r.opponentName); }
         }
-      }, 550 * i + 400);
+      }, playInterval * i);
       timers.current.push(t);
     });
   };
