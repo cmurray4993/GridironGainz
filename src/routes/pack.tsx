@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { PlayerCard } from "@/components/PlayerCard";
 import { generateBackyardHeroPack, generatePack, generatePositionPack, generateProPack } from "@/lib/game/generate";
-import { addPlayers, spendCoins, spendGridironCash, useGame } from "@/lib/game/store";
+import { addPlayers, setGridironCashBalance, spendCoins, useGame } from "@/lib/game/store";
+import { spendGridironCashServer } from "@/lib/solana/gridironCash";
 import { BACKYARD_HERO_PACK_COST, PACK_COST, PACK_SIZE, POSITION_PACK_COST, POSITIONS, PRO_PACK_COST, type Player, type Position } from "@/lib/game/types";
 
 export const Route = createFileRoute("/pack")({
@@ -62,12 +64,20 @@ function PackPage() {
   const [lastPosition, setLastPosition] = useState<Position>("QB");
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  const openPack = (kind: PackKind, currency: Currency, position?: Position) => {
+  const openPack = async (kind: PackKind, currency: Currency, position?: Position) => {
     const meta = PACK_META[kind];
     const cost = currency === "cash" ? meta.cashCost : meta.cost;
     if (currency === "cash" ? (state.gridironCash ?? 0) < cost : state.coins < cost) return;
     if (kind === "position" && !position) { setPendingCurrency(currency); setPickerOpen(true); return; }
-    if (currency === "cash" ? !spendGridironCash(cost) : !spendCoins(cost)) return;
+    if (currency === "cash") {
+      try {
+        const result = await spendGridironCashServer(cost, `pack:${kind}`, crypto.randomUUID());
+        setGridironCashBalance(result.balance);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Gridiron Cash purchase failed");
+        return;
+      }
+    } else if (!spendCoins(cost)) return;
     const players =
       kind === "pro" ? generateProPack() :
       kind === "backyard" ? generateBackyardHeroPack() :

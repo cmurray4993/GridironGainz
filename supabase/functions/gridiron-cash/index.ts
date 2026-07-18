@@ -233,6 +233,26 @@ Deno.serve(async (request) => {
       });
     }
 
+    if (action === "spend") {
+      const amount = Number(body.amount);
+      const reference = body.reference;
+      const reason = typeof body.reason === "string" ? body.reason.slice(0, 80) : "pack_purchase";
+      if (!Number.isInteger(amount) || amount <= 0 || amount > 100_000) {
+        return json({ error: "Invalid Gridiron Cash amount" }, 400);
+      }
+      if (typeof reference !== "string" || reference.length < 8 || reference.length > 120) {
+        return json({ error: "Invalid purchase reference" }, 400);
+      }
+      const { data: balance, error } = await admin.rpc("spend_gridiron_cash", {
+        p_user_id: authData.user.id,
+        p_amount: amount,
+        p_reason: reason,
+        p_reference: reference,
+      });
+      if (error) throw error;
+      return json({ status: "confirmed", balance: Number(balance) });
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (error) {
     console.error(error);

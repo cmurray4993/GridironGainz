@@ -53,6 +53,38 @@ export function verifyPurchase(purchaseId: string, signature: string) {
   return invoke<VerifiedPurchase | ConfirmingPurchase>({ action: "verify", purchaseId, signature });
 }
 
+export interface GridironCashStatus {
+  account: { balance: number; total_purchased: number };
+  purchases: Array<{
+    id: string;
+    signature: string | null;
+    expected_lamports: number;
+    gc_amount: number;
+    current_pool_lamports: number;
+    next_pool_lamports: number;
+    development_lamports: number;
+    created_at: string;
+  }>;
+  allocation: {
+    current_pool_lamports: number;
+    next_pool_lamports: number;
+    development_lamports: number;
+  } | null;
+}
+
+export function getGridironCashStatus() {
+  return invoke<GridironCashStatus>({ action: "status" });
+}
+
+export function spendGridironCashServer(amount: number, reason: string, reference: string) {
+  return invoke<{ status: "confirmed"; balance: number }>({
+    action: "spend",
+    amount,
+    reason,
+    reference,
+  });
+}
+
 export async function waitForVerifiedPurchase(purchaseId: string, signature: string) {
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const result = await verifyPurchase(purchaseId, signature);

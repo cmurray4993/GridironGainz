@@ -10,10 +10,10 @@ import {
 } from "@solana/web3.js";
 import { toast } from "sonner";
 
-import { creditGridironCashPurchase, setWalletAddress, useGame } from "@/lib/game/store";
+import { setWalletAddress, syncGridironCashSnapshot, useGame } from "@/lib/game/store";
 import { GRIDIRON_CASH_PER_SOL } from "@/lib/game/types";
 import { SolanaWalletProvider, TREASURY_WALLET } from "@/lib/solana/WalletProvider";
-import { createPurchaseIntent, waitForVerifiedPurchase } from "@/lib/solana/gridironCash";
+import { createPurchaseIntent, getGridironCashStatus, waitForVerifiedPurchase } from "@/lib/solana/gridironCash";
 import { getSolUsd } from "@/lib/solana/price";
 
 const QUICK = [0.05, 0.1, 0.5, 1];
@@ -133,9 +133,9 @@ function WalletPanel() {
       await connection.confirmTransaction({ signature: sig, ...latest }, "confirmed");
       setPurchaseStep("Verifying payment securely…");
       const verified = await waitForVerifiedPurchase(intent.purchaseId, sig);
-      const verifiedSol = verified.expected_lamports / LAMPORTS_PER_SOL;
-      const credited = creditGridironCashPurchase(verifiedSol, sig);
       const cash = verified.gc_amount;
+      const latestStatus = await getGridironCashStatus();
+      syncGridironCashSnapshot(latestStatus);
       toast.success(`Purchased ${cash.toLocaleString()} Gridiron Cash`, {
         id: sig,
         description: `tx ${sig.slice(0, 8)}…`,
@@ -144,7 +144,6 @@ function WalletPanel() {
           onClick: () => window.open(`https://solscan.io/tx/${sig}?cluster=devnet`, "_blank"),
         },
       });
-      if (credited === 0) toast.info("This verified purchase was already credited on this device.");
       const lam = await connection.getBalance(publicKey);
       setBalance(lam / LAMPORTS_PER_SOL);
     } catch (e: unknown) {

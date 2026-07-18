@@ -221,6 +221,68 @@ export function addPlayers(players: Player[]) {
   }));
 }
 
+export function addMarketPlayer(player: Player) {
+  set((s) => {
+    if (s.roster.some((existing) => existing.id === player.id)) return s;
+    return { ...s, roster: [...s.roster, player] };
+  });
+}
+
+export function removeMarketPlayer(id: string) {
+  set((s) => removePlayerInternal(s, id));
+}
+
+export function setMarketCoinBalance(coins: number) {
+  if (!Number.isFinite(coins) || coins < 0) return;
+  set((s) => ({ ...s, coins }));
+}
+
+export function syncGridironCashSnapshot(snapshot: {
+  account: { balance: number };
+  purchases: Array<{
+    id: string;
+    signature: string | null;
+    expected_lamports: number;
+    gc_amount: number;
+    current_pool_lamports: number;
+    next_pool_lamports: number;
+    development_lamports: number;
+    created_at: string;
+  }>;
+  allocation: {
+    current_pool_lamports: number;
+    next_pool_lamports: number;
+    development_lamports: number;
+  } | null;
+}) {
+  const lamportsPerSol = 1_000_000_000;
+  const allocation = snapshot.allocation;
+  const purchases = snapshot.purchases.map((purchase) => ({
+    id: purchase.id,
+    createdAt: new Date(purchase.created_at).getTime(),
+    sol: purchase.expected_lamports / lamportsPerSol,
+    cash: purchase.gc_amount,
+    currentPoolSol: purchase.current_pool_lamports / lamportsPerSol,
+    nextPoolSol: purchase.next_pool_lamports / lamportsPerSol,
+    devSol: purchase.development_lamports / lamportsPerSol,
+    signature: purchase.signature ?? undefined,
+  }));
+  set((s) => ({
+    ...s,
+    gridironCash: Number(snapshot.account.balance ?? 0),
+    sol: purchases.reduce((sum, purchase) => sum + purchase.sol, 0),
+    currentPrizePoolSol: Number(allocation?.current_pool_lamports ?? 0) / lamportsPerSol,
+    nextSeasonPoolSol: Number(allocation?.next_pool_lamports ?? 0) / lamportsPerSol,
+    devTreasurySol: Number(allocation?.development_lamports ?? 0) / lamportsPerSol,
+    cashPurchases: purchases,
+  }));
+}
+
+export function setGridironCashBalance(balance: number) {
+  if (!Number.isFinite(balance) || balance < 0) return;
+  set((s) => ({ ...s, gridironCash: balance }));
+}
+
 function removePlayerInternal(s: GameState, id: string): GameState {
   if (!s.roster.some((r) => r.id === id)) return s;
   const nextLineup = { ...s.lineup };
