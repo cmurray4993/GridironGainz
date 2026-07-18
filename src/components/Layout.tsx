@@ -16,36 +16,51 @@ export function TopBar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <Link to="/" className="flex items-center gap-2">
-          <img src="/gridiron-gainz-logo.png" alt="Gridiron Gainz" className="h-9 w-9 object-contain drop-shadow-[0_0_8px_rgba(245,183,43,0.35)]" />
-          <div className="hidden sm:block">
-            <div className="font-display text-lg leading-none">Gridiron Gainz</div>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Season 1</div>
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <div className="relative mx-auto max-w-5xl px-3 py-2.5 sm:px-4 sm:py-3">
+        <div className="flex items-center justify-between gap-3">
+          <Link to="/" className="flex min-w-0 items-center gap-2">
+            <img
+              src="/gridiron-gainz-logo.png"
+              alt="Gridiron Gainz"
+              className="h-9 w-9 shrink-0 object-contain drop-shadow-[0_0_8px_rgba(245,183,43,0.35)]"
+            />
+            <div>
+              <div className="font-display text-lg leading-none">Gridiron Gainz</div>
+              <div className="hidden text-[10px] uppercase tracking-widest text-muted-foreground min-[360px]:block">
+                Season 1
+              </div>
+            </div>
+          </Link>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Link
+              to="/wallet"
+              title="Wallet"
+              aria-label={`Wallet: ${(state.sol ?? 0).toFixed(2)} SOL`}
+              className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              ◎ {(state.sol ?? 0).toFixed(2)}
+            </Link>
+            <Link
+              to="/settings"
+              title="Settings"
+              aria-label="Settings"
+              className="grid h-8 w-8 place-items-center rounded-full border border-border/70 bg-card/70 text-xs text-muted-foreground hover:text-foreground"
+            >
+              ⚙︎
+            </Link>
+            <SignOutButton />
           </div>
-        </Link>
-        <div className="flex items-center gap-2 text-sm">
-          <Stat icon={<img src="/gc-icon.png" alt="Gridiron Cash" className="h-5 w-5 object-contain" />} value={fmt(state.gridironCash ?? 0)} tone="fan" />
+        </div>
+        <div className="mt-2 grid grid-cols-3 gap-1.5 text-sm sm:absolute sm:left-1/2 sm:top-1/2 sm:mt-0 sm:w-auto sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex sm:gap-2">
+          <Stat
+            icon={<img src="/gc-icon.png" alt="Gridiron Cash" className="h-5 w-5 object-contain" />}
+            value={fmt(state.gridironCash ?? 0)}
+            tone="fan"
+          />
           <Stat icon="🪙" value={fmt(state.coins)} tone="gold" />
           <Stat icon="🎟️" value={fmt(state.fans)} tone="fan" />
-          <Link
-            to="/wallet"
-            title="Wallet"
-            className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
-          >
-            ◎ {(state.sol ?? 0).toFixed(2)}
-          </Link>
-          <Link
-            to="/settings"
-            title="Settings"
-            className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
-          >
-            ⚙︎
-          </Link>
-          <SignOutButton />
         </div>
-
       </div>
     </header>
   );
@@ -60,7 +75,8 @@ function SignOutButton() {
         router.navigate({ to: "/auth" });
       }}
       title="Sign out"
-      className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+      aria-label="Sign out"
+      className="grid h-8 w-8 place-items-center rounded-full border border-border/70 bg-card/70 text-xs text-muted-foreground hover:text-foreground"
     >
       ⎋
     </button>
@@ -69,13 +85,15 @@ function SignOutButton() {
 
 function Stat({ icon, value, tone }: { icon: ReactNode; value: string; tone: "gold" | "fan" }) {
   return (
-    <div className={cn(
-      "flex items-center gap-1.5 rounded-full border border-border/70 bg-card/70 px-3 py-1.5",
-      tone === "gold" && "text-[oklch(0.85_0.17_88)]",
-      tone === "fan" && "text-[oklch(0.7_0.18_25)]",
-    )}>
-      <span>{icon}</span>
-      <span className="font-semibold tabular-nums text-foreground">{value}</span>
+    <div
+      className={cn(
+        "flex min-w-0 items-center justify-center gap-1 rounded-lg border border-border/70 bg-card/70 px-1.5 py-1.5 sm:gap-1.5 sm:rounded-full sm:px-3",
+        tone === "gold" && "text-[oklch(0.85_0.17_88)]",
+        tone === "fan" && "text-[oklch(0.7_0.18_25)]",
+      )}
+    >
+      <span className="shrink-0">{icon}</span>
+      <span className="truncate font-semibold tabular-nums text-foreground">{value}</span>
     </div>
   );
 }
@@ -91,7 +109,7 @@ export function BottomNav() {
     { to: "/standings", label: "League", icon: "🏆" },
   ] as const;
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/90 backdrop-blur-md">
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl">
         {items.map((it) => {
           const active = pathname === it.to;
@@ -100,13 +118,15 @@ export function BottomNav() {
               key={it.to}
               to={it.to}
               className={cn(
-                "flex-1 py-2.5 text-center text-[11px] uppercase tracking-widest transition-colors",
+                "min-w-0 flex-1 py-2 text-center text-[9px] uppercase tracking-wide transition-colors sm:py-2.5 sm:text-[11px] sm:tracking-widest",
                 active ? "text-primary" : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <div className="text-lg leading-none">{it.icon}</div>
+              <div className="text-base leading-none sm:text-lg">{it.icon}</div>
               <div className="mt-0.5">{it.label}</div>
-              {active && <div className="mx-auto mt-1 h-0.5 w-8 rounded-full bg-primary shadow-[0_0_10px_var(--gold)]" />}
+              {active && (
+                <div className="mx-auto mt-1 h-0.5 w-8 rounded-full bg-primary shadow-[0_0_10px_var(--gold)]" />
+              )}
             </Link>
           );
         })}

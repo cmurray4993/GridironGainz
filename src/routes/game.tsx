@@ -15,6 +15,7 @@ export const Route = createFileRoute("/game")({
 });
 
 type Phase = "ready" | "playing" | "final";
+const SIM_DURATION_MS = 2 * 60 * 1000;
 
 function scoutingAdvice(players: Player[]): string {
   const positions = new Set(players.map((p) => p.position));
@@ -64,6 +65,7 @@ function GamePage() {
   const [result, setResult] = useState<SimResult | null>(null);
   const [shown, setShown] = useState<string[]>([]);
   const [live, setLive] = useState({ home: 0, away: 0 });
+  const [secondsLeft, setSecondsLeft] = useState(0);
   const timers = useRef<number[]>([]);
   const recorded = useRef(false);
 
@@ -87,11 +89,18 @@ function GamePage() {
     setShown([]);
     setLive({ home: 0, away: 0 });
     setPhase("playing");
+    setSecondsLeft(SIM_DURATION_MS / 1000);
     recorded.current = false;
 
     timers.current.forEach(clearTimeout);
     timers.current = [];
+    const simEndsAt = Date.now() + SIM_DURATION_MS;
+    const countdown = window.setInterval(() => {
+      setSecondsLeft(Math.max(0, Math.ceil((simEndsAt - Date.now()) / 1000)));
+    }, 250);
+    timers.current.push(countdown);
     let h = 0, a = 0;
+    const playInterval = r.log.length > 1 ? SIM_DURATION_MS / (r.log.length - 1) : 0;
     r.log.forEach((line, i) => {
       const t = window.setTimeout(() => {
         setShown((s) => [...s, line]);
@@ -99,10 +108,12 @@ function GamePage() {
         const m = line.match(/\((\d+)-(\d+)\)/);
         if (m) { h = +m[1]; a = +m[2]; setLive({ home: h, away: a }); }
         if (i === r.log.length - 1) {
+          window.clearInterval(countdown);
+          setSecondsLeft(0);
           setPhase("final");
           if (!recorded.current) { recorded.current = true; if (!testMode) recordResult(r.win, r.homeScore, r.awayScore, r.opponentName); }
         }
-      }, 550 * i + 400);
+      }, playInterval * i);
       timers.current.push(t);
     });
   };
@@ -113,10 +124,11 @@ function GamePage() {
     setShown(result.log);
     setLive({ home: result.homeScore, away: result.awayScore });
     setPhase("final");
+    setSecondsLeft(0);
     if (!recorded.current) { recorded.current = true; if (!testMode) recordResult(result.win, result.homeScore, result.awayScore, result.opponentName); }
   };
 
-  const reset = () => { setPhase("ready"); setResult(null); setShown([]); setLive({ home: 0, away: 0 }); };
+  const reset = () => { setPhase("ready"); setResult(null); setShown([]); setLive({ home: 0, away: 0 }); setSecondsLeft(0); };
 
   return (
     <div className="animate-float-up space-y-5">
@@ -135,7 +147,7 @@ function GamePage() {
           <div className="text-center">
             <div className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-border bg-background/70 font-display">VS</div>
             <div className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-              {phase === "playing" ? "In progress" : phase === "final" ? "Final" : "Pre-game"}
+              {phase === "playing" ? `In progress · ${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}` : phase === "final" ? "Final" : "Pre-game"}
             </div>
           </div>
           <div className="text-center">

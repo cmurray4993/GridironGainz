@@ -57,7 +57,7 @@
   --popover: oklch(0.17 0.025 260);
   --popover-foreground: oklch(0.97 0.01 90);
 
-  --primary: oklch(0.82 0.16 82);        /* warm gold */
+  --primary: oklch(0.82 0.16 82); /* warm gold */
   --primary-foreground: oklch(0.15 0.02 260);
 
   --secondary: oklch(0.24 0.03 260);
@@ -66,7 +66,7 @@
   --muted: oklch(0.22 0.025 260);
   --muted-foreground: oklch(0.68 0.02 260);
 
-  --accent: oklch(0.62 0.18 25);          /* ember red */
+  --accent: oklch(0.62 0.18 25); /* ember red */
   --accent-foreground: oklch(0.98 0.01 90);
 
   --destructive: oklch(0.62 0.22 27);
@@ -91,7 +91,11 @@
   --gradient-card-silver: linear-gradient(135deg, oklch(0.88 0.02 260), oklch(0.6 0.02 260));
   --gradient-card-bronze: linear-gradient(135deg, oklch(0.68 0.12 55), oklch(0.4 0.09 45));
 
-  --gradient-field: radial-gradient(ellipse at top, oklch(0.24 0.05 260) 0%, oklch(0.13 0.02 260) 60%);
+  --gradient-field: radial-gradient(
+    ellipse at top,
+    oklch(0.24 0.05 260) 0%,
+    oklch(0.13 0.02 260) 60%
+  );
   --gradient-gold: linear-gradient(135deg, oklch(0.88 0.15 85), oklch(0.72 0.17 60));
 
   --shadow-glow: 0 0 40px oklch(0.82 0.16 82 / 0.35);
@@ -103,11 +107,13 @@
     border-color: var(--color-border);
   }
 
-  html, body {
+  html,
+  body {
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
   body {
@@ -117,7 +123,10 @@
     background-attachment: fixed;
   }
 
-  h1, h2, h3, .display {
+  h1,
+  h2,
+  h3,
+  .display {
     font-family: var(--font-display);
     letter-spacing: 0.02em;
   }
@@ -145,47 +154,112 @@
   box-shadow: var(--shadow-glow);
 }
 
-@utility rarity-bronze { background: var(--gradient-card-bronze); }
-@utility rarity-silver { background: var(--gradient-card-silver); }
-@utility rarity-gold { background: var(--gradient-card-gold); }
-@utility rarity-elite { background: var(--gradient-card-elite); }
+@utility rarity-bronze {
+  background: var(--gradient-card-bronze);
+}
+@utility rarity-silver {
+  background: var(--gradient-card-silver);
+}
+@utility rarity-gold {
+  background: var(--gradient-card-gold);
+}
+@utility rarity-elite {
+  background: var(--gradient-card-elite);
+}
 
 @keyframes card-flip {
-  0% { transform: rotateY(180deg) scale(0.8); opacity: 0; }
-  60% { transform: rotateY(0deg) scale(1.05); opacity: 1; }
-  100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+  0% {
+    transform: rotateY(180deg) scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: rotateY(0deg) scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: rotateY(0deg) scale(1);
+    opacity: 1;
+  }
 }
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 @keyframes float-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px oklch(0.82 0.16 82 / 0.3); }
-  50% { box-shadow: 0 0 50px oklch(0.82 0.16 82 / 0.7); }
+  0%,
+  100% {
+    box-shadow: 0 0 20px oklch(0.82 0.16 82 / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 50px oklch(0.82 0.16 82 / 0.7);
+  }
 }
 @keyframes rare-burst {
-  0%   { transform: scale(0.6) rotateY(180deg); opacity: 0; filter: brightness(2); }
-  40%  { transform: scale(1.15) rotateY(0deg); opacity: 1; filter: brightness(1.6); }
-  70%  { transform: scale(0.97) rotateY(0deg); filter: brightness(1.15); }
-  100% { transform: scale(1) rotateY(0deg); opacity: 1; filter: brightness(1); }
+  0% {
+    transform: scale(0.6) rotateY(180deg);
+    opacity: 0;
+    filter: brightness(2);
+  }
+  40% {
+    transform: scale(1.15) rotateY(0deg);
+    opacity: 1;
+    filter: brightness(1.6);
+  }
+  70% {
+    transform: scale(0.97) rotateY(0deg);
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: scale(1) rotateY(0deg);
+    opacity: 1;
+    filter: brightness(1);
+  }
 }
 @keyframes rare-flash {
-  0%   { opacity: 0; }
-  30%  { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 @keyframes rare-rays {
-  0%   { transform: rotate(0deg) scale(0.6); opacity: 0; }
-  30%  { opacity: 0.9; }
-  100% { transform: rotate(180deg) scale(2.2); opacity: 0; }
+  0% {
+    transform: rotate(0deg) scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: rotate(180deg) scale(2.2);
+    opacity: 0;
+  }
 }
 @keyframes gold-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @utility animate-card-reveal {
@@ -206,7 +280,12 @@
   animation: shimmer 2.5s infinite;
 }
 @utility gold-shimmer-overlay {
-  background: linear-gradient(110deg, transparent 25%, oklch(0.95 0.18 88 / 0.55) 50%, transparent 75%);
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    oklch(0.95 0.18 88 / 0.55) 50%,
+    transparent 75%
+  );
   background-size: 200% 100%;
   animation: gold-shimmer 2s infinite;
   mix-blend-mode: screen;
@@ -217,17 +296,37 @@
 }
 @utility rare-rays-layer {
   animation: rare-rays 1200ms ease-out both;
-  background: conic-gradient(from 0deg,
-    transparent 0deg, oklch(0.95 0.18 88 / 0.55) 8deg, transparent 16deg,
-    transparent 40deg, oklch(0.95 0.18 88 / 0.55) 48deg, transparent 56deg,
-    transparent 80deg, oklch(0.95 0.18 88 / 0.55) 88deg, transparent 96deg,
-    transparent 120deg, oklch(0.95 0.18 88 / 0.55) 128deg, transparent 136deg,
-    transparent 160deg, oklch(0.95 0.18 88 / 0.55) 168deg, transparent 176deg,
-    transparent 200deg, oklch(0.95 0.18 88 / 0.55) 208deg, transparent 216deg,
-    transparent 240deg, oklch(0.95 0.18 88 / 0.55) 248deg, transparent 256deg,
-    transparent 280deg, oklch(0.95 0.18 88 / 0.55) 288deg, transparent 296deg,
-    transparent 320deg, oklch(0.95 0.18 88 / 0.55) 328deg, transparent 336deg,
-    transparent 360deg);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    oklch(0.95 0.18 88 / 0.55) 8deg,
+    transparent 16deg,
+    transparent 40deg,
+    oklch(0.95 0.18 88 / 0.55) 48deg,
+    transparent 56deg,
+    transparent 80deg,
+    oklch(0.95 0.18 88 / 0.55) 88deg,
+    transparent 96deg,
+    transparent 120deg,
+    oklch(0.95 0.18 88 / 0.55) 128deg,
+    transparent 136deg,
+    transparent 160deg,
+    oklch(0.95 0.18 88 / 0.55) 168deg,
+    transparent 176deg,
+    transparent 200deg,
+    oklch(0.95 0.18 88 / 0.55) 208deg,
+    transparent 216deg,
+    transparent 240deg,
+    oklch(0.95 0.18 88 / 0.55) 248deg,
+    transparent 256deg,
+    transparent 280deg,
+    oklch(0.95 0.18 88 / 0.55) 288deg,
+    transparent 296deg,
+    transparent 320deg,
+    oklch(0.95 0.18 88 / 0.55) 328deg,
+    transparent 336deg,
+    transparent 360deg
+  );
   filter: blur(2px);
   mix-blend-mode: screen;
 }
@@ -262,4 +361,3 @@
   transform: rotateY(180deg);
   -webkit-transform: rotateY(180deg);
 }
-
