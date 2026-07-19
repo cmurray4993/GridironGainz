@@ -141,8 +141,8 @@ function AuthGate() {
   const { user, loading } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const isPublicRoute = pathname === "/auth";
-  const isChrome = pathname !== "/auth" && pathname !== "/welcome";
+  const isPublicRoute = pathname === "/auth" || pathname === "/terms";
+  const isChrome = pathname !== "/auth" && pathname !== "/welcome" && pathname !== "/terms";
 
   useEffect(() => {
     if (loading) return;

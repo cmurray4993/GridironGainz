@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -111,6 +111,7 @@ function AuthPage() {
           <span>🔐</span> Continue with Google
         </button>
       </div>
+      <p className="mt-4 text-center text-xs text-muted-foreground">By creating an account, you agree to the <Link to="/terms" className="text-primary underline">Beta User Agreement</Link>.</p>
     </div>
   );
 }

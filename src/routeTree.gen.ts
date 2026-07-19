@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StandingsRouteImport } from './routes/standings'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RosterRouteImport } from './routes/roster'
@@ -20,6 +21,7 @@ import { Route as LineupRouteImport } from './routes/lineup'
 import { Route as GameRouteImport } from './routes/game'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PlayerPlayerIdRouteImport } from './routes/player.$playerId'
 
 const WelcomeRoute = WelcomeRouteImport.update({
   id: '/welcome',
@@ -29,6 +31,11 @@ const WelcomeRoute = WelcomeRouteImport.update({
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StandingsRoute = StandingsRouteImport.update({
@@ -76,6 +83,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayerPlayerIdRoute = PlayerPlayerIdRouteImport.update({
+  id: '/player/$playerId',
+  path: '/player/$playerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,8 +99,10 @@ export interface FileRoutesByFullPath {
   '/roster': typeof RosterRoute
   '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
+  '/terms': typeof TermsRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/player/$playerId': typeof PlayerPlayerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -100,8 +114,10 @@ export interface FileRoutesByTo {
   '/roster': typeof RosterRoute
   '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
+  '/terms': typeof TermsRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/player/$playerId': typeof PlayerPlayerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -114,8 +130,10 @@ export interface FileRoutesById {
   '/roster': typeof RosterRoute
   '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
+  '/terms': typeof TermsRoute
   '/wallet': typeof WalletRoute
   '/welcome': typeof WelcomeRoute
+  '/player/$playerId': typeof PlayerPlayerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -129,8 +147,10 @@ export interface FileRouteTypes {
     | '/roster'
     | '/settings'
     | '/standings'
+    | '/terms'
     | '/wallet'
     | '/welcome'
+    | '/player/$playerId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -142,8 +162,10 @@ export interface FileRouteTypes {
     | '/roster'
     | '/settings'
     | '/standings'
+    | '/terms'
     | '/wallet'
     | '/welcome'
+    | '/player/$playerId'
   id:
     | '__root__'
     | '/'
@@ -155,8 +177,10 @@ export interface FileRouteTypes {
     | '/roster'
     | '/settings'
     | '/standings'
+    | '/terms'
     | '/wallet'
     | '/welcome'
+    | '/player/$playerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -169,8 +193,10 @@ export interface RootRouteChildren {
   RosterRoute: typeof RosterRoute
   SettingsRoute: typeof SettingsRoute
   StandingsRoute: typeof StandingsRoute
+  TermsRoute: typeof TermsRoute
   WalletRoute: typeof WalletRoute
   WelcomeRoute: typeof WelcomeRoute
+  PlayerPlayerIdRoute: typeof PlayerPlayerIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -187,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/standings': {
@@ -252,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/player/$playerId': {
+      id: '/player/$playerId'
+      path: '/player/$playerId'
+      fullPath: '/player/$playerId'
+      preLoaderRoute: typeof PlayerPlayerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -265,8 +305,10 @@ const rootRouteChildren: RootRouteChildren = {
   RosterRoute: RosterRoute,
   SettingsRoute: SettingsRoute,
   StandingsRoute: StandingsRoute,
+  TermsRoute: TermsRoute,
   WalletRoute: WalletRoute,
   WelcomeRoute: WelcomeRoute,
+  PlayerPlayerIdRoute: PlayerPlayerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

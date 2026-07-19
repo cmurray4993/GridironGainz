@@ -9,14 +9,22 @@ export interface MarketListing extends Omit<ListingRow, "card_data"> {
 }
 
 export interface ListingDraft {
-  currency: "coins" | "sol";
-  saleType: "auction" | "buy_now";
   startingPrice?: number;
   buyNowPrice?: number;
   solLamports?: number;
   sellerWallet?: string;
   durationHours: number;
 }
+
+export const MARKET_PRICE_FLOORS = {
+  bronze: { startingBid: 250, coinBuyNow: 1_000 },
+  silver: { startingBid: 500, coinBuyNow: 2_500 },
+  gold: { startingBid: 1_500, coinBuyNow: 7_500 },
+  elite: { startingBid: 5_000, coinBuyNow: 20_000 },
+} as const;
+
+export const MIN_SOL_LAMPORTS = 10_000_000;
+export const MAX_SOL_LAMPORTS = 100_000_000_000;
 
 export async function bootstrapMarketAccount(startingCoins: number) {
   const { data, error } = await supabase.rpc("bootstrap_market_account", {
@@ -59,10 +67,11 @@ export async function getOwnedMarketCards(): Promise<Player[]> {
 }
 
 export async function createMarketListing(player: Player, draft: ListingDraft) {
+  const hasCoins = Boolean(draft.startingPrice || draft.buyNowPrice);
   const { data, error } = await supabase.rpc("create_market_listing", {
     p_card_data: player as unknown as Json,
-    p_currency: draft.currency,
-    p_sale_type: draft.saleType,
+    p_currency: hasCoins ? "coins" : "sol",
+    p_sale_type: draft.startingPrice ? "auction" : "buy_now",
     p_starting_price: draft.startingPrice,
     p_buy_now_price: draft.buyNowPrice,
     p_sol_lamports: draft.solLamports,
@@ -71,6 +80,12 @@ export async function createMarketListing(player: Player, draft: ListingDraft) {
   });
   if (error) throw error;
   return { ...data, card_data: data.card_data as unknown as Player } as MarketListing;
+}
+
+export async function quickSellMarketCard(cardId: string) {
+  const { data, error } = await supabase.rpc("quick_sell_market_card", { p_card_id: cardId });
+  if (error) throw error;
+  return data as unknown as { handled: boolean; price?: number; balance?: number };
 }
 
 export async function placeMarketBid(listingId: string, amount: number) {

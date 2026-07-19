@@ -78,8 +78,8 @@ Deno.serve(async (request) => {
         .eq("status", "active")
         .single();
       if (error || !listing) return json({ error: "Listing not found" }, 404);
-      if (listing.currency !== "sol" || listing.sale_type !== "buy_now") {
-        return json({ error: "Listing is not available for SOL" }, 400);
+      if (!listing.sol_lamports) {
+        return json({ error: "Listing has no SOL Buy Now option" }, 400);
       }
       if (listing.seller_id === authData.user.id) return json({ error: "You cannot buy your own card" }, 400);
       if (!isAddress(listing.seller_wallet) || buyerWallet === listing.seller_wallet) {
