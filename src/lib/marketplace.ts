@@ -4,6 +4,17 @@ import type { Player } from "@/lib/game/types";
 
 type ListingRow = Database["public"]["Tables"]["market_listings"]["Row"];
 
+async function untypedRpc<T>(name: string, params: Record<string, unknown> = {}) {
+  const { data, error } = await (
+    supabase.rpc as unknown as (
+      fn: string,
+      args?: Record<string, unknown>,
+    ) => Promise<{ data: T | null; error: { message: string } | null }>
+  )(name, params);
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export interface MarketListing extends Omit<ListingRow, "card_data"> {
   card_data: Player;
   buyer_id?: string | null;
@@ -37,18 +48,14 @@ export const MARKET_PRICE_FLOORS = {
 export const MIN_SOL_LAMPORTS = 10_000_000;
 export const MAX_SOL_LAMPORTS = 100_000_000_000;
 
-export async function bootstrapMarketAccount(startingCoins: number) {
+export async function bootstrapMarketAccount() {
   const { data, error } = await supabase.rpc("bootstrap_market_account", {
-    p_starting_coins: Math.max(0, Math.floor(startingCoins)),
+    // Kept only for compatibility with the old RPC signature. The server
+    // ignores this value and reads the authoritative economy account.
+    p_starting_coins: 0,
   });
   if (error) throw error;
   return Number(data ?? 0);
-}
-
-export async function getMarketBalance() {
-  const { data, error } = await supabase.from("economy_accounts").select("coins").maybeSingle();
-  if (error) throw error;
-  return Number(data?.coins ?? 0);
 }
 
 export async function browseMarket(): Promise<MarketListing[]> {
@@ -63,9 +70,14 @@ export async function browseMarket(): Promise<MarketListing[]> {
 }
 
 export async function getMyMarketActivity(): Promise<MarketActivity> {
-  const { data, error } = await supabase.rpc("get_my_market_activity");
-  if (error) throw error;
-  const payload = (data ?? {}) as unknown as { items?: Array<{ listing: ListingRow & { buyer_id?: string | null }; myHighestBid?: number | null }>; heldCoins?: number };
+  const data = await untypedRpc<unknown>("get_my_market_activity");
+  const payload = (data ?? {}) as unknown as {
+    items?: Array<{
+      listing: ListingRow & { buyer_id?: string | null };
+      myHighestBid?: number | null;
+    }>;
+    heldCoins?: number;
+  };
   return {
     items: (payload.items ?? []).map((item) => ({
       listing: { ...item.listing, card_data: item.listing.card_data as unknown as Player },
@@ -81,19 +93,11 @@ export async function settleExpiredMarketListings() {
   return Number(data ?? 0);
 }
 
-export async function getOwnedMarketCards(): Promise<Player[]> {
-  const { data, error } = await supabase
-    .from("market_cards")
-    .select("card_data")
-    .eq("status", "owned");
-  if (error) throw error;
-  return (data ?? []).map((row) => row.card_data as unknown as Player);
-}
-
 export async function createMarketListing(player: Player, draft: ListingDraft) {
   const hasCoins = Boolean(draft.startingPrice || draft.buyNowPrice);
   const { data, error } = await supabase.rpc("create_market_listing", {
-    p_card_data: player as unknown as Json,
+    // Attributes are loaded from player_cards by the server.
+    p_card_data: { id: player.id } as unknown as Json,
     p_currency: hasCoins ? "coins" : "sol",
     p_sale_type: draft.startingPrice ? "auction" : "buy_now",
     p_starting_price: draft.startingPrice,
@@ -107,8 +111,7 @@ export async function createMarketListing(player: Player, draft: ListingDraft) {
 }
 
 export async function quickSellMarketCard(cardId: string) {
-  const { data, error } = await supabase.rpc("quick_sell_market_card", { p_card_id: cardId });
-  if (error) throw error;
+  const data = await untypedRpc<unknown>("quick_sell_market_card", { p_card_id: cardId });
   return data as unknown as { handled: boolean; price?: number; balance?: number };
 }
 
@@ -172,7 +175,11 @@ export function createSolMarketIntent(listingId: string, buyerWallet: string) {
 
 export async function verifySolMarketPurchase(purchaseId: string, signature: string) {
   for (let attempt = 0; attempt < 8; attempt += 1) {
-    const result = await invoke<{ status: "confirming" | "confirmed"; card?: Player; signature?: string }>({
+    const result = await invoke<{
+      status: "confirming" | "confirmed";
+      card?: Player;
+      signature?: string;
+    }>({
       action: "verify-sol",
       purchaseId,
       signature,

@@ -9,7 +9,23 @@ const LAMPORTS_PER_SOL = 1_000_000_000;
 const GC_PER_SOL = 10_000;
 const MIN_SOL = 0.01;
 const MAX_SOL = 10;
-const DEFAULT_TREASURY_WALLET = "8CfcSMpWF7qAm1acso4HjVSeZbFWtTRpj8aGvJ1YvZMu";
+const ALLOWED_NETWORKS = new Set(["devnet", "testnet", "mainnet-beta"]);
+
+function readReleaseNetwork() {
+  const network = Deno.env.get("SOLANA_NETWORK") || "devnet";
+  if (!ALLOWED_NETWORKS.has(network)) throw new Error("Invalid Solana network configuration");
+  if (network === "mainnet-beta") {
+    const mainnetApproved =
+      Deno.env.get("ENABLE_MAINNET_COMMERCE") === "true" &&
+      Deno.env.get("LEGAL_REVIEW_COMPLETE") === "true" &&
+      Deno.env.get("TAX_REVIEW_COMPLETE") === "true" &&
+      Deno.env.get("SECURITY_REVIEW_COMPLETE") === "true";
+    if (!mainnetApproved) {
+      throw new Error("Mainnet commerce is launch-locked pending legal, tax, and security review");
+    }
+  }
+  return network;
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -56,6 +72,50 @@ async function readConfirmedTransaction(rpcUrl: string, signature: string) {
   return payload.result;
 }
 
+async function assertRpcNetwork(rpcUrl: string, expectedNetwork: string) {
+  const knownGenesisHashes: Record<string, string> = {
+    devnet: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+    testnet: "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3zQawwpjk2NsNY",
+    "mainnet-beta": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2dKz",
+  };
+  const response = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getGenesisHash" }),
+  });
+  if (!response.ok) throw new Error("Unable to verify the configured Solana network");
+  const payload = await response.json();
+  if (payload.result !== knownGenesisHashes[expectedNetwork]) {
+    throw new Error("Solana RPC does not match the configured release network");
+  }
+}
+
+async function hasCurrentLegalAcceptance(admin: ReturnType<typeof createClient>, userId: string) {
+  const { data: documents, error: documentsError } = await admin
+    .from("legal_documents")
+    .select("code, version")
+    .eq("is_current", true);
+  if (documentsError) throw documentsError;
+  const versions = Object.fromEntries(
+    (documents ?? []).map((document) => [document.code, document.version]),
+  );
+  if (!versions.terms || !versions.privacy || !versions.contest_rules || !versions.purchase_policy)
+    return false;
+  const { data: acceptance, error } = await admin
+    .from("legal_acceptances")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("age_of_majority_attested", true)
+    .is("revoked_at", null)
+    .eq("terms_version", versions.terms)
+    .eq("privacy_version", versions.privacy)
+    .eq("contest_rules_version", versions.contest_rules)
+    .eq("purchase_policy_version", versions.purchase_policy)
+    .maybeSingle();
+  if (error) throw error;
+  return Boolean(acceptance);
+}
+
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -63,8 +123,18 @@ Deno.serve(async (request) => {
   try {
     const supabaseUrl = requiredEnv("SUPABASE_URL");
     const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
-    const treasuryWallet = Deno.env.get("TREASURY_WALLET") || DEFAULT_TREASURY_WALLET;
-    const rpcUrl = Deno.env.get("SOLANA_RPC_URL") || "https://api.devnet.solana.com";
+    const network = readReleaseNetwork();
+    const treasuryWallet = requiredEnv("TREASURY_WALLET");
+    if (!looksLikeSolanaAddress(treasuryWallet)) {
+      throw new Error("Invalid server configuration: TREASURY_WALLET");
+    }
+    const rpcUrl =
+      Deno.env.get("SOLANA_RPC_URL") ||
+      (network === "mainnet-beta"
+        ? "https://api.mainnet-beta.solana.com"
+        : network === "testnet"
+          ? "https://api.testnet.solana.com"
+          : "https://api.devnet.solana.com");
     const authorization = request.headers.get("Authorization") ?? "";
     const token = authorization.replace(/^Bearer\s+/i, "");
     if (!token) return json({ error: "Sign in required" }, 401);
@@ -75,8 +145,42 @@ Deno.serve(async (request) => {
     const { data: authData, error: authError } = await admin.auth.getUser(token);
     if (authError || !authData.user) return json({ error: "Invalid session" }, 401);
 
+    const { data: releaseControls, error: releaseError } = await admin
+      .from("app_release_controls")
+      .select(
+        "release_mode, real_money_enabled, purchase_funded_prizes, legal_review_complete, tax_review_complete, security_review_complete, operator_identity_complete, jurisdiction_controls_complete, consumer_protection_review_complete, financial_compliance_review_complete, incident_response_ready, reconciliation_ready",
+      )
+      .eq("singleton", true)
+      .single();
+    if (releaseError) throw releaseError;
+    if (
+      network === "mainnet-beta" &&
+      (releaseControls.release_mode !== "mainnet" ||
+        !releaseControls.real_money_enabled ||
+        releaseControls.purchase_funded_prizes ||
+        !releaseControls.legal_review_complete ||
+        !releaseControls.tax_review_complete ||
+        !releaseControls.security_review_complete ||
+        !releaseControls.operator_identity_complete ||
+        !releaseControls.jurisdiction_controls_complete ||
+        !releaseControls.consumer_protection_review_complete ||
+        !releaseControls.financial_compliance_review_complete ||
+        !releaseControls.incident_response_ready ||
+        !releaseControls.reconciliation_ready)
+    ) {
+      return json({ error: "Real-money commerce is disabled by the server release gate" }, 503);
+    }
+
     const body = await request.json();
     const action = body?.action;
+
+    if (action === "create" && !(await hasCurrentLegalAcceptance(admin, authData.user.id))) {
+      return json({ error: "Current legal documents must be accepted" }, 403);
+    }
+
+    if (action === "create" || action === "verify") {
+      await assertRpcNetwork(rpcUrl, network);
+    }
 
     if (action === "create") {
       const amountSol = Number(body.amountSol);
@@ -89,7 +193,10 @@ Deno.serve(async (request) => {
       }
       if (walletAddress === treasuryWallet) {
         return json(
-          { error: "The treasury wallet cannot purchase Gridiron Cash. Connect a different player wallet." },
+          {
+            error:
+              "The treasury wallet cannot purchase Gridiron Cash. Connect a different player wallet.",
+          },
           400,
         );
       }
@@ -103,6 +210,8 @@ Deno.serve(async (request) => {
           wallet_address: walletAddress,
           expected_lamports: expectedLamports,
           gc_amount: gcAmount,
+          network,
+          treasury_wallet: treasuryWallet,
         })
         .select("id, expected_lamports, gc_amount, expires_at")
         .single();
@@ -115,6 +224,7 @@ Deno.serve(async (request) => {
         gcAmount: data.gc_amount,
         expiresAt: data.expires_at,
         treasuryWallet,
+        network,
       });
     }
 
@@ -132,7 +242,14 @@ Deno.serve(async (request) => {
         .eq("user_id", authData.user.id)
         .single();
       if (purchaseError || !purchase) return json({ error: "Purchase not found" }, 404);
-      if (purchase.wallet_address === treasuryWallet) {
+      if (purchase.network !== network) {
+        return json({ error: "Purchase network does not match the active release network" }, 409);
+      }
+      const purchaseTreasury = purchase.treasury_wallet;
+      if (!looksLikeSolanaAddress(purchaseTreasury)) {
+        return json({ error: "Purchase treasury is invalid" }, 409);
+      }
+      if (purchase.wallet_address === purchaseTreasury) {
         return json({ error: "Treasury self-payments cannot be credited" }, 400);
       }
 
@@ -144,7 +261,18 @@ Deno.serve(async (request) => {
           .select("balance")
           .eq("user_id", authData.user.id)
           .single();
-        return json({ status: "confirmed", purchase, balance: account?.balance ?? 0 });
+        return json({
+          status: "confirmed",
+          purchaseId: purchase.id,
+          signature: purchase.signature,
+          balance: account?.balance ?? 0,
+          gc_amount: purchase.gc_amount,
+          expected_lamports: purchase.expected_lamports,
+          current_pool_lamports: 0,
+          next_pool_lamports: 0,
+          development_lamports: 0,
+          finalized_at: purchase.finalized_at,
+        });
       }
       if (purchase.status !== "pending")
         return json({ error: `Purchase is ${purchase.status}` }, 409);
@@ -191,7 +319,7 @@ Deno.serve(async (request) => {
           instruction.program === "system" &&
           parsed?.type === "transfer" &&
           info?.source === purchase.wallet_address &&
-          info?.destination === treasuryWallet &&
+          info?.destination === purchaseTreasury &&
           Number(info?.lamports) === Number(purchase.expected_lamports)
         );
       });
@@ -208,6 +336,41 @@ Deno.serve(async (request) => {
       );
       if (finalizeError) throw finalizeError;
       const result = Array.isArray(finalized) ? finalized[0] : finalized;
+      const blockTime =
+        typeof transaction.blockTime === "number"
+          ? new Date(transaction.blockTime * 1000).toISOString()
+          : null;
+      const slot = typeof transaction.slot === "number" ? transaction.slot : null;
+      const feeLamports = typeof transaction.meta?.fee === "number" ? transaction.meta.fee : null;
+      const { error: auditError } = await admin.from("solana_transaction_records").upsert(
+        {
+          signature,
+          purchase_id: purchase.id,
+          user_id: authData.user.id,
+          network,
+          sender_wallet: purchase.wallet_address,
+          treasury_wallet: purchaseTreasury,
+          amount_lamports: purchase.expected_lamports,
+          fee_lamports: feeLamports,
+          slot,
+          block_time: blockTime,
+          reconciliation_status: network === "mainnet-beta" ? "pending" : "not_applicable_testnet",
+        },
+        { onConflict: "signature", ignoreDuplicates: true },
+      );
+      if (auditError) throw auditError;
+      const { error: purchaseAuditError } = await admin
+        .from("gridiron_cash_purchases")
+        .update({
+          confirmed_slot: slot,
+          block_time: blockTime,
+          transaction_fee_lamports: feeLamports,
+          accounting_status:
+            network === "mainnet-beta" ? "pending_valuation" : "not_applicable_testnet",
+        })
+        .eq("id", purchase.id)
+        .eq("user_id", authData.user.id);
+      if (purchaseAuditError) throw purchaseAuditError;
       return json({ status: "confirmed", purchaseId: purchase.id, signature, ...result });
     }
 
@@ -231,26 +394,6 @@ Deno.serve(async (request) => {
         purchases: purchases ?? [],
         allocation,
       });
-    }
-
-    if (action === "spend") {
-      const amount = Number(body.amount);
-      const reference = body.reference;
-      const reason = typeof body.reason === "string" ? body.reason.slice(0, 80) : "pack_purchase";
-      if (!Number.isInteger(amount) || amount <= 0 || amount > 100_000) {
-        return json({ error: "Invalid Gridiron Cash amount" }, 400);
-      }
-      if (typeof reference !== "string" || reference.length < 8 || reference.length > 120) {
-        return json({ error: "Invalid purchase reference" }, 400);
-      }
-      const { data: balance, error } = await admin.rpc("spend_gridiron_cash", {
-        p_user_id: authData.user.id,
-        p_amount: amount,
-        p_reason: reason,
-        p_reference: reference,
-      });
-      if (error) throw error;
-      return json({ status: "confirmed", balance: Number(balance) });
     }
 
     return json({ error: "Unknown action" }, 400);

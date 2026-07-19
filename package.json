@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "prebuild": "npm run verify:legal && npm run verify:safety",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "verify:legal": "node scripts/verify-legal-documents.mjs",
+    "verify:safety": "node scripts/verify-release-safety.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

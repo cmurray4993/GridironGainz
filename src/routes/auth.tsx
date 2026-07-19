@@ -8,7 +8,10 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in — Gridiron Gainz" },
-      { name: "description", content: "Create your Gridiron Gainz franchise and open your first pack." },
+      {
+        name: "description",
+        content: "Create your Gridiron Gainz franchise and open your first pack.",
+      },
     ],
   }),
 });
@@ -21,12 +24,17 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [adultConfirmed, setAdultConfirmed] = useState(false);
+  const [documentsConfirmed, setDocumentsConfirmed] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     try {
       if (mode === "signup") {
+        if (!adultConfirmed || !documentsConfirmed) {
+          throw new Error("Age and legal-document confirmations are required");
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -51,10 +59,16 @@ function AuthPage() {
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
       <div className="mb-8 text-center">
-        <img src="/gridiron-gainz-logo.png" alt="Gridiron Gainz" className="mx-auto h-20 w-20 object-contain drop-shadow-[0_0_12px_rgba(245,183,43,0.4)]" />
+        <img
+          src="/gridiron-gainz-logo.png"
+          alt="Gridiron Gainz"
+          className="mx-auto h-20 w-20 object-contain drop-shadow-[0_0_12px_rgba(245,183,43,0.4)]"
+        />
         <h1 className="mt-4 font-display text-4xl text-gradient-gold">Gridiron Gainz</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {mode === "signup" ? "Claim your franchise. Open your first pack." : "Sign back into your franchise."}
+          {mode === "signup"
+            ? "Claim your franchise. Open your first pack."
+            : "Sign back into your franchise."}
         </p>
       </div>
 
@@ -82,6 +96,31 @@ function AuthPage() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-lg border border-border/70 bg-background/60 px-3 py-2.5 text-sm outline-none focus:border-primary"
           />
+          {mode === "signup" && (
+            <>
+              <label className="flex items-start gap-2 rounded-lg border border-border/70 bg-background/50 p-3 text-xs">
+                <input
+                  type="checkbox"
+                  checked={adultConfirmed}
+                  onChange={(event) => setAdultConfirmed(event.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>I am at least 18 and have reached the age of majority where I live.</span>
+              </label>
+              <label className="flex items-start gap-2 rounded-lg border border-border/70 bg-background/50 p-3 text-xs">
+                <input
+                  type="checkbox"
+                  checked={documentsConfirmed}
+                  onChange={(event) => setDocumentsConfirmed(event.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  I agree to review and accept the beta Terms, Privacy Notice, Contest Rules, and
+                  Purchase Policy before entering the game.
+                </span>
+              </label>
+            </>
+          )}
           <input
             type="password"
             required
@@ -93,7 +132,7 @@ function AuthPage() {
           />
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || (mode === "signup" && (!adultConfirmed || !documentsConfirmed))}
             className="w-full rounded-lg bg-[image:var(--gradient-gold)] px-4 py-2.5 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:opacity-50"
           >
             {busy ? "…" : mode === "signup" ? "Create account & open pack" : "Sign in"}
@@ -101,17 +140,33 @@ function AuthPage() {
         </form>
 
         <div className="hidden">
-          <div className="h-px flex-1 bg-border/60" /> or <div className="h-px flex-1 bg-border/60" />
+          <div className="h-px flex-1 bg-border/60" /> or{" "}
+          <div className="h-px flex-1 bg-border/60" />
         </div>
 
-        <button
-          type="button"
-          className="hidden"
-        >
+        <button type="button" className="hidden">
           <span>🔐</span> Continue with Google
         </button>
       </div>
-      <p className="mt-4 text-center text-xs text-muted-foreground">By creating an account, you agree to the <Link to="/terms" className="text-primary underline">Beta User Agreement</Link>.</p>
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        Review the{" "}
+        <Link to="/terms" className="text-primary underline">
+          Terms
+        </Link>
+        ,{" "}
+        <Link to="/privacy" className="text-primary underline">
+          Privacy Notice
+        </Link>
+        ,{" "}
+        <Link to="/rules" className="text-primary underline">
+          Contest Rules
+        </Link>
+        , and{" "}
+        <Link to="/purchase-policy" className="text-primary underline">
+          Purchase Policy
+        </Link>
+        .
+      </p>
     </div>
   );
 }

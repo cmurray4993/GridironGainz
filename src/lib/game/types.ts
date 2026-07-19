@@ -11,11 +11,24 @@ export const POSITIONS: Position[] = ["QB", "RB", "WR", "TE", "OL", "DL", "LB", 
 // and stat weights; use slotAccepts() for the picker allow-list.
 export const LINEUP_SLOTS: string[] = [
   // Offense (7)
-  "QB", "RB", "FLEX", "WR1", "WR2", "TE", "OL",
+  "QB",
+  "RB",
+  "FLEX",
+  "WR1",
+  "WR2",
+  "TE",
+  "OL",
   // Special teams
-  "K", "P",
+  "K",
+  "P",
   // Defense (7)
-  "DL", "LB1", "LB2", "DB1", "DB2", "DB3", "DFLEX",
+  "DL",
+  "LB1",
+  "LB2",
+  "DB1",
+  "DB2",
+  "DB3",
+  "DFLEX",
 ];
 
 export const FLEX_POSITIONS: Position[] = ["RB", "WR", "TE"];
@@ -48,8 +61,8 @@ export const POSITION_SIGNATURE: Record<Position, { key: string; label: string }
   DL: { key: "passRush", label: "Pass Rush" },
   LB: { key: "tackling", label: "Tackling" },
   DB: { key: "coverage", label: "Coverage" },
-  K:  { key: "legPower", label: "Leg Power" },
-  P:  { key: "hangTime", label: "Hang Time" },
+  K: { key: "legPower", label: "Leg Power" },
+  P: { key: "hangTime", label: "Hang Time" },
 };
 
 export interface Player {
@@ -65,7 +78,6 @@ export interface Player {
   rarity: Rarity;
   signature: PlayerSignatureAttr;
 }
-
 
 const FAN_RARITY_MULTIPLIER: Record<Rarity, number> = {
   bronze: 1,
@@ -119,6 +131,65 @@ export interface GameState {
   teamName?: string;
   sol?: number;
   walletAddress?: string;
+  authoritative?: AuthoritativeState;
+}
+
+export interface AuthoritativeSeasonGame {
+  id: string;
+  day_number: number;
+  round: "regular" | "quarterfinal" | "semifinal" | "championship" | "consolation";
+  game_number: number;
+  home_team_id: string;
+  away_team_id: string;
+  lock_at: string;
+  status: "scheduled" | "final" | "bye";
+  home_score: number | null;
+  away_score: number | null;
+  winner_team_id: string | null;
+  simulation?: {
+    algorithmVersion?: number;
+    homeOverall?: number;
+    awayOverall?: number;
+    playByPlay?: string[];
+    missedLineupRule?: string;
+  } | null;
+}
+
+export interface AuthoritativeLeagueTeam {
+  id: string;
+  name: string;
+  seat: number;
+  user_id: string | null;
+  bot_overall: number;
+  wins: number;
+  losses: number;
+  points_for: number;
+  points_against: number;
+  playoff_seed: number | null;
+  final_rank: number | null;
+}
+
+export interface AuthoritativeState {
+  season: {
+    id: string;
+    number: number;
+    startsOn: string;
+    endsOn: string;
+    day: number;
+    leagueId: string;
+    prizePoolLamports?: number;
+  };
+  team: AuthoritativeLeagueTeam;
+  standings: AuthoritativeLeagueTeam[];
+  games: AuthoritativeSeasonGame[];
+  rewards: Array<{
+    id: string;
+    final_rank: number;
+    coins: number;
+    sol_lamports: number;
+    status: string;
+  }>;
+  pendingClaim: { buckets: number; coins: number; capped: boolean; lastClaimAt: string };
 }
 
 export interface CashPurchase {
@@ -142,26 +213,35 @@ export interface OfficialGameResult {
   opponentName: string;
 }
 
-
 // How much each position leans on strength / speed / iq (weights sum ~1)
 export const POSITION_WEIGHTS: Record<Position, { str: number; spd: number; iq: number }> = {
-  QB: { str: 0.15, spd: 0.20, iq: 0.65 },
-  RB: { str: 0.40, spd: 0.45, iq: 0.15 },
-  WR: { str: 0.15, spd: 0.60, iq: 0.25 },
-  TE: { str: 0.40, spd: 0.30, iq: 0.30 },
-  OL: { str: 0.65, spd: 0.10, iq: 0.25 },
-  DL: { str: 0.60, spd: 0.25, iq: 0.15 },
-  LB: { str: 0.40, spd: 0.30, iq: 0.30 },
-  DB: { str: 0.15, spd: 0.55, iq: 0.30 },
-  K:  { str: 0.20, spd: 0.20, iq: 0.60 },
-  P:  { str: 0.25, spd: 0.15, iq: 0.60 },
+  QB: { str: 0.15, spd: 0.2, iq: 0.65 },
+  RB: { str: 0.4, spd: 0.45, iq: 0.15 },
+  WR: { str: 0.15, spd: 0.6, iq: 0.25 },
+  TE: { str: 0.4, spd: 0.3, iq: 0.3 },
+  OL: { str: 0.65, spd: 0.1, iq: 0.25 },
+  DL: { str: 0.6, spd: 0.25, iq: 0.15 },
+  LB: { str: 0.4, spd: 0.3, iq: 0.3 },
+  DB: { str: 0.15, spd: 0.55, iq: 0.3 },
+  K: { str: 0.2, spd: 0.2, iq: 0.6 },
+  P: { str: 0.25, spd: 0.15, iq: 0.6 },
 };
 
-export const RARITY_META: Record<Rarity, { label: string; weight: number; overallMin: number; overallMax: number; fanMin: number; fanMax: number }> = {
-  bronze: { label: "Bronze", weight: 60, overallMin: 60, overallMax: 69, fanMin: 5,  fanMax: 25 },
+export const RARITY_META: Record<
+  Rarity,
+  {
+    label: string;
+    weight: number;
+    overallMin: number;
+    overallMax: number;
+    fanMin: number;
+    fanMax: number;
+  }
+> = {
+  bronze: { label: "Bronze", weight: 60, overallMin: 60, overallMax: 69, fanMin: 5, fanMax: 25 },
   silver: { label: "Silver", weight: 28, overallMin: 70, overallMax: 79, fanMin: 20, fanMax: 60 },
-  gold:   { label: "Gold",   weight: 10, overallMin: 80, overallMax: 84, fanMin: 55, fanMax: 120 },
-  elite:  { label: "Elite",  weight: 2,  overallMin: 85, overallMax: 86, fanMin: 100, fanMax: 220 },
+  gold: { label: "Gold", weight: 10, overallMin: 80, overallMax: 84, fanMin: 55, fanMax: 120 },
+  elite: { label: "Elite", weight: 2, overallMin: 85, overallMax: 86, fanMin: 100, fanMax: 220 },
 };
 
 // Max overall currently obtainable in the game.

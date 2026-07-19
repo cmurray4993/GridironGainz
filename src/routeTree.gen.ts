@@ -14,11 +14,15 @@ import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StandingsRouteImport } from './routes/standings'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as RulesRouteImport } from './routes/rules'
 import { Route as RosterRouteImport } from './routes/roster'
+import { Route as PurchasePolicyRouteImport } from './routes/purchase-policy'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PackRouteImport } from './routes/pack'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as LineupRouteImport } from './routes/lineup'
 import { Route as GameRouteImport } from './routes/game'
+import { Route as EligibilityRouteImport } from './routes/eligibility'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PlayerPlayerIdRouteImport } from './routes/player.$playerId'
@@ -48,9 +52,24 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RulesRoute = RulesRouteImport.update({
+  id: '/rules',
+  path: '/rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RosterRoute = RosterRouteImport.update({
   id: '/roster',
   path: '/roster',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PurchasePolicyRoute = PurchasePolicyRouteImport.update({
+  id: '/purchase-policy',
+  path: '/purchase-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PackRoute = PackRouteImport.update({
@@ -73,6 +92,11 @@ const GameRoute = GameRouteImport.update({
   path: '/game',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EligibilityRoute = EligibilityRouteImport.update({
+  id: '/eligibility',
+  path: '/eligibility',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -92,11 +116,15 @@ const PlayerPlayerIdRoute = PlayerPlayerIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/eligibility': typeof EligibilityRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
   '/market': typeof MarketRoute
   '/pack': typeof PackRoute
+  '/privacy': typeof PrivacyRoute
+  '/purchase-policy': typeof PurchasePolicyRoute
   '/roster': typeof RosterRoute
+  '/rules': typeof RulesRoute
   '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
   '/terms': typeof TermsRoute
@@ -107,11 +135,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/eligibility': typeof EligibilityRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
   '/market': typeof MarketRoute
   '/pack': typeof PackRoute
+  '/privacy': typeof PrivacyRoute
+  '/purchase-policy': typeof PurchasePolicyRoute
   '/roster': typeof RosterRoute
+  '/rules': typeof RulesRoute
   '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
   '/terms': typeof TermsRoute
@@ -123,11 +155,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/eligibility': typeof EligibilityRoute
   '/game': typeof GameRoute
   '/lineup': typeof LineupRoute
   '/market': typeof MarketRoute
   '/pack': typeof PackRoute
+  '/privacy': typeof PrivacyRoute
+  '/purchase-policy': typeof PurchasePolicyRoute
   '/roster': typeof RosterRoute
+  '/rules': typeof RulesRoute
   '/settings': typeof SettingsRoute
   '/standings': typeof StandingsRoute
   '/terms': typeof TermsRoute
@@ -140,11 +176,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/eligibility'
     | '/game'
     | '/lineup'
     | '/market'
     | '/pack'
+    | '/privacy'
+    | '/purchase-policy'
     | '/roster'
+    | '/rules'
     | '/settings'
     | '/standings'
     | '/terms'
@@ -155,11 +195,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/eligibility'
     | '/game'
     | '/lineup'
     | '/market'
     | '/pack'
+    | '/privacy'
+    | '/purchase-policy'
     | '/roster'
+    | '/rules'
     | '/settings'
     | '/standings'
     | '/terms'
@@ -170,11 +214,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/eligibility'
     | '/game'
     | '/lineup'
     | '/market'
     | '/pack'
+    | '/privacy'
+    | '/purchase-policy'
     | '/roster'
+    | '/rules'
     | '/settings'
     | '/standings'
     | '/terms'
@@ -186,11 +234,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  EligibilityRoute: typeof EligibilityRoute
   GameRoute: typeof GameRoute
   LineupRoute: typeof LineupRoute
   MarketRoute: typeof MarketRoute
   PackRoute: typeof PackRoute
+  PrivacyRoute: typeof PrivacyRoute
+  PurchasePolicyRoute: typeof PurchasePolicyRoute
   RosterRoute: typeof RosterRoute
+  RulesRoute: typeof RulesRoute
   SettingsRoute: typeof SettingsRoute
   StandingsRoute: typeof StandingsRoute
   TermsRoute: typeof TermsRoute
@@ -236,11 +288,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rules': {
+      id: '/rules'
+      path: '/rules'
+      fullPath: '/rules'
+      preLoaderRoute: typeof RulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/roster': {
       id: '/roster'
       path: '/roster'
       fullPath: '/roster'
       preLoaderRoute: typeof RosterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/purchase-policy': {
+      id: '/purchase-policy'
+      path: '/purchase-policy'
+      fullPath: '/purchase-policy'
+      preLoaderRoute: typeof PurchasePolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pack': {
@@ -271,6 +344,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/eligibility': {
+      id: '/eligibility'
+      path: '/eligibility'
+      fullPath: '/eligibility'
+      preLoaderRoute: typeof EligibilityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -298,11 +378,15 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  EligibilityRoute: EligibilityRoute,
   GameRoute: GameRoute,
   LineupRoute: LineupRoute,
   MarketRoute: MarketRoute,
   PackRoute: PackRoute,
+  PrivacyRoute: PrivacyRoute,
+  PurchasePolicyRoute: PurchasePolicyRoute,
   RosterRoute: RosterRoute,
+  RulesRoute: RulesRoute,
   SettingsRoute: SettingsRoute,
   StandingsRoute: StandingsRoute,
   TermsRoute: TermsRoute,

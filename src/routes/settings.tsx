@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { resetAll, setTeamName, useGame } from "@/lib/game/store";
+import { setTeamName, useGame } from "@/lib/game/store";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
@@ -11,18 +11,23 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const { teamName } = useGame();
   const [name, setName] = useState(teamName ?? "");
-  const [confirmReset, setConfirmReset] = useState(false);
 
-  useEffect(() => { setName(teamName ?? ""); }, [teamName]);
+  useEffect(() => {
+    setName(teamName ?? "");
+  }, [teamName]);
 
   const clean = name.trim();
   const dirty = clean !== (teamName ?? "");
   const valid = clean.length >= 2 && clean.length <= 24;
 
-  const save = () => {
+  const save = async () => {
     if (!valid) return;
-    setTeamName(clean);
-    toast.success("Team name updated");
+    try {
+      await setTeamName(clean);
+      toast.success("Team name updated");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Team name could not be updated");
+    }
   };
 
   return (
@@ -30,12 +35,17 @@ function SettingsPage() {
       <header>
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary/80">Franchise</div>
         <h1 className="mt-1 font-display text-3xl">Settings</h1>
-        <p className="text-sm text-muted-foreground">Your username and team name are the same — one identity across the league.</p>
+        <p className="text-sm text-muted-foreground">
+          Your username and team name are the same — one identity across the league.
+        </p>
       </header>
 
       <section className="rounded-2xl border border-border/70 bg-card/80 p-5 shadow-[var(--shadow-card)] space-y-4">
         <div>
-          <label htmlFor="team-name" className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          <label
+            htmlFor="team-name"
+            className="text-[10px] uppercase tracking-widest text-muted-foreground"
+          >
             Username / Team name
           </label>
           <input
@@ -53,7 +63,7 @@ function SettingsPage() {
         </div>
 
         <button
-          onClick={save}
+          onClick={() => void save()}
           disabled={!dirty || !valid}
           className="w-full rounded-lg bg-[image:var(--gradient-gold)] px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -65,31 +75,32 @@ function SettingsPage() {
         Current: <span className="text-foreground font-semibold">{teamName ?? "Your Squad"}</span>
       </p>
 
-      <section className="space-y-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-5">
-        <div>
-          <div className="text-[10px] uppercase tracking-widest text-destructive">Developer tools</div>
-          <h2 className="mt-1 font-display text-xl">Reset test account</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Clears this account's roster, lineup, currency, packs, record, and season results so testing can start fresh at any time.</p>
+      <section className="rounded-2xl border border-border/70 bg-card/80 p-5">
+        <div className="text-[10px] uppercase tracking-widest text-primary">
+          Safety and policies
         </div>
-        {confirmReset ? (
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => setConfirmReset(false)} className="rounded-lg border border-border bg-secondary px-3 py-2 text-sm">Cancel</button>
-            <button
-              onClick={() => {
-                resetAll();
-                setConfirmReset(false);
-                toast.success("Test account reset");
-              }}
-              className="rounded-lg bg-destructive px-3 py-2 text-sm font-semibold text-destructive-foreground"
-            >
-              Confirm reset
-            </button>
-          </div>
-        ) : (
-          <button onClick={() => setConfirmReset(true)} className="w-full rounded-lg border border-destructive/60 px-4 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10">
-            Reset account data
-          </button>
-        )}
+        <h2 className="mt-1 font-display text-xl">Beta documents</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Review the current documents you accepted. Updated versions require a new acceptance
+          before play resumes.
+        </p>
+        <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
+          <Link to="/terms" className="rounded-lg border border-border bg-secondary px-3 py-2">
+            Terms
+          </Link>
+          <Link to="/privacy" className="rounded-lg border border-border bg-secondary px-3 py-2">
+            Privacy
+          </Link>
+          <Link to="/rules" className="rounded-lg border border-border bg-secondary px-3 py-2">
+            Beta rules
+          </Link>
+          <Link
+            to="/purchase-policy"
+            className="rounded-lg border border-border bg-secondary px-3 py-2"
+          >
+            Purchase policy
+          </Link>
+        </div>
       </section>
     </div>
   );

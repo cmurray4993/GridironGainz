@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useGame } from "@/lib/game/store";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { IS_TEST_NETWORK, SOLANA_NETWORK } from "@/lib/release";
 
 export function TopBar() {
   const state = useGame();
@@ -33,10 +34,15 @@ export function TopBar() {
             </div>
           </Link>
           <div className="flex shrink-0 items-center gap-1.5">
+            {IS_TEST_NETWORK && (
+              <span className="hidden rounded-full border border-sky-400/40 bg-sky-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-200 sm:inline">
+                {SOLANA_NETWORK} · no cash value
+              </span>
+            )}
             <Link
               to="/wallet"
               title="Wallet"
-              aria-label={`Wallet: ${(state.sol ?? 0).toFixed(2)} SOL`}
+              aria-label={`Confirmed test receipts: ${(state.sol ?? 0).toFixed(2)} devnet SOL`}
               className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
             >
               ◎ {(state.sol ?? 0).toFixed(2)}

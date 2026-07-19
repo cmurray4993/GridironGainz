@@ -76,15 +76,6 @@ export function getGridironCashStatus() {
   return invoke<GridironCashStatus>({ action: "status" });
 }
 
-export function spendGridironCashServer(amount: number, reason: string, reference: string) {
-  return invoke<{ status: "confirmed"; balance: number }>({
-    action: "spend",
-    amount,
-    reason,
-    reference,
-  });
-}
-
 export async function waitForVerifiedPurchase(purchaseId: string, signature: string) {
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const result = await verifyPurchase(purchaseId, signature);

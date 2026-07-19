@@ -4,6 +4,22 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+const ALLOWED_NETWORKS = new Set(["devnet", "testnet", "mainnet-beta"]);
+
+function readReleaseNetwork() {
+  const network = Deno.env.get("SOLANA_NETWORK") || "devnet";
+  if (!ALLOWED_NETWORKS.has(network)) throw new Error("Invalid Solana network configuration");
+  if (network === "mainnet-beta") {
+    const approved =
+      Deno.env.get("ENABLE_MAINNET_COMMERCE") === "true" &&
+      Deno.env.get("LEGAL_REVIEW_COMPLETE") === "true" &&
+      Deno.env.get("TAX_REVIEW_COMPLETE") === "true" &&
+      Deno.env.get("SECURITY_REVIEW_COMPLETE") === "true" &&
+      Deno.env.get("MARKETPLACE_SOL_REVIEW_COMPLETE") === "true";
+    if (!approved) throw new Error("Mainnet marketplace settlement is launch-locked");
+  }
+  return network;
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -34,17 +50,64 @@ async function getTransaction(rpcUrl: string, signature: string) {
       jsonrpc: "2.0",
       id: 1,
       method: "getTransaction",
-      params: [signature, {
-        encoding: "jsonParsed",
-        commitment: "confirmed",
-        maxSupportedTransactionVersion: 0,
-      }],
+      params: [
+        signature,
+        {
+          encoding: "jsonParsed",
+          commitment: "confirmed",
+          maxSupportedTransactionVersion: 0,
+        },
+      ],
     }),
   });
   if (!response.ok) throw new Error("Solana RPC request failed");
   const payload = await response.json();
   if (payload.error) throw new Error(payload.error.message ?? "Solana RPC returned an error");
   return payload.result;
+}
+
+async function assertRpcNetwork(rpcUrl: string, expectedNetwork: string) {
+  const knownGenesisHashes: Record<string, string> = {
+    devnet: "EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+    testnet: "4uhcVJyU9pJkvQyS88uRDiswHXSCkY3zQawwpjk2NsNY",
+    "mainnet-beta": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2dKz",
+  };
+  const response = await fetch(rpcUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getGenesisHash" }),
+  });
+  if (!response.ok) throw new Error("Unable to verify the configured Solana network");
+  const payload = await response.json();
+  if (payload.result !== knownGenesisHashes[expectedNetwork]) {
+    throw new Error("Solana RPC does not match the configured release network");
+  }
+}
+
+async function hasCurrentLegalAcceptance(admin: ReturnType<typeof createClient>, userId: string) {
+  const { data: documents, error: documentsError } = await admin
+    .from("legal_documents")
+    .select("code, version")
+    .eq("is_current", true);
+  if (documentsError) throw documentsError;
+  const versions = Object.fromEntries(
+    (documents ?? []).map((document) => [document.code, document.version]),
+  );
+  if (!versions.terms || !versions.privacy || !versions.contest_rules || !versions.purchase_policy)
+    return false;
+  const { data: acceptance, error } = await admin
+    .from("legal_acceptances")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("age_of_majority_attested", true)
+    .is("revoked_at", null)
+    .eq("terms_version", versions.terms)
+    .eq("privacy_version", versions.privacy)
+    .eq("contest_rules_version", versions.contest_rules)
+    .eq("purchase_policy_version", versions.purchase_policy)
+    .maybeSingle();
+  if (error) throw error;
+  return Boolean(acceptance);
 }
 
 Deno.serve(async (request) => {
@@ -54,7 +117,14 @@ Deno.serve(async (request) => {
   try {
     const supabaseUrl = requiredEnv("SUPABASE_URL");
     const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
-    const rpcUrl = Deno.env.get("SOLANA_RPC_URL") || "https://api.devnet.solana.com";
+    const network = readReleaseNetwork();
+    const rpcUrl =
+      Deno.env.get("SOLANA_RPC_URL") ||
+      (network === "mainnet-beta"
+        ? "https://api.mainnet-beta.solana.com"
+        : network === "testnet"
+          ? "https://api.testnet.solana.com"
+          : "https://api.devnet.solana.com");
     const token = (request.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     if (!token) return json({ error: "Sign in required" }, 401);
 
@@ -64,8 +134,39 @@ Deno.serve(async (request) => {
     const { data: authData, error: authError } = await admin.auth.getUser(token);
     if (authError || !authData.user) return json({ error: "Invalid session" }, 401);
 
+    const { data: releaseControls, error: releaseError } = await admin
+      .from("app_release_controls")
+      .select(
+        "release_mode, real_money_enabled, real_sol_market_enabled, purchase_funded_prizes, legal_review_complete, tax_review_complete, security_review_complete, operator_identity_complete, jurisdiction_controls_complete, consumer_protection_review_complete, financial_compliance_review_complete, incident_response_ready, reconciliation_ready",
+      )
+      .eq("singleton", true)
+      .single();
+    if (releaseError) throw releaseError;
+    if (
+      network === "mainnet-beta" &&
+      (releaseControls.release_mode !== "mainnet" ||
+        !releaseControls.real_money_enabled ||
+        !releaseControls.real_sol_market_enabled ||
+        releaseControls.purchase_funded_prizes ||
+        !releaseControls.legal_review_complete ||
+        !releaseControls.tax_review_complete ||
+        !releaseControls.security_review_complete ||
+        !releaseControls.operator_identity_complete ||
+        !releaseControls.jurisdiction_controls_complete ||
+        !releaseControls.consumer_protection_review_complete ||
+        !releaseControls.financial_compliance_review_complete ||
+        !releaseControls.incident_response_ready ||
+        !releaseControls.reconciliation_ready)
+    ) {
+      return json({ error: "Real-value marketplace settlement is disabled" }, 503);
+    }
+
     const body = await request.json();
     if (body?.action === "create-sol") {
+      if (!(await hasCurrentLegalAcceptance(admin, authData.user.id))) {
+        return json({ error: "Current legal documents must be accepted" }, 403);
+      }
+      await assertRpcNetwork(rpcUrl, network);
       const listingId = body.listingId;
       const buyerWallet = body.buyerWallet;
       if (typeof listingId !== "string" || !isAddress(buyerWallet)) {
@@ -81,7 +182,8 @@ Deno.serve(async (request) => {
       if (!listing.sol_lamports) {
         return json({ error: "Listing has no SOL Buy Now option" }, 400);
       }
-      if (listing.seller_id === authData.user.id) return json({ error: "You cannot buy your own card" }, 400);
+      if (listing.seller_id === authData.user.id)
+        return json({ error: "You cannot buy your own card" }, 400);
       if (!isAddress(listing.seller_wallet) || buyerWallet === listing.seller_wallet) {
         return json({ error: "Buyer and seller wallets must be different" }, 400);
       }
@@ -126,6 +228,7 @@ Deno.serve(async (request) => {
           buyer_wallet: buyerWallet,
           seller_wallet: listing.seller_wallet,
           expected_lamports: listing.sol_lamports,
+          network,
         })
         .select("id, expected_lamports, seller_wallet, expires_at")
         .single();
@@ -144,6 +247,7 @@ Deno.serve(async (request) => {
     }
 
     if (body?.action === "verify-sol") {
+      await assertRpcNetwork(rpcUrl, network);
       const purchaseId = body.purchaseId;
       const signature = body.signature;
       if (typeof purchaseId !== "string" || !isSignature(signature)) {
@@ -156,9 +260,17 @@ Deno.serve(async (request) => {
         .eq("buyer_id", authData.user.id)
         .single();
       if (error || !purchase) return json({ error: "Purchase not found" }, 404);
+      if (purchase.network !== network) {
+        return json({ error: "Purchase network does not match the active release network" }, 409);
+      }
       if (purchase.status === "confirmed") {
-        if (purchase.signature !== signature) return json({ error: "Purchase already finalized" }, 409);
-        const { data: listing } = await admin.from("market_listings").select("card_data").eq("id", purchase.listing_id).single();
+        if (purchase.signature !== signature)
+          return json({ error: "Purchase already finalized" }, 409);
+        const { data: listing } = await admin
+          .from("market_listings")
+          .select("card_data")
+          .eq("id", purchase.listing_id)
+          .single();
         return json({ status: "confirmed", card: listing?.card_data, signature });
       }
       if (purchase.status !== "pending" || new Date(purchase.expires_at).getTime() <= Date.now()) {
@@ -170,25 +282,75 @@ Deno.serve(async (request) => {
       const transaction = await getTransaction(rpcUrl, signature);
       if (!transaction) return json({ status: "confirming" });
       if (transaction.meta?.err) return json({ error: "Transaction failed on Solana" }, 400);
+      const signatures = transaction.transaction?.signatures ?? [];
+      if (!signatures.includes(signature)) return json({ error: "Signature mismatch" }, 400);
+      const createdAtSeconds = Math.floor(new Date(purchase.created_at).getTime() / 1000);
+      if (
+        typeof transaction.blockTime === "number" &&
+        transaction.blockTime < createdAtSeconds - 120
+      ) {
+        return json({ error: "Transaction predates this purchase" }, 400);
+      }
       const instructions = transaction.transaction?.message?.instructions ?? [];
       const memo = `gridiron-market:${purchase.id}`;
-      const memoMatches = instructions.some((i: Record<string, unknown>) => i.program === "spl-memo" && i.parsed === memo);
+      const memoMatches = instructions.some(
+        (i: Record<string, unknown>) => i.program === "spl-memo" && i.parsed === memo,
+      );
       if (!memoMatches) return json({ error: "Transaction listing reference is missing" }, 400);
       const transferMatches = instructions.some((i: Record<string, unknown>) => {
         const parsed = i.parsed as { type?: string; info?: Record<string, unknown> } | undefined;
         const info = parsed?.info;
-        return i.program === "system" && parsed?.type === "transfer"
-          && info?.source === purchase.buyer_wallet
-          && info?.destination === purchase.seller_wallet
-          && Number(info?.lamports) === Number(purchase.expected_lamports);
+        return (
+          i.program === "system" &&
+          parsed?.type === "transfer" &&
+          info?.source === purchase.buyer_wallet &&
+          info?.destination === purchase.seller_wallet &&
+          Number(info?.lamports) === Number(purchase.expected_lamports)
+        );
       });
-      if (!transferMatches) return json({ error: "Transaction does not match the listing payment" }, 400);
+      if (!transferMatches)
+        return json({ error: "Transaction does not match the listing payment" }, 400);
       const { data: card, error: finalizeError } = await admin.rpc("finalize_market_sol_purchase", {
         p_purchase_id: purchase.id,
         p_buyer_id: authData.user.id,
         p_signature: signature,
       });
       if (finalizeError) throw finalizeError;
+      const blockTime =
+        typeof transaction.blockTime === "number"
+          ? new Date(transaction.blockTime * 1000).toISOString()
+          : null;
+      const slot = typeof transaction.slot === "number" ? transaction.slot : null;
+      const feeLamports = typeof transaction.meta?.fee === "number" ? transaction.meta.fee : null;
+      const { error: auditError } = await admin.from("solana_transaction_records").upsert(
+        {
+          signature,
+          market_purchase_id: purchase.id,
+          user_id: authData.user.id,
+          network,
+          sender_wallet: purchase.buyer_wallet,
+          treasury_wallet: purchase.seller_wallet,
+          amount_lamports: purchase.expected_lamports,
+          fee_lamports: feeLamports,
+          slot,
+          block_time: blockTime,
+          purpose: "market_card_purchase",
+          reconciliation_status: network === "mainnet-beta" ? "pending" : "not_applicable_testnet",
+        },
+        { onConflict: "signature", ignoreDuplicates: true },
+      );
+      if (auditError) throw auditError;
+      const { error: purchaseAuditError } = await admin
+        .from("market_sol_purchases")
+        .update({
+          confirmed_slot: slot,
+          block_time: blockTime,
+          transaction_fee_lamports: feeLamports,
+          reconciliation_status: network === "mainnet-beta" ? "pending" : "not_applicable_testnet",
+        })
+        .eq("id", purchase.id)
+        .eq("buyer_id", authData.user.id);
+      if (purchaseAuditError) throw purchaseAuditError;
       return json({ status: "confirmed", card, signature });
     }
 

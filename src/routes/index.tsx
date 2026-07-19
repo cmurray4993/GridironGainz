@@ -1,15 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import {
-  claimCoins,
-  devGrantCoins,
-  MAX_CLAIM_BUCKETS,
-  pendingClaim,
-  useGame,
-} from "@/lib/game/store";
+import { claimCoins, MAX_CLAIM_BUCKETS, pendingClaim, useGame } from "@/lib/game/store";
 import { COIN_PER_FAN_PER_HOUR } from "@/lib/game/types";
-import { lineupOverall, pickTodaysOpponent } from "@/lib/game/sim";
+import { lineupOverall } from "@/lib/game/sim";
 import { KickoffCountdown } from "@/components/KickoffCountdown";
 
 export const Route = createFileRoute("/")({ component: Home });
@@ -35,7 +28,30 @@ function Home() {
   const teamOverall =
     lineupOverall(lineupPlayers) ||
     (roster.length ? Math.round(roster.reduce((s, p) => s + p.overall, 0) / roster.length) : 60);
-  const opponent = useMemo(() => pickTodaysOpponent(teamOverall), [teamOverall]);
+  const official = state.authoritative;
+  const currentGame = useMemo(
+    () =>
+      official?.games.find(
+        (game) =>
+          game.day_number === official.season.day &&
+          (game.home_team_id === official.team.id || game.away_team_id === official.team.id),
+      ),
+    [official],
+  );
+  const opponentId = currentGame
+    ? currentGame.home_team_id === official?.team.id
+      ? currentGame.away_team_id
+      : currentGame.home_team_id
+    : null;
+  const opponent = official?.standings.find((team) => team.id === opponentId);
+  const opponentOverall =
+    currentGame?.status === "final"
+      ? Number(
+          currentGame.home_team_id === official?.team.id
+            ? currentGame.simulation?.awayOverall
+            : currentGame.simulation?.homeOverall,
+        )
+      : opponent?.bot_overall;
   const coinsPerHour = state.fans * COIN_PER_FAN_PER_HOUR;
 
   const [mounted, setMounted] = useState(false);
@@ -86,16 +102,18 @@ function Home() {
             </div>
             <h2 className="mt-1 font-display text-2xl leading-tight">
               {state.teamName ?? "Your Squad"} <span className="text-muted-foreground">vs</span>{" "}
-              {opponent.name}
+              {opponent?.name ?? "Awaiting playoff matchup"}
             </h2>
             <div className="mt-1 text-[11px] text-muted-foreground">
-              Managed by a real player · matched at kickoff
+              {opponent
+                ? `${opponent.user_id ? "Manager franchise" : "League bot"} · assigned by the server`
+                : "Previous-round results must finish first"}
             </div>
           </div>
         </div>
 
         <div className="mt-4">
-          <KickoffCountdown />
+          <KickoffCountdown lockAt={currentGame?.lock_at} />
         </div>
 
         <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
@@ -105,10 +123,10 @@ function Home() {
               VS
             </div>
             <div className="mt-2 text-xs text-muted-foreground">
-              Difficulty {rank(opponent.overall - teamOverall)}
+              {opponentOverall ? `Difficulty ${rank(opponentOverall - teamOverall)}` : "TBD"}
             </div>
           </div>
-          <TeamCard label="Opponent OVR" value={opponent.overall} tone="ember" />
+          <TeamCard label="Opponent OVR" value={opponentOverall || 0} tone="ember" />
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -138,7 +156,7 @@ function Home() {
         <ActionCard
           to="/wallet"
           title="Wallet & funds"
-          description={`◎ ${(state.sol ?? 0).toFixed(3)} deposited · connect Phantom or Solflare to add SOL.`}
+          description={`◎ ${(state.sol ?? 0).toFixed(3)} test SOL in confirmed GC test receipts.`}
           emoji="◎"
           cta="Manage wallet"
         />
@@ -149,24 +167,6 @@ function Home() {
           emoji="👥"
           cta="View roster"
         />
-      </section>
-
-      <section className="rounded-xl border border-dashed border-primary/40 bg-background/40 p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <div className="text-[10px] uppercase tracking-widest text-primary/80">Dev tools</div>
-            <div className="text-xs text-muted-foreground">Testing account helpers.</div>
-          </div>
-          <button
-            onClick={() => {
-              devGrantCoins(2_000_000);
-              toast.success("+2,000,000 🪙 granted");
-            }}
-            className="rounded-lg border border-primary/60 bg-secondary px-3 py-2 text-xs font-semibold hover:bg-secondary/70"
-          >
-            +2M coins
-          </button>
-        </div>
       </section>
     </div>
   );

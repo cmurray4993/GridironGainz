@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { BottomNav, TopBar } from "@/components/Layout";
 import { useAuth } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/sonner";
+import { useReleaseEligibility } from "@/lib/legal";
 
 function NotFoundComponent() {
   return (
@@ -139,19 +140,45 @@ function RootComponent() {
 
 function AuthGate() {
   const { user, loading } = useAuth();
+  const eligibility = useReleaseEligibility(user?.id);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
-  const isPublicRoute = pathname === "/auth" || pathname === "/terms";
-  const isChrome = pathname !== "/auth" && pathname !== "/welcome" && pathname !== "/terms";
+  const legalRoutes = ["/terms", "/privacy", "/rules", "/purchase-policy"];
+  const isPublicRoute = pathname === "/auth" || legalRoutes.includes(pathname);
+  const isEligibilityRoute = pathname === "/eligibility";
+  const isChrome =
+    pathname !== "/auth" &&
+    pathname !== "/welcome" &&
+    !isEligibilityRoute &&
+    !legalRoutes.includes(pathname);
 
   useEffect(() => {
     if (loading) return;
     if (!user && !isPublicRoute) {
       router.navigate({ to: "/auth" });
     } else if (user && pathname === "/auth") {
+      router.navigate({ to: eligibility.data?.accepted ? "/" : "/eligibility" });
+    } else if (
+      user &&
+      !eligibility.loading &&
+      !eligibility.data?.accepted &&
+      !isPublicRoute &&
+      !isEligibilityRoute
+    ) {
+      router.navigate({ to: "/eligibility" });
+    } else if (user && eligibility.data?.accepted && isEligibilityRoute) {
       router.navigate({ to: "/" });
     }
-  }, [loading, user, isPublicRoute, pathname, router]);
+  }, [
+    loading,
+    user,
+    isPublicRoute,
+    isEligibilityRoute,
+    pathname,
+    router,
+    eligibility.loading,
+    eligibility.data?.accepted,
+  ]);
 
   if (loading) {
     return (
@@ -162,6 +189,18 @@ function AuthGate() {
   }
 
   if (!user && !isPublicRoute) {
+    return null;
+  }
+
+  if (user && eligibility.loading && !isPublicRoute) {
+    return (
+      <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">
+        Checking eligibility…
+      </div>
+    );
+  }
+
+  if (user && !eligibility.data?.accepted && !isPublicRoute && !isEligibilityRoute) {
     return null;
   }
 

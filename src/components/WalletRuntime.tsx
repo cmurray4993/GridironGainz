@@ -13,8 +13,13 @@ import { toast } from "sonner";
 import { setWalletAddress, syncGridironCashSnapshot, useGame } from "@/lib/game/store";
 import { GRIDIRON_CASH_PER_SOL } from "@/lib/game/types";
 import { SolanaWalletProvider, TREASURY_WALLET } from "@/lib/solana/WalletProvider";
-import { createPurchaseIntent, getGridironCashStatus, waitForVerifiedPurchase } from "@/lib/solana/gridironCash";
+import {
+  createPurchaseIntent,
+  getGridironCashStatus,
+  waitForVerifiedPurchase,
+} from "@/lib/solana/gridironCash";
 import { getSolUsd } from "@/lib/solana/price";
+import { IS_TEST_NETWORK, SOLANA_NETWORK, TESTNET_DISCLOSURE } from "@/lib/release";
 
 const QUICK = [0.05, 0.1, 0.5, 1];
 
@@ -87,7 +92,9 @@ function WalletPanel() {
   async function deposit() {
     if (!publicKey) return;
     if (publicKey.toBase58() === TREASURY_WALLET) {
-      toast.error("The treasury wallet cannot purchase Gridiron Cash. Connect a different player wallet.");
+      toast.error(
+        "The treasury wallet cannot purchase Gridiron Cash. Connect a different player wallet.",
+      );
       return;
     }
     const amt = Number(amount);
@@ -108,7 +115,9 @@ function WalletPanel() {
       }
       const treasury = new PublicKey(intent.treasuryWallet);
       if (publicKey.equals(treasury)) {
-        throw new Error("The treasury wallet cannot purchase Gridiron Cash. Connect a different player wallet.");
+        throw new Error(
+          "The treasury wallet cannot purchase Gridiron Cash. Connect a different player wallet.",
+        );
       }
       const memoProgram = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
       const tx = new Transaction().add(
@@ -163,6 +172,10 @@ function WalletPanel() {
   return (
     <div className="animate-float-up space-y-6">
       <section className="rounded-2xl border border-border/70 bg-card/80 p-6 shadow-[var(--shadow-card)]">
+        <div className="mb-4 rounded-xl border border-sky-400/40 bg-sky-400/10 p-3 text-sm text-sky-100">
+          <strong className="block font-semibold">Test environment</strong>
+          {TESTNET_DISCLOSURE} Purchases do not fund a prize pool.
+        </div>
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary/80">
           Franchise Wallet
         </div>
@@ -180,7 +193,9 @@ function WalletPanel() {
               ◎ {inGameSol.toFixed(4)}
             </div>
             <div className="mt-0.5 text-[10px] text-muted-foreground">
-              ≈ ${(inGameSol * solUsd).toFixed(2)} USD
+              {IS_TEST_NETWORK
+                ? "Testnet activity only"
+                : `≈ $${(inGameSol * solUsd).toFixed(2)} USD`}
             </div>
           </div>
           <div className="rounded-xl border border-border/70 bg-background/50 p-3">
@@ -198,16 +213,14 @@ function WalletPanel() {
             </div>
             <div className="mt-0.5 text-[10px] text-muted-foreground">Premium packs and offers</div>
           </div>
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3">
+          <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3">
             <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              Season pool
+              Network
             </div>
-            <div className="mt-1 font-display text-2xl text-emerald-300">
-              ◎ {(state.currentPrizePoolSol ?? 250).toFixed(2)}
+            <div className="mt-1 font-display text-2xl uppercase text-sky-300">
+              {SOLANA_NETWORK}
             </div>
-            <div className="mt-0.5 text-[10px] text-muted-foreground">
-              60% of eligible purchases
-            </div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">Mainnet is launch-locked</div>
           </div>
         </div>
       </section>
@@ -287,7 +300,7 @@ function WalletPanel() {
               <span className="text-muted-foreground">On-chain balance</span>
               <span className="tabular-nums">
                 ◎ {balance == null ? "…" : balance.toFixed(4)}
-                {balance != null && solUsd > 0 && (
+                {!IS_TEST_NETWORK && balance != null && solUsd > 0 && (
                   <span className="ml-2 text-[11px] text-muted-foreground">
                     ≈ ${(balance * solUsd).toFixed(2)}
                   </span>
@@ -302,10 +315,10 @@ function WalletPanel() {
         <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
           Gridiron Cash
         </div>
-        <h2 className="mt-1 font-display text-xl">Purchase premium currency</h2>
+        <h2 className="mt-1 font-display text-xl">Purchase test currency</h2>
         <p className="mt-1 text-xs text-muted-foreground">
-          1 SOL purchases {GRIDIRON_CASH_PER_SOL.toLocaleString()} GC. SOL is transferred to the
-          franchise treasury on {(import.meta.env.VITE_SOLANA_NETWORK as string) || "mainnet-beta"}.
+          1 devnet SOL grants {GRIDIRON_CASH_PER_SOL.toLocaleString()} test GC. Devnet SOL is
+          transferred to the test treasury on {SOLANA_NETWORK} and has no cash value.
         </p>
 
         {!TREASURY_WALLET && (
@@ -350,7 +363,9 @@ function WalletPanel() {
               onChange={(e) => setAmount(e.target.value)}
               className="mt-0.5 w-full bg-transparent font-display text-2xl outline-none"
             />
-            <div className="text-[10px] text-muted-foreground">≈ ${usdPreview} USD</div>
+            <div className="text-[10px] text-muted-foreground">
+              {IS_TEST_NETWORK ? "No real-money value" : `≈ $${usdPreview} USD`}
+            </div>
             <div className="mt-1 font-semibold text-fuchsia-300">
               You receive GC {cashPreview.toLocaleString()}
             </div>
@@ -360,7 +375,7 @@ function WalletPanel() {
             disabled={!connected || busy || !TREASURY_WALLET || isTreasuryWallet}
             className="rounded-lg bg-[image:var(--gradient-gold)] px-5 font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {busy ? "Processing…" : connected ? "Buy Gridiron Cash" : "Connect wallet"}
+            {busy ? "Processing…" : connected ? "Get test Gridiron Cash" : "Connect wallet"}
           </button>
         </div>
         {purchaseStep && (
@@ -368,19 +383,9 @@ function WalletPanel() {
             {purchaseStep}
           </div>
         )}
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
-          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2">
-            <strong className="block text-emerald-300">60%</strong>Current pool
-            <br />◎ {(amt * 0.6).toFixed(3)}
-          </div>
-          <div className="rounded-lg border border-sky-500/30 bg-sky-500/10 p-2">
-            <strong className="block text-sky-300">20%</strong>Next season
-            <br />◎ {(amt * 0.2).toFixed(3)}
-          </div>
-          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2">
-            <strong className="block text-amber-300">20%</strong>Development
-            <br />◎ {(amt * 0.2).toFixed(3)}
-          </div>
+        <div className="mt-4 rounded-lg border border-sky-500/30 bg-sky-500/10 p-3 text-xs text-sky-100">
+          <strong>Prize separation:</strong> GC activity is recorded separately from contest
+          rewards. Test purchases do not increase current or future season prizes.
         </div>
         <p className="mt-3 text-[10px] text-muted-foreground">
           Purchases are credited only after the server verifies the sender, treasury, amount,
@@ -390,29 +395,9 @@ function WalletPanel() {
 
       <section className="rounded-2xl border border-border/70 bg-card/80 p-6 shadow-[var(--shadow-card)]">
         <div className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">
-          Treasury allocation
+          Test transaction history
         </div>
-        <h2 className="mt-1 font-display text-xl">60 / 20 / 20 ledger</h2>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-lg bg-emerald-500/10 p-3">
-            <div className="text-[10px] text-muted-foreground">CURRENT POOL</div>
-            <div className="font-display text-lg text-emerald-300">
-              ◎ {(state.currentPrizePoolSol ?? 250).toFixed(3)}
-            </div>
-          </div>
-          <div className="rounded-lg bg-sky-500/10 p-3">
-            <div className="text-[10px] text-muted-foreground">NEXT SEASON</div>
-            <div className="font-display text-lg text-sky-300">
-              ◎ {(state.nextSeasonPoolSol ?? 0).toFixed(3)}
-            </div>
-          </div>
-          <div className="rounded-lg bg-amber-500/10 p-3">
-            <div className="text-[10px] text-muted-foreground">DEVELOPMENT</div>
-            <div className="font-display text-lg text-amber-300">
-              ◎ {(state.devTreasurySol ?? 0).toFixed(3)}
-            </div>
-          </div>
-        </div>
+        <h2 className="mt-1 font-display text-xl">Verified devnet activity</h2>
         <div className="mt-4 space-y-2">
           {(state.cashPurchases ?? []).length === 0 ? (
             <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
@@ -432,7 +417,7 @@ function WalletPanel() {
                 </div>
                 <div className="text-right tabular-nums">
                   ◎ {purchase.sol.toFixed(3)}
-                  <div className="text-[10px] text-muted-foreground">60% / 20% / 20%</div>
+                  <div className="text-[10px] text-muted-foreground">Test treasury only</div>
                 </div>
               </div>
             ))
