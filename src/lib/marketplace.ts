@@ -6,6 +6,17 @@ type ListingRow = Database["public"]["Tables"]["market_listings"]["Row"];
 
 export interface MarketListing extends Omit<ListingRow, "card_data"> {
   card_data: Player;
+  buyer_id?: string | null;
+}
+
+export interface MarketActivityItem {
+  listing: MarketListing;
+  myHighestBid: number | null;
+}
+
+export interface MarketActivity {
+  items: MarketActivityItem[];
+  heldCoins: number;
 }
 
 export interface ListingDraft {
@@ -49,6 +60,19 @@ export async function browseMarket(): Promise<MarketListing[]> {
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map((row) => ({ ...row, card_data: row.card_data as unknown as Player }));
+}
+
+export async function getMyMarketActivity(): Promise<MarketActivity> {
+  const { data, error } = await supabase.rpc("get_my_market_activity");
+  if (error) throw error;
+  const payload = (data ?? {}) as unknown as { items?: Array<{ listing: ListingRow & { buyer_id?: string | null }; myHighestBid?: number | null }>; heldCoins?: number };
+  return {
+    items: (payload.items ?? []).map((item) => ({
+      listing: { ...item.listing, card_data: item.listing.card_data as unknown as Player },
+      myHighestBid: item.myHighestBid == null ? null : Number(item.myHighestBid),
+    })),
+    heldCoins: Number(payload.heldCoins ?? 0),
+  };
 }
 
 export async function settleExpiredMarketListings() {
