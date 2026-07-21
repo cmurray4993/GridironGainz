@@ -124,12 +124,12 @@ function PlayerManager() {
     }
   }
   return (
-    <div className="fixed inset-0 z-40 overflow-x-auto overflow-y-auto bg-[radial-gradient(circle_at_50%_25%,oklch(0.22_0.025_240),oklch(0.09_0.015_245)_62%)]">
-      <div className="min-h-full min-w-[900px]">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-black/60 px-7 py-3 backdrop-blur-xl">
+    <div className="fixed inset-0 z-40 overflow-y-auto overflow-x-hidden bg-[radial-gradient(circle_at_50%_25%,oklch(0.22_0.025_240),oklch(0.09_0.015_245)_62%)]">
+      <div className="min-h-full min-w-0 pb-[env(safe-area-inset-bottom)]">
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-black/60 px-3 py-2.5 backdrop-blur-xl sm:px-7 sm:py-3">
           <button
             onClick={() => navigate({ to: "/roster" })}
-            className="flex items-center gap-2 font-display text-3xl"
+            className="flex min-w-0 items-center gap-1 font-display text-xl sm:gap-2 sm:text-3xl"
           >
             <span className="text-4xl text-primary">‹</span>
             {player.position} PLAYER
@@ -138,18 +138,18 @@ function PlayerManager() {
             <div className="text-[10px] uppercase tracking-[.25em] text-muted-foreground">
               Roster management
             </div>
-            <div className="font-display text-xl">{starter ? "STARTING LINEUP" : "BENCH"}</div>
+            <div className="font-display text-base sm:text-xl">{starter ? "STARTER" : "BENCH"}</div>
           </div>
         </header>
-        <main className="mx-auto grid max-w-7xl grid-cols-[250px_minmax(320px,1fr)_330px] items-start gap-6 px-7 py-9">
-          <section>
+        <main className="mx-auto grid w-full max-w-7xl grid-cols-[minmax(0,140px)_minmax(0,1fr)] items-start gap-3 px-3 py-4 sm:grid-cols-[220px_minmax(0,1fr)] sm:gap-5 sm:px-5 lg:grid-cols-[250px_minmax(320px,1fr)_330px] lg:gap-6 lg:px-7 lg:py-9">
+          <section className="min-w-0">
             <div className="mb-2 text-center text-[10px] uppercase tracking-[.25em] text-primary">
               Your card
             </div>
-            <PlayerCard player={player} onClick={() => {}} />
+            <PlayerCard player={player} mobileDense onClick={() => {}} />
           </section>
-          <section>
-            <div className="mb-4 text-center font-display text-4xl text-gradient-gold">
+          <section className="min-w-0">
+            <div className="mb-2 text-center font-display text-3xl text-gradient-gold sm:mb-4 sm:text-4xl">
               {player.overall} <span className="text-xl text-foreground">OVR</span>
             </div>
             <div className="space-y-2">
@@ -170,7 +170,7 @@ function PlayerManager() {
                 : `Quick sell · 🪙 ${sellPrice(player)}`}
             </button>
           </section>
-          <aside className="rounded-2xl border border-white/10 bg-black/25 p-4">
+          <aside className="col-span-2 rounded-2xl border border-white/10 bg-black/25 p-3 sm:p-4 lg:col-span-1">
             <h2 className="font-display text-2xl">Auction House Listing</h2>
             <p className="mb-4 text-xs text-muted-foreground">
               Enable any combination. Each price is independent.
@@ -251,9 +251,9 @@ function PlayerManager() {
 }
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[.05] px-4 py-3">
-      <span className="font-semibold">{label}</span>
-      <b className="font-display text-xl">{value.toLocaleString()}</b>
+    <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[.05] px-2.5 py-2 sm:px-4 sm:py-3">
+      <span className="truncate text-xs font-semibold sm:text-base">{label}</span>
+      <b className="font-display text-lg sm:text-xl">{value.toLocaleString()}</b>
     </div>
   );
 }

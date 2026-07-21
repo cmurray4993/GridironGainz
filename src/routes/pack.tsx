@@ -159,7 +159,7 @@ function PackPage() {
 
   return (
     <div className="animate-float-up space-y-6">
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
         <div>
           <div className="text-[11px] uppercase tracking-[0.3em] text-primary/80">Store</div>
           <h1 className="mt-1 font-display text-3xl">Pack Store</h1>
@@ -169,14 +169,14 @@ function PackPage() {
         </div>
         <button
           onClick={() => setOddsOpen(true)}
-          className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary"
+          className="self-start rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary sm:self-auto"
         >
           View pack odds
         </button>
       </header>
 
       {phase === "idle" && (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2.5 min-[420px]:gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {(["standard", "position", "pro", "backyard"] as PackKind[]).map((kind) => {
             const meta = PACK_META[kind];
             const canAffordCoins = state.coins >= meta.cost;
@@ -186,7 +186,7 @@ function PackPage() {
             return (
               <div key={kind} className="group relative text-left">
                 <div
-                  className={`relative h-72 w-full overflow-hidden rounded-2xl border ${isPromo ? "border-primary" : kind === "pro" ? "border-primary/60" : "border-primary/40"} bg-[image:var(--gradient-card-elite)] shadow-[var(--shadow-card)] transition-transform ${canAfford ? "group-hover:-translate-y-1 animate-pulse-glow" : "opacity-60"}`}
+                  className={`relative h-52 w-full overflow-hidden rounded-xl border min-[420px]:h-60 sm:h-72 sm:rounded-2xl ${isPromo ? "border-primary" : kind === "pro" ? "border-primary/60" : "border-primary/40"} bg-[image:var(--gradient-card-elite)] shadow-[var(--shadow-card)] transition-transform ${canAfford ? "group-hover:-translate-y-1 animate-pulse-glow" : "opacity-60"}`}
                 >
                   <div className="absolute inset-0 shimmer-overlay opacity-60" />
                   {isPromo && (
@@ -194,20 +194,24 @@ function PackPage() {
                       Limited
                     </div>
                   )}
-                  <div className="absolute inset-2 rounded-xl bg-background/70 p-4 flex flex-col items-center justify-center text-center">
+                  <div className="absolute inset-1.5 flex flex-col items-center justify-center rounded-lg bg-background/70 p-2 text-center sm:inset-2 sm:rounded-xl sm:p-4">
                     <div className="text-[10px] uppercase tracking-[0.4em] text-primary/80">
                       {meta.tag ?? (kind === "pro" ? "Premium" : "Gridiron Gainz")}
                     </div>
-                    <div className="mt-2 font-display text-3xl text-gradient-gold">{meta.name}</div>
-                    <div className="mt-3 text-5xl">{meta.emoji}</div>
-                    <div className="mt-3 text-xs text-muted-foreground px-3">{meta.blurb}</div>
+                    <div className="mt-1 font-display text-xl text-gradient-gold min-[420px]:text-2xl sm:mt-2 sm:text-3xl">
+                      {meta.name}
+                    </div>
+                    <div className="mt-2 text-3xl sm:mt-3 sm:text-5xl">{meta.emoji}</div>
+                    <div className="mt-2 line-clamp-3 px-1 text-[10px] text-muted-foreground sm:mt-3 sm:px-3 sm:text-xs">
+                      {meta.blurb}
+                    </div>
                   </div>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="mt-2 grid gap-1.5 sm:mt-3 sm:grid-cols-2 sm:gap-2">
                   <button
                     onClick={() => openPack(kind, "coins")}
                     disabled={!canAffordCoins || busy}
-                    className="rounded-full bg-primary px-3 py-2 text-center text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:bg-secondary disabled:text-muted-foreground disabled:shadow-none"
+                    className="rounded-full bg-primary px-2 py-2 text-center text-[11px] font-semibold text-primary-foreground shadow-[var(--shadow-glow)] disabled:bg-secondary disabled:text-muted-foreground disabled:shadow-none sm:px-3 sm:text-sm"
                   >
                     {canAffordCoins
                       ? `🪙 ${meta.cost.toLocaleString()}`
@@ -216,7 +220,7 @@ function PackPage() {
                   <button
                     onClick={() => openPack(kind, "cash")}
                     disabled={!canAffordCash || busy}
-                    className="rounded-full bg-fuchsia-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-[var(--shadow-glow)] disabled:bg-secondary disabled:text-muted-foreground disabled:shadow-none"
+                    className="rounded-full bg-fuchsia-600 px-2 py-2 text-center text-[11px] font-semibold text-white shadow-[var(--shadow-glow)] disabled:bg-secondary disabled:text-muted-foreground disabled:shadow-none sm:px-3 sm:text-sm"
                   >
                     <span className="inline-flex items-center justify-center gap-1">
                       <img src="/gc-icon.png" alt="GC" className="h-5 w-5 object-contain" />
@@ -399,9 +403,11 @@ function PackPage() {
                       {(pack.odds.slots ?? []).map((slot, index) => (
                         <div
                           key={index}
-                          className="grid grid-cols-5 gap-2 rounded-lg bg-background/50 p-2 text-center text-xs"
+                          className="grid grid-cols-2 gap-1.5 rounded-lg bg-background/50 p-2 text-center text-[10px] sm:grid-cols-5 sm:gap-2 sm:text-xs"
                         >
-                          <div className="text-left text-muted-foreground">{slot.count}× slot</div>
+                          <div className="col-span-2 text-left text-muted-foreground sm:col-span-1">
+                            {slot.count}× slot
+                          </div>
                           <div>Bronze {Math.round((slot.bronze ?? 0) * 100)}%</div>
                           <div>Silver {Math.round((slot.silver ?? 0) * 100)}%</div>
                           <div>Gold {Math.round((slot.gold ?? 0) * 100)}%</div>

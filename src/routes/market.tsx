@@ -183,7 +183,7 @@ function MarketPanel() {
   const activeCount = filterCount(filters);
   return (
     <div className="animate-float-up space-y-5 pb-24">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div>
           <div className="text-[11px] uppercase tracking-[.3em] text-primary/80">Player Market</div>
           <h1 className="mt-1 font-display text-3xl">Auction House</h1>
@@ -191,7 +191,7 @@ function MarketPanel() {
             Find cards, track bids, and review every market result.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
           <Summary label="Available" value={`🪙 ${Math.floor(state.coins).toLocaleString()}`} />
           <Summary label="Held in bids" value={`🪙 ${activity.heldCoins.toLocaleString()}`} />
         </div>
@@ -200,8 +200,8 @@ function MarketPanel() {
         SOL purchases use devnet only. Completing either Buy Now option automatically refunds the
         active coin bidder.
       </div>
-      <div className="flex items-center gap-2">
-        <div className="flex flex-1 rounded-xl border border-border/70 bg-card/70 p-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 flex-[1_0_100%] rounded-xl border border-border/70 bg-card/70 p-1 sm:flex-1 sm:basis-auto">
           {(["browse", "mine"] as View[]).map((v) => (
             <button
               key={v}
@@ -215,7 +215,7 @@ function MarketPanel() {
         {view === "browse" && (
           <button
             onClick={() => setFilterOpen(true)}
-            className="rounded-xl border border-primary/40 bg-card px-4 py-3 text-xs font-semibold"
+            className="min-w-0 flex-1 rounded-xl border border-primary/40 bg-card px-3 py-3 text-xs font-semibold sm:flex-none sm:px-4"
           >
             ⌕ Search & Filter{activeCount ? ` (${activeCount})` : ""}
           </button>
@@ -244,7 +244,7 @@ function MarketPanel() {
           ) : shown.length === 0 ? (
             <Empty text="No active listings match those filters." />
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 min-[420px]:gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {shown.map((l) => (
                 <ListingCard
                   key={l.id}
@@ -468,8 +468,8 @@ function ActivityRow({
   const l = item.listing,
     info = activityLabel(item, userId);
   return (
-    <article className="grid grid-cols-[74px_1fr_auto] items-center gap-3 rounded-xl border border-border/70 bg-card/75 p-2">
-      <div className="w-[74px]">
+    <article className="grid grid-cols-[60px_minmax(0,1fr)] items-center gap-2 rounded-xl border border-border/70 bg-card/75 p-2 sm:grid-cols-[74px_1fr_auto] sm:gap-3">
+      <div className="w-[60px] sm:w-[74px]">
         <PlayerCard player={l.card_data} compact onClick={() => {}} />
       </div>
       <div className="min-w-0">
@@ -482,7 +482,7 @@ function ActivityRow({
           {new Date(l.completed_at ?? l.expires_at).toLocaleString()}
         </div>
       </div>
-      <div className="text-right">
+      <div className="col-span-2 flex items-center justify-end gap-3 text-right sm:col-span-1 sm:block">
         <div
           className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase ${info.className}`}
         >
@@ -554,11 +554,11 @@ function FilterScreen({
     "w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary";
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-background/95 p-4 backdrop-blur-xl"
+      className="fixed inset-0 z-50 overflow-y-auto bg-background/95 p-2.5 backdrop-blur-xl sm:p-4"
       onClick={onClose}
     >
       <div
-        className="mx-auto mt-8 max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl"
+        className="mx-auto mt-2 max-w-lg rounded-2xl border border-border bg-card p-4 shadow-2xl sm:mt-8 sm:p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">

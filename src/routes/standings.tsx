@@ -125,7 +125,17 @@ function StandingsPage() {
             Top 8 qualify
           </span>
         </div>
-        <div className="mt-3 overflow-x-auto rounded-lg border border-border/60">
+        <div className="mt-3 grid gap-2 sm:hidden">
+          {official.standings.map((team, index) => (
+            <MobileStandingRow
+              key={team.id}
+              team={team}
+              seed={index + 1}
+              isYou={team.id === official.team.id}
+            />
+          ))}
+        </div>
+        <div className="mt-3 hidden overflow-x-auto rounded-lg border border-border/60 sm:block">
           <table className="min-w-[560px] w-full text-sm">
             <thead className="bg-background/60 text-[10px] uppercase tracking-widest text-muted-foreground">
               <tr>
@@ -335,6 +345,63 @@ function SeasonStat({ label, value, sub }: { label: string; value: string; sub?:
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
       <div className="mt-1 font-display text-lg tabular-nums">{value}</div>
       {sub && <div className="mt-0.5 text-[10px] text-muted-foreground">{sub}</div>}
+    </div>
+  );
+}
+
+function MobileStandingRow({
+  team,
+  seed,
+  isYou,
+}: {
+  team: { name: string; wins: number; losses: number; points_for: number; points_against: number };
+  seed: number;
+  isYou: boolean;
+}) {
+  const diff = team.points_for - team.points_against;
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-border/60 bg-background/40 p-3",
+        isYou && "border-primary/50 bg-primary/10",
+      )}
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          className={cn(
+            "rounded px-1.5 py-0.5 text-[10px]",
+            seed <= 8 ? "bg-sky-500/20 text-sky-200" : "text-muted-foreground",
+          )}
+        >
+          #{seed}
+        </span>
+        <span className={cn("min-w-0 flex-1 truncate font-semibold", isYou && "text-primary")}>
+          {team.name}
+          {isYou ? " (You)" : ""}
+        </span>
+        <span className="font-display text-lg">
+          {team.wins}-{team.losses}
+        </span>
+      </div>
+      <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[10px] text-muted-foreground">
+        <span>
+          PF <b className="text-foreground">{team.points_for}</b>
+        </span>
+        <span>
+          PA <b className="text-foreground">{team.points_against}</b>
+        </span>
+        <span>
+          DIFF{" "}
+          <b
+            className={cn(
+              diff > 0 ? "text-emerald-400" : diff < 0 ? "text-red-400" : "text-foreground",
+            )}
+          >
+            {diff > 0 ? "+" : ""}
+            {diff}
+          </b>
+        </span>
+      </div>
     </div>
   );
 }

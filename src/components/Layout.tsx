@@ -19,14 +19,14 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
       <div className="relative mx-auto max-w-5xl px-3 py-2.5 sm:px-4 sm:py-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-2">
             <img
               src="/gridiron-gainz-logo.png"
               alt="Gridiron Gainz"
               className="h-9 w-9 shrink-0 object-contain drop-shadow-[0_0_8px_rgba(245,183,43,0.35)]"
             />
-            <div>
+            <div className="hidden min-[380px]:block">
               <div className="font-display text-lg leading-none">Gridiron Gainz</div>
               <div className="hidden text-[10px] uppercase tracking-widest text-muted-foreground min-[360px]:block">
                 Season 1
@@ -43,7 +43,7 @@ export function TopBar() {
               to="/wallet"
               title="Wallet"
               aria-label={`Confirmed test receipts: ${(state.sol ?? 0).toFixed(2)} devnet SOL`}
-              className="rounded-full border border-border/70 bg-card/70 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+              className="max-w-[74px] truncate rounded-full border border-border/70 bg-card/70 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground sm:max-w-none sm:px-2.5 sm:text-xs"
             >
               ◎ {(state.sol ?? 0).toFixed(2)}
             </Link>

@@ -209,9 +209,9 @@ function AuthGate() {
   }
 
   return (
-    <div className="min-h-screen pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+    <div className="min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
       <TopBar />
-      <main className="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6">
+      <main className="mx-auto min-w-0 max-w-5xl px-2.5 py-3 min-[380px]:px-3 sm:px-4 sm:py-6">
         <Outlet />
       </main>
       <BottomNav />

@@ -114,6 +114,20 @@
     font-family: var(--font-sans);
     min-height: 100vh;
     overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  #root {
+    min-height: 100dvh;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  button,
+  a,
+  input,
+  select {
+    touch-action: manipulation;
   }
 
   body {
