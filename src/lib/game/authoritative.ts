@@ -156,6 +156,21 @@ export function openAuthoritativePack(
   });
 }
 
+export function fetchBetaDeveloperStatus() {
+  return rpc<{ enabled: boolean; releaseMode: string }>("get_beta_developer_status");
+}
+
+export function claimBetaDeveloperAccess(token: string) {
+  return rpc<{ enabled: boolean }>("claim_beta_developer_access", { p_token: token });
+}
+
+export function grantBetaTestCurrency(currency: "coins" | "gc", amount: number, requestId: string) {
+  return rpc<{ currency: "coins" | "gc"; amount: number; balance: number; duplicate: boolean }>(
+    "grant_beta_test_currency",
+    { p_currency: currency, p_amount: amount, p_request_id: requestId },
+  );
+}
+
 export async function fetchPackDefinitions(): Promise<PackDefinition[]> {
   const { data, error } = await supabase
     .from("pack_definitions" as never)

@@ -1,7 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { setTeamName, useGame } from "@/lib/game/store";
+import { refreshAuthoritativeState, setTeamName, useGame } from "@/lib/game/store";
+import {
+  claimBetaDeveloperAccess,
+  fetchBetaDeveloperStatus,
+  grantBetaTestCurrency,
+} from "@/lib/game/authoritative";
+import { IS_TEST_NETWORK } from "@/lib/release";
 
 export const Route = createFileRoute("/settings")({
   component: SettingsPage,
@@ -11,10 +17,20 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const { teamName } = useGame();
   const [name, setName] = useState(teamName ?? "");
+  const [developerEnabled, setDeveloperEnabled] = useState(false);
+  const [developerCode, setDeveloperCode] = useState("");
+  const [developerBusy, setDeveloperBusy] = useState(false);
 
   useEffect(() => {
     setName(teamName ?? "");
   }, [teamName]);
+
+  useEffect(() => {
+    if (!IS_TEST_NETWORK) return;
+    void fetchBetaDeveloperStatus()
+      .then((status) => setDeveloperEnabled(status.enabled))
+      .catch(() => setDeveloperEnabled(false));
+  }, []);
 
   const clean = name.trim();
   const dirty = clean !== (teamName ?? "");
@@ -27,6 +43,36 @@ function SettingsPage() {
       toast.success("Team name updated");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Team name could not be updated");
+    }
+  };
+
+  const unlockDeveloperTools = async () => {
+    if (!developerCode.trim()) return;
+    setDeveloperBusy(true);
+    try {
+      await claimBetaDeveloperAccess(developerCode.trim());
+      setDeveloperEnabled(true);
+      setDeveloperCode("");
+      toast.success("Developer tools unlocked for this account");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Developer access could not be unlocked",
+      );
+    } finally {
+      setDeveloperBusy(false);
+    }
+  };
+
+  const grantCurrency = async (currency: "coins" | "gc", amount: number) => {
+    setDeveloperBusy(true);
+    try {
+      await grantBetaTestCurrency(currency, amount, crypto.randomUUID());
+      await refreshAuthoritativeState();
+      toast.success(`+${amount.toLocaleString()} ${currency === "gc" ? "GC" : "Coins"} granted`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Test currency could not be granted");
+    } finally {
+      setDeveloperBusy(false);
     }
   };
 
@@ -102,6 +148,73 @@ function SettingsPage() {
           </Link>
         </div>
       </section>
+
+      {IS_TEST_NETWORK && (
+        <section className="space-y-4 rounded-2xl border border-dashed border-primary/50 bg-primary/5 p-5">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-primary">
+              Developer tools
+            </div>
+            <h2 className="mt-1 font-display text-xl">Devnet testing</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Server-authorized test grants are recorded in the permanent currency ledger. They
+              cannot run if real-money features are enabled.
+            </p>
+          </div>
+
+          {developerEnabled ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <button
+                  onClick={() => void grantCurrency("coins", 100_000)}
+                  disabled={developerBusy}
+                  className="rounded-lg border border-primary/60 bg-secondary px-3 py-2.5 text-xs font-semibold disabled:opacity-40"
+                >
+                  +100K Coins
+                </button>
+                <button
+                  onClick={() => void grantCurrency("coins", 2_000_000)}
+                  disabled={developerBusy}
+                  className="rounded-lg border border-primary/60 bg-secondary px-3 py-2.5 text-xs font-semibold disabled:opacity-40"
+                >
+                  +2M Coins
+                </button>
+                <button
+                  onClick={() => void grantCurrency("gc", 10_000)}
+                  disabled={developerBusy}
+                  className="rounded-lg border border-primary/60 bg-secondary px-3 py-2.5 text-xs font-semibold disabled:opacity-40"
+                >
+                  +10K GC
+                </button>
+              </div>
+              <Link
+                to="/pack"
+                className="block w-full rounded-lg bg-[image:var(--gradient-gold)] px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground"
+              >
+                Open packs
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <input
+                type="password"
+                value={developerCode}
+                onChange={(event) => setDeveloperCode(event.target.value)}
+                placeholder="One-time developer access code"
+                autoComplete="off"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
+              />
+              <button
+                onClick={() => void unlockDeveloperTools()}
+                disabled={developerBusy || !developerCode.trim()}
+                className="w-full rounded-lg border border-primary/60 bg-secondary px-4 py-2.5 text-sm font-semibold disabled:opacity-40"
+              >
+                Unlock developer tools
+              </button>
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
