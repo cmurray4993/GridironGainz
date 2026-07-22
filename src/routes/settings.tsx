@@ -2,11 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { refreshAuthoritativeState, setTeamName, useGame } from "@/lib/game/store";
-import {
-  claimBetaDeveloperAccess,
-  fetchBetaDeveloperStatus,
-  grantBetaTestCurrency,
-} from "@/lib/game/authoritative";
+import { fetchBetaDeveloperStatus, grantBetaTestCurrency } from "@/lib/game/authoritative";
 import { IS_TEST_NETWORK } from "@/lib/release";
 
 export const Route = createFileRoute("/settings")({
@@ -17,8 +13,7 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const { teamName } = useGame();
   const [name, setName] = useState(teamName ?? "");
-  const [developerEnabled, setDeveloperEnabled] = useState(false);
-  const [developerCode, setDeveloperCode] = useState("");
+  const [developerEnabled, setDeveloperEnabled] = useState(IS_TEST_NETWORK);
   const [developerBusy, setDeveloperBusy] = useState(false);
 
   useEffect(() => {
@@ -43,23 +38,6 @@ function SettingsPage() {
       toast.success("Team name updated");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Team name could not be updated");
-    }
-  };
-
-  const unlockDeveloperTools = async () => {
-    if (!developerCode.trim()) return;
-    setDeveloperBusy(true);
-    try {
-      await claimBetaDeveloperAccess(developerCode.trim());
-      setDeveloperEnabled(true);
-      setDeveloperCode("");
-      toast.success("Developer tools unlocked for this account");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Developer access could not be unlocked",
-      );
-    } finally {
-      setDeveloperBusy(false);
     }
   };
 
@@ -153,12 +131,13 @@ function SettingsPage() {
         <section className="space-y-4 rounded-2xl border border-dashed border-primary/50 bg-primary/5 p-5">
           <div>
             <div className="text-[10px] uppercase tracking-widest text-primary">
-              Developer tools
+              Beta tester tools
             </div>
-            <h2 className="mt-1 font-display text-xl">Devnet testing</h2>
+            <h2 className="mt-1 font-display text-xl">Devnet testing funds</h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              Server-authorized test grants are recorded in the permanent currency ledger. They
-              cannot run if real-money features are enabled.
+              Every approved beta tester can create no-value test funds. Server-authorized grants
+              are recorded in the permanent currency ledger and automatically stop if real-money
+              features are enabled.
             </p>
           </div>
 
@@ -195,22 +174,9 @@ function SettingsPage() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-2">
-              <input
-                type="password"
-                value={developerCode}
-                onChange={(event) => setDeveloperCode(event.target.value)}
-                placeholder="One-time developer access code"
-                autoComplete="off"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
-              />
-              <button
-                onClick={() => void unlockDeveloperTools()}
-                disabled={developerBusy || !developerCode.trim()}
-                className="w-full rounded-lg border border-primary/60 bg-secondary px-4 py-2.5 text-sm font-semibold disabled:opacity-40"
-              >
-                Unlock developer tools
-              </button>
+            <div className="rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-100">
+              Beta tools are temporarily unavailable. Confirm this account accepted the current beta
+              documents and that the app is still running on devnet.
             </div>
           )}
         </section>
