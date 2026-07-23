@@ -127,6 +127,28 @@ const BACKYARD_HEROES = new Set([
   "Gary Gainz",
 ]);
 
+// Shared with the replay markers so new card art automatically appears in SimCast.
+// eslint-disable-next-line react-refresh/only-export-components
+export function getPlayerArt(player: Player): string {
+  const isHometownHero = player.program === "hometown_heroes" || BACKYARD_HEROES.has(player.name);
+  const isBaseProspect =
+    !isHometownHero &&
+    (player.name.startsWith("Unsigned") || player.name === BASE_PROSPECT_NAMES[player.position]);
+  return isBaseProspect
+    ? PROSPECT_ART[player.position]
+    : (SIGNATURE_ART[player.name] ?? POSITION_ART[player.position]);
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function getPlayerRarityColor(rarity: Player["rarity"]): string {
+  return {
+    bronze: "#a96d3d",
+    silver: "#b9c7d5",
+    gold: "#f0b91d",
+    elite: "#e12d3d",
+  }[rarity];
+}
+
 export function PlayerCard({
   player,
   compact = false,
@@ -158,9 +180,7 @@ export function PlayerCard({
     !isHometownHero &&
     (player.name.startsWith("Unsigned") || player.name === BASE_PROSPECT_NAMES[player.position]);
   const sigArt = SIGNATURE_ART[player.name];
-  const art = isBaseProspect
-    ? PROSPECT_ART[player.position]
-    : (sigArt ?? POSITION_ART[player.position]);
+  const art = getPlayerArt(player);
   const hasSignatureArt = Boolean(sigArt);
   const archetype = playerArchetype(player);
   const fansPerHr = +(player.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(2);

@@ -147,8 +147,11 @@ export interface AuthoritativeSeasonGame {
   home_score: number | null;
   away_score: number | null;
   winner_team_id: string | null;
+  home_lineup?: Array<Player & { slot?: string }> | null;
+  away_lineup?: Array<Player & { slot?: string }> | null;
   simulation?: {
     algorithmVersion?: number;
+    replayVersion?: number;
     homeOverall?: number;
     awayOverall?: number;
     playByPlay?: string[];

@@ -143,12 +143,15 @@ function AuthGate() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const router = useRouter();
   const legalRoutes = ["/terms", "/privacy", "/rules", "/purchase-policy"];
-  const isPublicRoute = pathname === "/auth" || legalRoutes.includes(pathname);
+  const isLocalSimcastPreview = import.meta.env.DEV && pathname === "/simcast-preview";
+  const isPublicRoute =
+    pathname === "/auth" || legalRoutes.includes(pathname) || isLocalSimcastPreview;
   const isEligibilityRoute = pathname === "/eligibility";
   const isChrome =
     pathname !== "/auth" &&
     pathname !== "/welcome" &&
     !isEligibilityRoute &&
+    !isLocalSimcastPreview &&
     !legalRoutes.includes(pathname);
 
   useEffect(() => {

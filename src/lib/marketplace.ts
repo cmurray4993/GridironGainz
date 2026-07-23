@@ -17,7 +17,6 @@ async function untypedRpc<T>(name: string, params: Record<string, unknown> = {})
 
 export interface MarketListing extends Omit<ListingRow, "card_data"> {
   card_data: Player;
-  buyer_id?: string | null;
 }
 
 export interface MarketActivityItem {

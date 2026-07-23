@@ -13,6 +13,7 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StandingsRouteImport } from './routes/standings'
+import { Route as SimcastPreviewRouteImport } from './routes/simcast-preview'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RulesRouteImport } from './routes/rules'
 import { Route as RosterRouteImport } from './routes/roster'
@@ -45,6 +46,11 @@ const TermsRoute = TermsRouteImport.update({
 const StandingsRoute = StandingsRouteImport.update({
   id: '/standings',
   path: '/standings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimcastPreviewRoute = SimcastPreviewRouteImport.update({
+  id: '/simcast-preview',
+  path: '/simcast-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -126,6 +132,7 @@ export interface FileRoutesByFullPath {
   '/roster': typeof RosterRoute
   '/rules': typeof RulesRoute
   '/settings': typeof SettingsRoute
+  '/simcast-preview': typeof SimcastPreviewRoute
   '/standings': typeof StandingsRoute
   '/terms': typeof TermsRoute
   '/wallet': typeof WalletRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/roster': typeof RosterRoute
   '/rules': typeof RulesRoute
   '/settings': typeof SettingsRoute
+  '/simcast-preview': typeof SimcastPreviewRoute
   '/standings': typeof StandingsRoute
   '/terms': typeof TermsRoute
   '/wallet': typeof WalletRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/roster': typeof RosterRoute
   '/rules': typeof RulesRoute
   '/settings': typeof SettingsRoute
+  '/simcast-preview': typeof SimcastPreviewRoute
   '/standings': typeof StandingsRoute
   '/terms': typeof TermsRoute
   '/wallet': typeof WalletRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/roster'
     | '/rules'
     | '/settings'
+    | '/simcast-preview'
     | '/standings'
     | '/terms'
     | '/wallet'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/roster'
     | '/rules'
     | '/settings'
+    | '/simcast-preview'
     | '/standings'
     | '/terms'
     | '/wallet'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/roster'
     | '/rules'
     | '/settings'
+    | '/simcast-preview'
     | '/standings'
     | '/terms'
     | '/wallet'
@@ -244,6 +256,7 @@ export interface RootRouteChildren {
   RosterRoute: typeof RosterRoute
   RulesRoute: typeof RulesRoute
   SettingsRoute: typeof SettingsRoute
+  SimcastPreviewRoute: typeof SimcastPreviewRoute
   StandingsRoute: typeof StandingsRoute
   TermsRoute: typeof TermsRoute
   WalletRoute: typeof WalletRoute
@@ -279,6 +292,13 @@ declare module '@tanstack/react-router' {
       path: '/standings'
       fullPath: '/standings'
       preLoaderRoute: typeof StandingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simcast-preview': {
+      id: '/simcast-preview'
+      path: '/simcast-preview'
+      fullPath: '/simcast-preview'
+      preLoaderRoute: typeof SimcastPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -388,6 +408,7 @@ const rootRouteChildren: RootRouteChildren = {
   RosterRoute: RosterRoute,
   RulesRoute: RulesRoute,
   SettingsRoute: SettingsRoute,
+  SimcastPreviewRoute: SimcastPreviewRoute,
   StandingsRoute: StandingsRoute,
   TermsRoute: TermsRoute,
   WalletRoute: WalletRoute,

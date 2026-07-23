@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PlayerCard } from "@/components/PlayerCard";
+import { FootballSimCast } from "@/components/simcast/FootballSimCast";
 import { fetchTodayOfficialGame } from "@/lib/game/authoritative";
 import { refreshAuthoritativeState, useGame } from "@/lib/game/store";
 import {
@@ -11,6 +12,7 @@ import {
   type Player,
 } from "@/lib/game/types";
 import { lineupOverall } from "@/lib/game/sim";
+import { buildSimcastReplay } from "@/lib/simcast/replay";
 
 export const Route = createFileRoute("/game")({
   component: GamePage,
@@ -57,6 +59,30 @@ function GamePage() {
     [state.lineup, state.roster],
   );
   const teamOverall = lineupOverall(lineupPlayers);
+  const simcastReplay = useMemo(() => {
+    if (!today || today.game.status !== "final") return null;
+    const game = today.game;
+    const userPlayers = lineupPlayers.filter((player): player is Player => Boolean(player));
+    const homeName = today.isHome ? (state.teamName ?? "Your Squad") : today.opponent.name;
+    const awayName = today.isHome ? today.opponent.name : (state.teamName ?? "Your Squad");
+    return buildSimcastReplay({
+      gameId: game.id,
+      homeName,
+      awayName,
+      homeScore: Number(game.home_score ?? 0),
+      awayScore: Number(game.away_score ?? 0),
+      homeOverall: Number(
+        game.simulation?.homeOverall ?? (today.isHome ? teamOverall : today.opponent.bot_overall),
+      ),
+      awayOverall: Number(
+        game.simulation?.awayOverall ?? (today.isHome ? today.opponent.bot_overall : teamOverall),
+      ),
+      homeLineup: game.home_lineup,
+      awayLineup: game.away_lineup,
+      homeFallbackPlayers: today.isHome ? userPlayers : today.opponentTopPlayers,
+      awayFallbackPlayers: today.isHome ? today.opponentTopPlayers : userPlayers,
+    });
+  }, [lineupPlayers, state.teamName, teamOverall, today]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -229,25 +255,43 @@ function GamePage() {
       </section>
 
       {final && (
-        <section className="rounded-xl border border-border/70 bg-card/70 p-4">
-          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Server game report
-          </div>
-          <ol className="mt-3 space-y-2">
-            {playByPlay.map((line, index) => (
-              <li
-                key={`${index}-${line}`}
-                className="rounded-lg border border-border/50 bg-background/40 p-3 text-sm"
-              >
-                {line}
-              </li>
-            ))}
-          </ol>
-          <div className="mt-3 text-xs text-muted-foreground">
-            Algorithm version {String(game.simulation?.algorithmVersion ?? "—")} ·{" "}
-            {game.simulation?.missedLineupRule ?? "Saved lineups were used."}
-          </div>
-        </section>
+        <>
+          {simcastReplay && (
+            <div className="space-y-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.25em] text-sky-300">
+                  Gridiron SimCast
+                </div>
+                <h2 className="mt-1 font-display text-2xl">Watch your cards make the plays</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  This deterministic replay visualizes the locked server result. Playback cannot
+                  change the official score, standings, or rewards.
+                </p>
+              </div>
+              <FootballSimCast replay={simcastReplay} />
+            </div>
+          )}
+
+          <section className="rounded-xl border border-border/70 bg-card/70 p-4">
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Server game report
+            </div>
+            <ol className="mt-3 space-y-2">
+              {playByPlay.map((line, index) => (
+                <li
+                  key={`${index}-${line}`}
+                  className="rounded-lg border border-border/50 bg-background/40 p-3 text-sm"
+                >
+                  {line}
+                </li>
+              ))}
+            </ol>
+            <div className="mt-3 text-xs text-muted-foreground">
+              Algorithm version {String(game.simulation?.algorithmVersion ?? "—")} ·{" "}
+              {game.simulation?.missedLineupRule ?? "Saved lineups were used."}
+            </div>
+          </section>
+        </>
       )}
 
       <div className="flex gap-2">
