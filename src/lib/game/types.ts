@@ -68,6 +68,7 @@ export const POSITION_SIGNATURE: Record<Position, { key: string; label: string }
 export interface Player {
   id: string;
   name: string;
+  program?: "base" | "hometown_heroes";
   position: Position;
   overall: number;
   strength: number;

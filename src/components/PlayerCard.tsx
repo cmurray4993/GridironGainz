@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { COIN_PER_FAN_PER_HOUR, playerArchetype, type Player, type Position } from "@/lib/game/types";
+import {
+  COIN_PER_FAN_PER_HOUR,
+  playerArchetype,
+  type Player,
+  type Position,
+} from "@/lib/game/types";
 import { BASE_PROSPECT_NAMES } from "@/lib/game/generate";
 import { cn } from "@/lib/utils";
 import qbArt from "@/assets/art/clean/qb.png";
@@ -37,24 +42,39 @@ import baseProgramLogo from "@/assets/brand/gridiron-gainz-logo.png";
 import hometownHeroesLogo from "@/assets/promos/hometown-heroes.png";
 
 const POSITION_ART: Record<Position, string> = {
-  QB: qbArt, RB: rbArt, WR: wrArt, TE: teArt, OL: olArt,
-  DL: dlArt, LB: lbArt, DB: dbArt, K: kArt, P: kArt,
+  QB: qbArt,
+  RB: rbArt,
+  WR: wrArt,
+  TE: teArt,
+  OL: olArt,
+  DL: dlArt,
+  LB: lbArt,
+  DB: dbArt,
+  K: kArt,
+  P: kArt,
 };
 
 const PROSPECT_ART: Record<Position, string> = {
-  QB: prospectQbArt, RB: prospectRbArt, WR: prospectWrArt, TE: prospectTeArt,
-  OL: prospectOlArt, DL: prospectDlArt, LB: prospectLbArt, DB: prospectDbArt,
-  K: prospectKArt, P: prospectKArt,
+  QB: prospectQbArt,
+  RB: prospectRbArt,
+  WR: prospectWrArt,
+  TE: prospectTeArt,
+  OL: prospectOlArt,
+  DL: prospectDlArt,
+  LB: prospectLbArt,
+  DB: prospectDbArt,
+  K: prospectKArt,
+  P: prospectKArt,
 };
 
 const SIGNATURE_ART: Record<string, string> = {
-  'Creighton Murray': sigCreighton,
+  "Creighton Murray": sigCreighton,
   'Talon "7 Iron" Reynolds': sigTalon,
   'Ty "Teethman" Smith': sigTy,
-  'Gary Gainz': sigGary,
+  "Gary Gainz": sigGary,
   'Busta "Fly" Jones': sigBusta,
-  'Gringo Guth': sigGringo,
-  'Sleepy Cringle': sigSleepy,
+  "Gringo Guth": sigGringo,
+  "Sleepy Cringle": sigSleepy,
   'Josiah "8 Man" Mettling': sigMettling,
   'Josiah "The Messiah" Ball': sigBall,
   'Breck "Coach Razor" Guthrie': sigBreck,
@@ -78,10 +98,13 @@ const rarityLabel: Record<Player["rarity"], string> = {
 };
 
 const compactNameplate: Record<Player["rarity"], string> = {
-  bronze: "border-[oklch(0.58_0.11_55)] bg-[linear-gradient(135deg,oklch(0.38_0.08_48),oklch(0.24_0.045_40))]",
-  silver: "border-[oklch(0.78_0.025_245)] bg-[linear-gradient(135deg,oklch(0.58_0.03_245),oklch(0.30_0.025_250))]",
+  bronze:
+    "border-[oklch(0.58_0.11_55)] bg-[linear-gradient(135deg,oklch(0.38_0.08_48),oklch(0.24_0.045_40))]",
+  silver:
+    "border-[oklch(0.78_0.025_245)] bg-[linear-gradient(135deg,oklch(0.58_0.03_245),oklch(0.30_0.025_250))]",
   gold: "border-[oklch(0.88_0.17_85)] bg-[linear-gradient(135deg,oklch(0.68_0.17_75),oklch(0.34_0.09_65))]",
-  elite: "border-[oklch(0.67_0.22_27)] bg-[linear-gradient(135deg,oklch(0.58_0.23_27),oklch(0.28_0.13_25))]",
+  elite:
+    "border-[oklch(0.67_0.22_27)] bg-[linear-gradient(135deg,oklch(0.58_0.23_27),oklch(0.28_0.13_25))]",
 };
 
 const compactFrame: Record<Player["rarity"], string> = {
@@ -92,12 +115,17 @@ const compactFrame: Record<Player["rarity"], string> = {
 };
 
 const BACKYARD_HEROES = new Set([
-  'Busta "Fly" Jones', 'Josiah "The Messiah" Ball', 'Creighton Murray',
-  'Gringo Guth', 'Sleepy Cringle', 'Talon "7 Iron" Reynolds',
-  'Ty "Teethman" Smith', 'Josiah "8 Man" Mettling',
-  'Breck "Coach Razor" Guthrie', 'Gary Gainz',
+  'Busta "Fly" Jones',
+  'Josiah "The Messiah" Ball',
+  "Creighton Murray",
+  "Gringo Guth",
+  "Sleepy Cringle",
+  'Talon "7 Iron" Reynolds',
+  'Ty "Teethman" Smith',
+  'Josiah "8 Man" Mettling',
+  'Breck "Coach Razor" Guthrie',
+  "Gary Gainz",
 ]);
-
 
 export function PlayerCard({
   player,
@@ -125,19 +153,24 @@ export function PlayerCard({
     setFlipped((f) => !f);
   };
 
-  const isBaseProspect = player.name.startsWith("Unsigned") || player.name === BASE_PROSPECT_NAMES[player.position];
+  const isHometownHero = player.program === "hometown_heroes" || BACKYARD_HEROES.has(player.name);
+  const isBaseProspect =
+    !isHometownHero &&
+    (player.name.startsWith("Unsigned") || player.name === BASE_PROSPECT_NAMES[player.position]);
   const sigArt = SIGNATURE_ART[player.name];
-  const art = isBaseProspect ? PROSPECT_ART[player.position] : sigArt ?? POSITION_ART[player.position];
+  const art = isBaseProspect
+    ? PROSPECT_ART[player.position]
+    : (sigArt ?? POSITION_ART[player.position]);
   const hasSignatureArt = Boolean(sigArt);
   const archetype = playerArchetype(player);
   const fansPerHr = +(player.fanValue * COIN_PER_FAN_PER_HOUR).toFixed(2);
   const promo = isBaseProspect
     ? { short: "GG", name: "Base Program", logo: baseProgramLogo }
-    : BACKYARD_HEROES.has(player.name)
-    ? { short: "HH", name: "Hometown Heroes", logo: hometownHeroesLogo }
-    : SIGNATURE_ART[player.name]
-      ? { short: "SIG", name: "Signature Series", logo: null }
-      : { short: "GG", name: "Base Program", logo: baseProgramLogo };
+    : isHometownHero
+      ? { short: "HH", name: "Hometown Heroes", logo: hometownHeroesLogo }
+      : SIGNATURE_ART[player.name]
+        ? { short: "SIG", name: "Signature Series", logo: null }
+        : { short: "GG", name: "Base Program", logo: baseProgramLogo };
 
   if (compact) {
     return (
@@ -160,10 +193,19 @@ export function PlayerCard({
           className,
         )}
       >
-        {hasSignatureArt || isBaseProspect || (player.rarity !== "gold" && player.rarity !== "elite") ? (
-          <img src={art} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
+        {hasSignatureArt ||
+        isBaseProspect ||
+        (player.rarity !== "gold" && player.rarity !== "elite") ? (
+          <img
+            src={art}
+            alt=""
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
         ) : (
-          <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle,oklch(0.30_0.08_80),oklch(0.10_0.02_260))] font-display text-4xl text-white/60">{player.position}</div>
+          <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle,oklch(0.30_0.08_80),oklch(0.10_0.02_260))] font-display text-4xl text-white/60">
+            {player.position}
+          </div>
         )}
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.50),transparent_38%,rgba(0,0,0,0.08)_58%,rgba(0,0,0,0.68)_100%)]" />
 
@@ -171,16 +213,32 @@ export function PlayerCard({
           title={promo.name}
           className="absolute left-1 top-1 grid h-6 w-6 place-items-center p-0.5 font-display text-[6px] tracking-wide text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.9)]"
         >
-          {promo.logo ? <img src={promo.logo} alt="" className="h-full w-full object-contain" /> : promo.short}
+          {promo.logo ? (
+            <img src={promo.logo} alt="" className="h-full w-full object-contain" />
+          ) : (
+            promo.short
+          )}
         </div>
 
         <div className="absolute -right-0.5 top-1 flex w-7 flex-col items-center text-center drop-shadow-[0_2px_3px_rgba(0,0,0,0.95)]">
           <div className="font-display text-[15px] leading-[0.85] text-white">{player.overall}</div>
-          <div className="mt-0.5 w-full font-display text-[8px] uppercase leading-none tracking-normal text-white/90">{player.position}</div>
+          <div className="mt-0.5 w-full font-display text-[8px] uppercase leading-none tracking-normal text-white/90">
+            {player.position}
+          </div>
         </div>
 
-        <div className={cn("absolute inset-x-0 bottom-0 border-t px-2 py-1.5 text-left shadow-[0_-3px_12px_rgba(0,0,0,0.45)]", compactNameplate[player.rarity])}>
-          <div className="text-balance break-words font-display text-[8px] uppercase leading-[0.9] tracking-[0.04em] text-white drop-shadow sm:text-[9px]" title={player.name}>{player.name}</div>
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 border-t px-2 py-1.5 text-left shadow-[0_-3px_12px_rgba(0,0,0,0.45)]",
+            compactNameplate[player.rarity],
+          )}
+        >
+          <div
+            className="text-balance break-words font-display text-[8px] uppercase leading-[0.9] tracking-[0.04em] text-white drop-shadow sm:text-[9px]"
+            title={player.name}
+          >
+            {player.name}
+          </div>
           <div className="mt-1 flex items-center justify-between font-display text-[7px] uppercase tracking-[0.12em] text-white/75">
             <span>{rarityLabel[player.rarity]}</span>
             <span>♥ {player.fanValue}</span>
@@ -191,7 +249,6 @@ export function PlayerCard({
   }
 
   const minHeight = 260;
-
 
   return (
     <div
@@ -228,7 +285,9 @@ export function PlayerCard({
         >
           <div className="m-[2px] rounded-[calc(var(--radius)-2px)] h-full flex flex-col overflow-hidden relative">
             <div className="absolute inset-0">
-              {hasSignatureArt || isBaseProspect || (player.rarity !== "gold" && player.rarity !== "elite") ? (
+              {hasSignatureArt ||
+              isBaseProspect ||
+              (player.rarity !== "gold" && player.rarity !== "elite") ? (
                 <img
                   src={art}
                   alt={`${player.name} art`}
@@ -238,9 +297,15 @@ export function PlayerCard({
               ) : (
                 <div className="h-full w-full bg-[radial-gradient(ellipse_at_center,oklch(0.28_0.06_80)_0%,oklch(0.14_0.02_260)_70%,oklch(0.08_0.01_260)_100%)] flex items-center justify-center">
                   <div className="text-center px-4">
-                    <div className="font-display text-5xl text-gradient-gold opacity-90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{player.position}</div>
-                    <div className="mt-2 text-[9px] uppercase tracking-widest text-white/50">Signature art</div>
-                    <div className="text-[9px] uppercase tracking-widest text-white/40">Coming soon</div>
+                    <div className="font-display text-5xl text-gradient-gold opacity-90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                      {player.position}
+                    </div>
+                    <div className="mt-2 text-[9px] uppercase tracking-widest text-white/50">
+                      Signature art
+                    </div>
+                    <div className="text-[9px] uppercase tracking-widest text-white/40">
+                      Coming soon
+                    </div>
                   </div>
                 </div>
               )}
@@ -252,25 +317,75 @@ export function PlayerCard({
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.55)_0%,rgba(0,0,0,0.05)_35%,rgba(0,0,0,0.15)_60%,rgba(0,0,0,0.9)_100%)]" />
             </div>
 
-
-            <div className={cn("relative z-10 flex h-full flex-col", mobileDense ? "p-1.5 sm:p-3" : "p-3")}>
+            <div
+              className={cn(
+                "relative z-10 flex h-full flex-col",
+                mobileDense ? "p-1.5 sm:p-3" : "p-3",
+              )}
+            >
               <div className="flex items-start justify-between gap-2">
-                <div title={promo.name} className={cn("grid shrink-0 place-items-center drop-shadow-[0_3px_5px_rgba(0,0,0,0.9)]", mobileDense ? "h-6 w-6 p-0.5 sm:h-10 sm:w-10 sm:p-1" : "h-10 w-10 p-1")}>
-                  {promo.logo ? <img src={promo.logo} alt={`${promo.name} logo`} className="h-full w-full object-contain" /> : <span className="font-display text-[10px] tracking-wide text-white">{promo.short}</span>}
+                <div
+                  title={promo.name}
+                  className={cn(
+                    "grid shrink-0 place-items-center drop-shadow-[0_3px_5px_rgba(0,0,0,0.9)]",
+                    mobileDense ? "h-6 w-6 p-0.5 sm:h-10 sm:w-10 sm:p-1" : "h-10 w-10 p-1",
+                  )}
+                >
+                  {promo.logo ? (
+                    <img
+                      src={promo.logo}
+                      alt={`${promo.name} logo`}
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <span className="font-display text-[10px] tracking-wide text-white">
+                      {promo.short}
+                    </span>
+                  )}
                 </div>
-                <div className={cn("mt-0 flex shrink-0 flex-col items-center text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]", mobileDense ? "-mr-1 w-7 sm:-mr-3 sm:w-12" : "-mr-3 w-12")}>
-                  <div className={cn("font-display leading-none text-white", mobileDense ? "text-lg sm:text-3xl" : "text-3xl")}>{player.overall}</div>
-                  <div className={cn("mt-0.5 w-full font-display uppercase leading-none tracking-normal text-white/90", mobileDense ? "text-[7px] sm:text-xs" : "text-xs")}>{player.position}</div>
+                <div
+                  className={cn(
+                    "mt-0 flex shrink-0 flex-col items-center text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]",
+                    mobileDense ? "-mr-1 w-7 sm:-mr-3 sm:w-12" : "-mr-3 w-12",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "font-display leading-none text-white",
+                      mobileDense ? "text-lg sm:text-3xl" : "text-3xl",
+                    )}
+                  >
+                    {player.overall}
+                  </div>
+                  <div
+                    className={cn(
+                      "mt-0.5 w-full font-display uppercase leading-none tracking-normal text-white/90",
+                      mobileDense ? "text-[7px] sm:text-xs" : "text-xs",
+                    )}
+                  >
+                    {player.position}
+                  </div>
                 </div>
               </div>
 
               <div className="flex-1" />
 
               <div className="mt-2">
-                <div className={cn("break-words font-display leading-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]", mobileDense ? "line-clamp-2 text-[8px] sm:text-lg" : "text-base sm:text-lg")}>{player.name}</div>
+                <div
+                  className={cn(
+                    "break-words font-display leading-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]",
+                    mobileDense ? "line-clamp-2 text-[8px] sm:text-lg" : "text-base sm:text-lg",
+                  )}
+                >
+                  {player.name}
+                </div>
                 <div className="mt-1 flex items-center justify-between text-[11px]">
-                  <span className="text-white/60 uppercase tracking-widest text-[9px]">{player.position}</span>
-                  <span className="text-[oklch(0.85_0.18_25)] font-semibold drop-shadow">❤️ {player.fanValue}</span>
+                  <span className="text-white/60 uppercase tracking-widest text-[9px]">
+                    {player.position}
+                  </span>
+                  <span className="text-[oklch(0.85_0.18_25)] font-semibold drop-shadow">
+                    ❤️ {player.fanValue}
+                  </span>
                 </div>
               </div>
 
@@ -287,7 +402,6 @@ export function PlayerCard({
           )}
         </div>
 
-
         {/* BACK */}
         <div
           className={cn(
@@ -295,18 +409,39 @@ export function PlayerCard({
             rarityBg[player.rarity],
           )}
         >
-          <div className={cn(
-            "m-[2px] flex h-full flex-col rounded-[calc(var(--radius)-2px)] bg-background/90 backdrop-blur-sm",
-            mobileDense ? "gap-1 p-1.5 sm:gap-2 sm:p-3" : "gap-2 p-3",
-          )}>
+          <div
+            className={cn(
+              "m-[2px] flex h-full flex-col rounded-[calc(var(--radius)-2px)] bg-background/90 backdrop-blur-sm",
+              mobileDense ? "gap-1 p-1.5 sm:gap-2 sm:p-3" : "gap-2 p-3",
+            )}
+          >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <div className={cn("uppercase tracking-widest text-muted-foreground", mobileDense ? "text-[6px] sm:text-[10px]" : "text-[10px]")}>
+                <div
+                  className={cn(
+                    "uppercase tracking-widest text-muted-foreground",
+                    mobileDense ? "text-[6px] sm:text-[10px]" : "text-[10px]",
+                  )}
+                >
                   {rarityLabel[player.rarity]} · {player.position}
                 </div>
-                <div className={cn("break-words font-display leading-tight", mobileDense ? "line-clamp-2 text-[8px] sm:text-base" : "text-sm sm:text-base")}>{player.name}</div>
+                <div
+                  className={cn(
+                    "break-words font-display leading-tight",
+                    mobileDense ? "line-clamp-2 text-[8px] sm:text-base" : "text-sm sm:text-base",
+                  )}
+                >
+                  {player.name}
+                </div>
               </div>
-              <div className={cn("font-display text-gradient-gold leading-none", mobileDense ? "text-base sm:text-2xl" : "text-2xl")}>{player.overall}</div>
+              <div
+                className={cn(
+                  "font-display text-gradient-gold leading-none",
+                  mobileDense ? "text-base sm:text-2xl" : "text-2xl",
+                )}
+              >
+                {player.overall}
+              </div>
             </div>
 
             <div className={cn("space-y-1.5", mobileDense && "hidden sm:block")}>
@@ -315,7 +450,11 @@ export function PlayerCard({
               <StatBar label="Speed" value={player.speed} tone="cyan" />
               <StatBar label="IQ" value={player.iq} tone="violet" />
               {player.signature && (
-                <StatBar label={player.signature.label} value={player.signature.value} tone="emerald" />
+                <StatBar
+                  label={player.signature.label}
+                  value={player.signature.value}
+                  tone="emerald"
+                />
               )}
               <StatBar label="Popularity" value={player.popularity} tone="pink" />
             </div>
@@ -327,12 +466,19 @@ export function PlayerCard({
                 <MiniStat label="IQ" value={player.iq} />
                 <MiniStat label="POP" value={player.popularity} />
                 <MiniStat label="FAN" value={player.fanValue} />
-                <MiniStat label={player.signature?.label.slice(0, 4).toUpperCase() ?? "SIG"} value={player.signature?.value ?? player.overall} />
+                <MiniStat
+                  label={player.signature?.label.slice(0, 4).toUpperCase() ?? "SIG"}
+                  value={player.signature?.value ?? player.overall}
+                />
               </div>
             )}
 
-
-            <div className={cn("mt-auto grid grid-cols-2 gap-2 pt-1", mobileDense ? "text-[6px] sm:text-[10px]" : "text-[10px]")}>
+            <div
+              className={cn(
+                "mt-auto grid grid-cols-2 gap-2 pt-1",
+                mobileDense ? "text-[6px] sm:text-[10px]" : "text-[10px]",
+              )}
+            >
               <div className="rounded-md bg-white/5 px-2 py-1">
                 <div className="uppercase tracking-widest text-muted-foreground">Archetype</div>
                 <div className="font-semibold">{archetype}</div>
@@ -366,7 +512,6 @@ const TONE: Record<string, string> = {
   pink: "bg-[oklch(0.75_0.18_355)]",
   emerald: "bg-[oklch(0.75_0.17_160)]",
 };
-
 
 function StatBar({ label, value, tone = "gold" }: { label: string; value: number; tone?: string }) {
   const pct = Math.max(0, Math.min(100, value));
