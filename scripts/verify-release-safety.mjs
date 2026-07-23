@@ -24,6 +24,9 @@ async function sourceFiles(path) {
 
 for (const path of await sourceFiles("src")) {
   const source = await text(path);
+  if (/oqvlshzkzppvzmzxdsyc|@lovable\.dev\/cloud-auth-js/.test(source)) {
+    failures.push(`${path} reconnects browser traffic to the retired Lovable backend`);
+  }
   if (/SUPABASE_SERVICE_ROLE_KEY|SEASON_PROCESSOR_SECRET/.test(source)) {
     failures.push(`${path} exposes a server-only secret name in browser source`);
   }
@@ -39,6 +42,18 @@ for (const path of await sourceFiles("src")) {
   if (gameplaySource && /Math\.random\s*\(/.test(source)) {
     failures.push(`${path} contains browser-side gameplay randomness`);
   }
+}
+
+const supabaseConfig = await text("src/integrations/supabase/config.ts");
+requireText(
+  supabaseConfig,
+  '"wccvfmsfjopkvkijsthh"',
+  "Browser data access is not pinned to the owned Supabase project",
+);
+
+const packageManifest = await text("package.json");
+if (packageManifest.includes("@lovable.dev/cloud-auth-js")) {
+  failures.push("Lovable Cloud authentication was restored as an application dependency");
 }
 
 const release = await text("src/lib/release.ts");

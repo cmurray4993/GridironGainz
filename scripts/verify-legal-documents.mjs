@@ -11,8 +11,9 @@ const documents = {
 
 let failed = false;
 for (const [path, expected] of Object.entries(documents)) {
-  const content = await readFile(new URL(`../${path}`, import.meta.url));
-  const actual = createHash("sha256").update(content).digest("hex");
+  const content = await readFile(new URL(`../${path}`, import.meta.url), "utf8");
+  const normalizedContent = content.replace(/\r\n/g, "\n");
+  const actual = createHash("sha256").update(normalizedContent).digest("hex");
   if (actual !== expected) {
     failed = true;
     console.error(`${path} changed without a new legal-document version.`);
